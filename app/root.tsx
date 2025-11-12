@@ -6,8 +6,10 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { Provider } from "react-redux";
-import { store } from "./store/store";
+import { useEffect, useState } from "react";
+import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar";
+import { Loader2 } from "lucide-react";
 import "./app.css";
 
 export const links = () => [
@@ -42,10 +44,41 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate theme or user data loading
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-zinc-950">
+        <Loader2 className="size-7 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <Provider store={store}>
-      <Outlet />
-    </Provider>
+    <div className="flex bg-white dark:bg-zinc-950 text-gray-900 dark:text-slate-100 min-h-screen">
+      <Sidebar
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+      />
+
+      <div className="flex-1 flex flex-col h-screen">
+        <Navbar
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+        />
+
+        <main className="flex-1 h-full p-6 xl:p-10 xl:px-16 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 }
 

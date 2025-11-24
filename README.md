@@ -1,72 +1,111 @@
 # 🧩 Project Management App
 
-A modern **Project Management Dashboard** built with **React Router v7**, **Redux Toolkit**, and **TailwindCSS** — featuring a responsive layout with a Sidebar and Navbar, theme toggle, and scalable architecture ready for API and backend integration.
+A modern, scalable **Project Management Dashboard** built with **React 19**, **React Router v7 (App Router)**, **Redux Toolkit**, and **TailwindCSS v4**.  
+This project follows real-world production architecture, featuring responsive layouts, lazy-loaded components, OAuth-ready authentication, skeleton loaders, and clean code principles adopted by senior engineers.
 
 ---
 
-## 🚀 Features (Current Progress)
+# 🚀 Features Implemented (Detailed Overview)
 
-✅ **React Router v7 (App Directory)**  
-✅ **Responsive Navbar and Sidebar Layout**  
-✅ **Dark / Light Theme Toggle (dummy state for now)**  
-✅ **Accessible UI (WCAG 2.1 AA)**  
-✅ **Reusable Component Structure**  
-✅ **Production-Ready Folder Architecture**  
-✅ **Lazy-loaded Dashboard Sections**  
-✅ **Skeleton Loaders for All Dashboard Components**  
+## ⭐ 1. Application Architecture
+- Fully configured **React Router v7 App Directory** (file-based routing)
+- Modular & scalable **component architecture**
+- Global **Layout system** (Navbar + Sidebar)
+- Intelligent **layout hiding** for routes like `/login` and `404`
+- Organized folder structure following industry-level best practices
 
----
+## ⭐ 2. Authentication (Frontend Setup)
+- OAuth-ready **Login Page UI** using shadcn/ui
+- “Continue with Google” button (awaiting backend integration)
+- Built **auth slice** with Redux Toolkit  
+  - `loginSuccess()`  
+  - `logout()`  
+  - `localStorage` persistence  
+- Created **ProtectedRoute** component
+  - Blocks unauthorized access  
+  - Redirects user to `/login` if not logged in
 
-##  Tech Stack
+## ⭐ 3. Dashboard Page (Home Screen)
+- Semantic, responsive, accessible layout  
+- Split into multiple sections:
+  - Stats overview  
+  - Project overview  
+  - Recent activities  
+  - Task summary  
+- All dashboard sections:
+  - **Lazy-loaded** with `React.lazy()`
+  - Wrapped with **Suspense**
+  - Wrapped with **memo()** for performance
 
-| Category | Technology |
-|-----------|-------------|
-| **Frontend Framework** | [React 19](https://react.dev/) |
-| **Router** | [React Router v7](https://reactrouter.com/) |
-| **State Management** | [Redux Toolkit](https://redux-toolkit.js.org/) |
-| **Styling** | [TailwindCSS v4](https://tailwindcss.com/) |
-| **Icons** | [Lucide React](https://lucide.dev/) |
-| **Build Tool** | [Vite](https://vitejs.dev/) |
-| **Language** | TypeScript (ES Modules) |
+## ⭐ 4. Skeleton Loaders (Production Standard)
+Added highly polished skeleton loaders for:
 
----
-
-## 📈 Project Progress
-
-A clear summary of all development completed so far:
-
-### **✔️ Core UI & Layout**
-- Implemented a fully responsive **Navbar**  
-  - Search bar  
-  - Theme toggle button  
-  - User avatar  
-  - WCAG-compliant accessibility & ARIA attributes  
-- Built a **mobile-responsive Sidebar**  
-  - Slide-in mobile behavior  
-  - Overlay + ESC to close  
-  - Keyboard navigation support  
-  - Desktop fixed layout  
-
-### **✔️ Dashboard Page**
-- Added Dashboard as the main homepage through `_index.tsx`  
-- Integrated with the global layout (Sidebar + Navbar)  
-- Optimized using:
-  - `React.lazy()`  
-  - `Suspense`  
-  - `memo()` for performance  
-
-### **✔️ Skeleton Loaders (Production Standard)**
-Created reusable skeleton loading UIs for a smoother and more modern user experience:
 - `StatsGridSkeleton`
 - `ProjectOverviewSkeleton`
 - `RecentActivitySkeleton`
 - `TaskSummarySkeleton`
 
-All skeletons follow consistent design, accessibility rules, and TailwindCSS animation patterns.
+All built using TailwindCSS animations and WCAG-accessible placeholders.
+
+## ⭐ 5. UI System & Accessibility
+### ✨ Navbar
+- Search bar  
+- Light/Dark theme toggle  
+- User avatar  
+- Fully keyboard accessible  
+
+### ✨ Sidebar
+- Desktop fixed version  
+- Mobile slide-in version  
+- Touch-friendly overlay  
+- Click outside to close  
+- Escape key support  
+- ARIA role-based navigation  
+
+## ⭐ 6. Error Handling
+- Added **NotFound (404) Page**
+- Automatically served for unknown routes
+- Sidebar + Navbar are hidden on 404 page
 
 ---
 
+# 🏗️ Tech Stack
 
+| Area | Technology |
+|------|------------|
+| **Language** | TypeScript |
+| **Framework** | React 19 |
+| **Router** | React Router v7 (App Router) |
+| **State Management** | Redux Toolkit |
+| **Styles** | TailwindCSS v4 |
+| **UI Components** | shadcn/ui |
+| **Icons** | Lucide React |
+| **Bundler** | Vite |
+| **Auth (Upcoming)** | Google OAuth (Express + Passport) |
+| **Database (Upcoming)** | Neon PostgreSQL |
 
+---
 
+# 📂 Folder Structure (Production Standard)
 
+app/
+├── components/
+│ ├── Navbar.tsx
+│ ├── Sidebar.tsx
+│ └── ui/ (shadcn components + skeletons)
+│
+├── routes/
+│ ├── Dashboard.tsx
+│ ├── Login.tsx
+│ ├── NotFound.tsx
+│ └── routes.ts (React Router file-based config)
+│
+├── store/
+│ ├── authSlice.ts
+│ └── store.ts
+│
+├── assets/
+│ └── profile.svg
+│
+├── root.tsx
+└── app.css

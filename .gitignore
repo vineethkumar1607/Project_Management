@@ -5,3 +5,6 @@
 # React Router
 /.react-router/
 /build/
+
+//google auth secrets
+client_secret_google.json

@@ -1,3 +1,16 @@
-import { type RouteConfig, index } from "@react-router/dev/routes";
+import { type RouteConfig } from "@react-router/dev/routes";
 
-export default [index("routes/index.tsx")] satisfies RouteConfig;
+export default [
+  {
+    path: "/",                     // Home = Dashboard
+    file: "routes/Dashboard.tsx",
+  },
+  {
+    path: "/login",
+    file: "routes/Login.tsx",
+  },
+  {
+    path: "*",                     // Catch-all for not found
+    file: "routes/NotFound.tsx",
+  },
+] satisfies RouteConfig;

@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
 } from "react-router";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router";  
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import { Loader2 } from "lucide-react";
@@ -46,9 +47,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();   // 👉 get current route
+
+  // Routes where layout SHOULD NOT appear
+const hideLayoutRoutes = ["/login", "/404", "*"];
+
+
+  const shouldHideLayout = hideLayoutRoutes.includes(location.pathname);
 
   useEffect(() => {
-    // Simulate theme or user data loading
     const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);
   }, []);
@@ -61,6 +68,12 @@ export default function App() {
     );
   }
 
+  // If layout should be hidden → only render the route
+  if (shouldHideLayout) {
+    return <Outlet />;
+  }
+
+  // Normal layout pages (Dashboard, Projects, Team...)
   return (
     <div className="flex bg-white dark:bg-zinc-950 text-gray-900 dark:text-slate-100 min-h-screen">
       <Sidebar

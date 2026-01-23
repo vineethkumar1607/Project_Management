@@ -6,13 +6,21 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router";  
+import { useLocation } from "react-router";
+
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import { Loader2 } from "lucide-react";
 import "./app.css";
+import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { Navigate } from "react-router";
 
+/* --------------------------------------------------
+   <Links /> – Used to inject <link> tags into <head>
+   This replaces index.html in Vite
+--------------------------------------------------- */
 export const links = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -26,75 +34,106 @@ export const links = () => [
   },
 ];
 
+/* --------------------------------------------------
+   Layout Component
+   This defines the FINAL HTML DOCUMENT
+--------------------------------------------------- */
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        {/* Dynamic <title>, <meta> from routes */}
         <Meta />
+
+        {/* Injects styles & links */}
         <Links />
       </head>
+
       <body>
+        {/* This is your App UI */}
         {children}
+
+        {/* Remembers scroll position between routes */}
         <ScrollRestoration />
+
+        {/* Injects JS bundles */}
         <Scripts />
       </body>
     </html>
   );
 }
 
+/* --------------------------------------------------
+   App Component ("APP.TSX")
+--------------------------------------------------- */
+
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Add your Clerk Publishable Key to the .env file");
+}
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const location = useLocation();   // 👉 get current route
+  // Current route path (/login, /dashboard, etc.)
+  const location = useLocation();
 
-  // Routes where layout SHOULD NOT appear
-const hideLayoutRoutes = ["/login", "/404", "*"];
-
-
+  /* Routes where Navbar + Sidebar should NOT appear */
+  const hideLayoutRoutes = ["/login", "/404"];
   const shouldHideLayout = hideLayoutRoutes.includes(location.pathname);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-white dark:bg-zinc-950">
-        <Loader2 className="size-7 text-blue-500 animate-spin" />
-      </div>
-    );
-  }
-
-  // If layout should be hidden → only render the route
-  if (shouldHideLayout) {
-    return <Outlet />;
-  }
-
-  // Normal layout pages (Dashboard, Projects, Team...)
+  /* --------------------------------------------------
+      Main App Layout (Dashboard Pages)
+  --------------------------------------------------- */
   return (
-    <div className="flex bg-white dark:bg-zinc-950 text-gray-900 dark:text-slate-100 min-h-screen">
-      <Sidebar
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-      />
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
 
-      <div className="flex-1 flex flex-col h-screen">
-        <Navbar
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
-        />
+      {/* -------------------------------
+        USER IS NOT LOGGED IN
+    -------------------------------- */}
+      <SignedOut>
+        {location.pathname === "/login" ? <Outlet /> : <Navigate to="/login" />}
+      </SignedOut>
 
-        <main className="flex-1 h-full p-6 xl:p-10 xl:px-16 overflow-y-auto">
+
+      {/* -------------------------------
+        USER IS LOGGED IN
+    -------------------------------- */}
+      <SignedIn>
+        {shouldHideLayout ? (
+          /* Logged in but layout intentionally hidden */
           <Outlet />
-        </main>
-      </div>
-    </div>
+        ) : (
+          /* Logged in + normal dashboard layout */
+          <div className="flex bg-white dark:bg-zinc-950 min-h-screen">
+            <Sidebar
+              isSidebarOpen={isSidebarOpen}
+              setIsSidebarOpen={setIsSidebarOpen}
+            />
+
+            <div className="flex-1 flex flex-col h-screen">
+              <Navbar
+                isSidebarOpen={isSidebarOpen}
+                setIsSidebarOpen={setIsSidebarOpen}
+              />
+
+              <main className="flex-1 p-6 xl:p-10 overflow-y-auto">
+                <Outlet />
+              </main>
+            </div>
+          </div>
+        )}
+      </SignedIn>
+
+    </ClerkProvider>
   );
+
 }
 
+/* --------------------------------------------------
+   Global Error Boundary
+--------------------------------------------------- */
 export function ErrorBoundary({ error }: any) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
@@ -106,20 +145,16 @@ export function ErrorBoundary({ error }: any) {
       error.status === 404
         ? "The requested page could not be found."
         : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
+  } else if (import.meta.env.DEV && error instanceof Error) {
     details = error.message;
     stack = error.stack;
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
+    <main className="p-6">
       <h1>{message}</h1>
       <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+      {stack && <pre>{stack}</pre>}
     </main>
   );
 }

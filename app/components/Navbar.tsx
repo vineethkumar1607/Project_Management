@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Search, PanelLeft, Moon, Sun } from "lucide-react";
-import profileImg from "../assessts/profile.svg"; // make sure you have one SVG
+import { UserButton } from "@clerk/clerk-react";
+import profileImg from "../assessts/profile.svg"; // make sure there is one SVG
 
 interface NavbarProps {
   isSidebarOpen: boolean;
@@ -75,17 +76,14 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen }: NavbarProps) => {
           </button>
 
           {/* User Avatar */}
-          <button
-            type="button"
-            aria-label="User menu"
-            className="focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full"
-          >
-            <img
-              src={profileImg}
-              alt="User avatar"
-              className="size-8 rounded-full object-cover"
-            />
-          </button>
+          <UserButton
+            afterSignOutUrl="/login"
+            appearance={{
+              elements: {
+                avatarBox: "size-8",
+              },
+            }}
+          />
         </div>
       </nav>
     </header>

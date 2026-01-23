@@ -1,20 +1,18 @@
-# 🧩 Project Management App
+#  Project Management App
 
 A modern, scalable **Project Management Dashboard** built with **React 19**, **React Router v7 (App Router)**, **Redux Toolkit**, and **TailwindCSS v4**.  
 This project follows real-world production architecture, featuring responsive layouts, lazy-loaded components, OAuth-ready authentication, skeleton loaders, and clean code principles adopted by senior engineers.
 
----
+# Features Implemented (Detailed Overview)
 
-# 🚀 Features Implemented (Detailed Overview)
-
-## ⭐ 1. Application Architecture
+##  1. Application Architecture
 - Fully configured **React Router v7 App Directory** (file-based routing)
 - Modular & scalable **component architecture**
 - Global **Layout system** (Navbar + Sidebar)
 - Intelligent **layout hiding** for routes like `/login` and `404`
 - Organized folder structure following industry-level best practices
 
-## ⭐ 2. Authentication (Frontend Setup)
+## 2. Authentication (Frontend Setup)
 - OAuth-ready **Login Page UI** using shadcn/ui
 - “Continue with Google” button (awaiting backend integration)
 - Built **auth slice** with Redux Toolkit  
@@ -25,7 +23,7 @@ This project follows real-world production architecture, featuring responsive la
   - Blocks unauthorized access  
   - Redirects user to `/login` if not logged in
 
-## ⭐ 3. Dashboard Page (Home Screen)
+##  3. Dashboard Page (Home Screen)
 - Semantic, responsive, accessible layout  
 - Split into multiple sections:
   - Stats overview  
@@ -37,7 +35,7 @@ This project follows real-world production architecture, featuring responsive la
   - Wrapped with **Suspense**
   - Wrapped with **memo()** for performance
 
-## ⭐ 4. Skeleton Loaders (Production Standard)
+## 4. Skeleton Loaders (Production Standard)
 Added highly polished skeleton loaders for:
 
 - `StatsGridSkeleton`
@@ -47,14 +45,14 @@ Added highly polished skeleton loaders for:
 
 All built using TailwindCSS animations and WCAG-accessible placeholders.
 
-## ⭐ 5. UI System & Accessibility
-### ✨ Navbar
+##  5. UI System & Accessibility
+###  Navbar
 - Search bar  
 - Light/Dark theme toggle  
 - User avatar  
 - Fully keyboard accessible  
 
-### ✨ Sidebar
+###  Sidebar
 - Desktop fixed version  
 - Mobile slide-in version  
 - Touch-friendly overlay  
@@ -62,14 +60,14 @@ All built using TailwindCSS animations and WCAG-accessible placeholders.
 - Escape key support  
 - ARIA role-based navigation  
 
-## ⭐ 6. Error Handling
+##  6. Error Handling
 - Added **NotFound (404) Page**
 - Automatically served for unknown routes
 - Sidebar + Navbar are hidden on 404 page
 
 ---
 
-# 🏗️ Tech Stack
+#  Tech Stack
 
 | Area | Technology |
 |------|------------|
@@ -86,7 +84,7 @@ All built using TailwindCSS animations and WCAG-accessible placeholders.
 
 ---
 
-# 📂 Folder Structure (Production Standard)
+#  Folder Structure (Production Standard)
 
 app/
 ├── components/

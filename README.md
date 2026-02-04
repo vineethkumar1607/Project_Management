@@ -1,9 +1,15 @@
 #  Project Management App
 
 A modern, scalable **Project Management Dashboard** built with **React 19**, **React Router v7 (App Router)**, **Redux Toolkit**, and **TailwindCSS v4**.  
-This project follows real-world production architecture, featuring responsive layouts, lazy-loaded components, OAuth-ready authentication, skeleton loaders, and clean code principles adopted by senior engineers.
+A modern, scalable Project Management Dashboard built with React 19, React Router v7 (App Router), TailwindCSS v4, and Clerk Authentication. 
+The project follows real-world production architecture, focusing on: 
+ - UI-first development
+ - Feature-based folder organization
+ - Skeleton loaders for async UX
+ - Clean separation of concerns
+ - Accessibility and performance best practices
 
-# Features Implemented (Detailed Overview)
+# Features Implemented (Detailed Overview)+
 
 ##  1. Application Architecture
 - Fully configured **React Router v7 App Directory** (file-based routing)
@@ -13,27 +19,24 @@ This project follows real-world production architecture, featuring responsive la
 - Organized folder structure following industry-level best practices
 
 ## 2. Authentication (Frontend Setup)
-- OAuth-ready **Login Page UI** using shadcn/ui
-- “Continue with Google” button (awaiting backend integration)
-- Built **auth slice** with Redux Toolkit  
-  - `loginSuccess()`  
-  - `logout()`  
-  - `localStorage` persistence  
-- Created **ProtectedRoute** component
-  - Blocks unauthorized access  
-  - Redirects user to `/login` if not logged in
+- Integrated ClerkProvider at the app root
+- Authentication handled fully by Clerk
+- Supports:  
+  - OAuth providers (Google-ready)  
+  - Session-based auth
+  - Secure route protection 
 
 ##  3. Dashboard Page (Home Screen)
-- Semantic, responsive, accessible layout  
-- Split into multiple sections:
-  - Stats overview  
+The dashboard is composed of multiple independent widgets:
+  - Stats Grid (animated with Framer Motion)
   - Project overview  
   - Recent activities  
   - Task summary  
-- All dashboard sections:
-  - **Lazy-loaded** with `React.lazy()`
-  - Wrapped with **Suspense**
-  - Wrapped with **memo()** for performance
+Each widget:
+ - Is built as an isolated component
+ - Uses mock data for UI validation
+ -  Is ready for backend integration
+ - Avoids premature global state coupling
 
 ## 4. Skeleton Loaders 
 Added highly polished skeleton loaders for:
@@ -43,7 +46,26 @@ Added highly polished skeleton loaders for:
 - `RecentActivitySkeleton`
 - `TaskSummarySkeleton`
 
-All built using TailwindCSS animations and WCAG-accessible placeholders.
+## 5. Animations & Micro-Interactions
+
+- Smooth entrance animations for dashboard widgets using **Framer Motion**
+- Staggered card animations in the StatsGrid
+- Skeleton → content transitions for improved perceived performance
+- Subtle hover micro-interactions for stat cards
+
+
+Skeletons:
+- Match final layout structure
+- Use TailwindCSS animate-pulse
+- Prevent layout shift
+- Are easily replaceable with real loading states later
+
+Performance Optimizations
+- Dashboard sections are:
+  - Lazy-loaded with React.lazy
+  - Wrapped with Suspense
+  - Memoized using memo()
+  - Optimized re-renders and layout stability
 
 ##  5. UI System & Accessibility
 ###  Navbar
@@ -79,31 +101,35 @@ All built using TailwindCSS animations and WCAG-accessible placeholders.
 | **UI Components** | shadcn/ui |
 | **Icons** | Lucide React |
 | **Bundler** | Vite |
-| **Auth (Upcoming)** | Google OAuth (Express + Passport) |
+| **Auth** | Clerk |
 | **Database (Upcoming)** | Neon PostgreSQL |
 
 ---
 
-#  Folder Structure (Production Standard)
+#  Folder Structure 
 
 app/
 ├── components/
-│ ├── Navbar.tsx
-│ ├── Sidebar.tsx
-│ └── ui/ (shadcn components + skeletons)
+│   ├── layout/
+│   │   ├── Navbar.tsx
+│   │   └── Sidebar.tsx
+│   │
+│   ├── dashboard/
+│   │   ├── StatsGrid.tsx
+│   │   ├── StatsGridSkeleton.tsx
+│   │   ├── TasksSummary.tsx
+│   │   └── TasksSummarySkeleton.tsx
+│   │
+│   └── ui/
+│       
 │
 ├── routes/
-│ ├── Dashboard.tsx
-│ ├── Login.tsx
-│ ├── NotFound.tsx
-│ └── routes.ts (React Router file-based config)
-│
-├── store/
-│ ├── authSlice.ts
-│ └── store.ts
+│   ├── Dashboard.tsx
+│   ├── Login.tsx
+│   └── NotFound.tsx
 │
 ├── assets/
-│ └── profile.svg
+│   └── profile.svg
 │
 ├── root.tsx
 └── app.css

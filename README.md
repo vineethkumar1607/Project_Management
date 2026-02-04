@@ -35,7 +35,7 @@ This project follows real-world production architecture, featuring responsive la
   - Wrapped with **Suspense**
   - Wrapped with **memo()** for performance
 
-## 4. Skeleton Loaders (Production Standard)
+## 4. Skeleton Loaders 
 Added highly polished skeleton loaders for:
 
 - `StatsGridSkeleton`

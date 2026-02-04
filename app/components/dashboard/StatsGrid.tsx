@@ -1,12 +1,18 @@
 import { FolderOpen, CheckCircle, Users, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import StatsGridSkeleton from "./StatsGridSkeleton";
 
 /* =======================
-   Component (UI ONLY)
+   Component 
 ======================= */
 
 export default function StatsGrid() {
-  // Temporary static data for UI testing
+  const [isLoading, setIsLoading] = useState(true);
+
+
+
+
+  // Temporary static data 
   const [stats] = useState({
     totalProjects: 12,
     activeProjects: 7,
@@ -14,6 +20,17 @@ export default function StatsGrid() {
     myTasks: 14,
     overdueIssues: 3,
   });
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+
+  if (isLoading) {
+    return <StatsGridSkeleton />;
+  }
+
 
   const statCards = [
     {

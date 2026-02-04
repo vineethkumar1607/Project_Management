@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Clock, AlertTriangle, User } from "lucide-react";
+import TasksSummarySkeleton from "./TasksSummarySkeleton";
 
 /* =======================
    Types
@@ -23,6 +24,11 @@ interface Task {
 ======================= */
 
 export default function TasksSummary() {
+   const [isLoading, setIsLoading] = useState(true);
+
+ 
+
+
   // Temporary mock logged in user 
   const user = { id: "user_1" };
 
@@ -64,6 +70,13 @@ export default function TasksSummary() {
       due_date: "2026-01-10",
     },
   ]);
+
+   useEffect(() => {
+      const timer = setTimeout(() => setIsLoading(false), 2000);
+      return () => clearTimeout(timer);
+    }, []);
+
+      if (isLoading) return <TasksSummarySkeleton />;
 
   /* =======================
      Derived Data

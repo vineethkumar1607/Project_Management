@@ -6,10 +6,10 @@ import RecentActivitySkeleton from "~/components/ui/RecentActivitySkeleton";
 import TaskSummarySkeleton from "~/components/ui/TaskSummarySkeleton";
 
 // Lazy-load heavy components 
-const StatsGrid = lazy(() => import("../components/StatsGrid"));
+const StatsGrid = lazy(() => import("../components/dashboard/StatsGrid"));
 const ProjectOverview = lazy(() => import("../components/ProjectOverview"));
 const RecentActivity = lazy(() => import("../components/RecentActivity"));
-const TasksSummary = lazy(() => import("../components/TasksSummary"));
+const TasksSummary = lazy(() => import("../components/dashboard/TasksSummary"));
 const CreateProjectDialogBox = lazy(() => import("../components/CreateProjectDialogBox"));
 
 // Types

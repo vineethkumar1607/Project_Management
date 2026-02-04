@@ -7,12 +7,13 @@ import {
   ScrollRestoration,
 } from "react-router";
 
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { useLocation } from "react-router";
-
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
-import { Loader2 } from "lucide-react";
+import { Provider } from "react-redux";
+import { store } from "./store/store";
+
 import "./app.css";
 import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { Navigate } from "react-router";
@@ -87,6 +88,7 @@ export default function App() {
       Main App Layout (Dashboard Pages)
   --------------------------------------------------- */
   return (
+     <Provider store={store}>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
 
       {/* -------------------------------
@@ -127,6 +129,7 @@ export default function App() {
       </SignedIn>
 
     </ClerkProvider>
+    </Provider>
   );
 
 }

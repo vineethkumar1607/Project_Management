@@ -1,119 +1,26 @@
 import { FolderOpen, CheckCircle, Users, AlertTriangle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useState } from "react";
 
 /* =======================
-   Types
-======================= */
-
-type ProjectStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
-type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
-
-interface User {
-  email: string;
-}
-
-interface Task {
-  id: string;
-  status: TaskStatus;
-  due_date?: string | null;
-  assignee?: User | null;
-}
-
-interface Project {
-  id: string;
-  status: ProjectStatus;
-  tasks: Task[];
-}
-
-interface Workspace {
-  name: string;
-  owner: User;
-  projects: Project[];
-}
-
-interface WorkspaceState {
-  currentWorkspace: Workspace | null;
-}
-
-interface RootState {
-  workspace: WorkspaceState;
-}
-
-/* =======================
-   Component
+   Component (UI ONLY)
 ======================= */
 
 export default function StatsGrid() {
-  const currentWorkspace = useSelector(
-    (state: RootState) => state.workspace.currentWorkspace
-  );
-
-  const currentUserEmail = currentWorkspace?.owner?.email;
-
-  const [stats, setStats] = useState({
-    totalProjects: 0,
-    activeProjects: 0,
-    completedProjects: 0,
-    myTasks: 0,
-    overdueIssues: 0,
+  // Temporary static data for UI testing
+  const [stats] = useState({
+    totalProjects: 12,
+    activeProjects: 7,
+    completedProjects: 5,
+    myTasks: 14,
+    overdueIssues: 3,
   });
-
-  useEffect(() => {
-    if (!currentWorkspace?.projects) return;
-
-    const projects = currentWorkspace.projects;
-
-    const totalProjects = projects.length;
-
-    const activeProjects = projects.filter(
-      (p) => p.status !== "CANCELLED" && p.status !== "COMPLETED"
-    ).length;
-
-    const completedProjects = projects.filter(
-      (p) => p.status === "COMPLETED"
-    ).length;
-
-    const myTasks = projects.reduce<number>((acc, project) => {
-      const tasks = project.tasks ?? [];
-      return (
-        acc +
-        tasks.filter(
-          (t) => t.assignee?.email === currentUserEmail
-        ).length
-      );
-    }, 0);
-
-    const overdueIssues = projects.reduce<number>((acc, project) => {
-      const tasks = project.tasks ?? [];
-      return (
-        acc +
-        tasks.filter(
-          (t) =>
-            t.due_date &&
-            new Date(t.due_date) < new Date() &&
-            t.status !== "DONE"
-        ).length
-      );
-    }, 0);
-
-    setStats({
-      totalProjects,
-      activeProjects,
-      completedProjects,
-      myTasks,
-      overdueIssues,
-    });
-  }, [currentWorkspace, currentUserEmail]);
 
   const statCards = [
     {
       icon: FolderOpen,
       title: "Total Projects",
       value: stats.totalProjects,
-      subtitle: currentWorkspace
-        ? `projects in ${currentWorkspace.name}`
-        : "",
+      subtitle: "projects in workspace",
       bgColor: "bg-blue-500/10",
       textColor: "text-blue-500",
     },
@@ -160,11 +67,9 @@ export default function StatsGrid() {
                   <p className="text-3xl font-bold text-zinc-800 dark:text-white">
                     {value}
                   </p>
-                  {subtitle && (
-                    <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
-                      {subtitle}
-                    </p>
-                  )}
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                    {subtitle}
+                  </p>
                 </div>
                 <div className={`p-3 rounded-xl ${bgColor}`}>
                   <Icon size={20} className={textColor} />

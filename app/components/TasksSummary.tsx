@@ -1,13 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowRight, Clock, AlertTriangle, User } from "lucide-react";
-import { useSelector } from "react-redux";
 
 /* =======================
-   Types & Interfaces
+   Types
 ======================= */
 
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
-
 type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
 
 interface Task {
@@ -20,52 +18,56 @@ interface Task {
   due_date?: string | null;
 }
 
-interface Project {
-  id: string;
-  tasks: Task[];
-}
-
-interface Workspace {
-  id: string;
-  projects: Project[];
-}
-
-interface WorkspaceState {
-  currentWorkspace: Workspace | null;
-}
-
-interface RootState {
-  workspace: WorkspaceState;
-}
-
 /* =======================
-   Component
+   Component 
 ======================= */
 
 export default function TasksSummary() {
-  const { currentWorkspace } = useSelector(
-    (state: RootState) => state.workspace
-  );
-
-  // TODO: Replace with real auth user (Clerk / backend)
+  // Temporary mock logged in user 
   const user = { id: "user_1" };
 
-  const [tasks, setTasks] = useState<Task[]>([]);
+  // Temporary mock data tasks 
+  const [tasks] = useState<Task[]>([
+    {
+      id: "1",
+      title: "Design dashboard layout",
+      type: "design",
+      priority: "HIGH",
+      status: "IN_PROGRESS",
+      assigneeId: "user_1",
+      due_date: "2026-02-01",
+    },
+    {
+      id: "2",
+      title: "Fix login redirect bug",
+      type: "bug",
+      priority: "MEDIUM",
+      status: "TODO",
+      assigneeId: "user_1",
+      due_date: "2026-01-20",
+    },
+    {
+      id: "3",
+      title: "Update API docs",
+      type: "documentation",
+      priority: "LOW",
+      status: "DONE",
+      assigneeId: "user_2",
+    },
+    {
+      id: "4",
+      title: "Resolve payment failure",
+      type: "bug",
+      priority: "HIGH",
+      status: "IN_PROGRESS",
+      assigneeId: "user_3",
+      due_date: "2026-01-10",
+    },
+  ]);
 
-  // Collect all tasks from all projects in the workspace
-  useEffect(() => {
-    if (!currentWorkspace?.projects) return;
-
-    const allTasks = currentWorkspace.projects.flatMap(
-      (project) => project.tasks ?? []
-    );
-
-    setTasks(allTasks);
-  }, [currentWorkspace]);
-
-  /* 
+  /* =======================
      Derived Data
- */
+  ======================= */
 
   const myTasks = tasks.filter(
     (task) => task.assigneeId === user.id

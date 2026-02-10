@@ -53,12 +53,13 @@ const Dashboard = () => {
         </button>
 
         {/* Dialog */}
-        <Suspense fallback={<div>Loading...</div>}>
-          <CreateProjectDialogBox
-            isDialogOpen={isDialogOpen}
-            setIsDialogOpen={setIsDialogOpen}
-          />
-        </Suspense>
+        {isDialogOpen && (
+          <Suspense fallback={<div />}>
+            <CreateProjectDialogBox
+              setIsDialogOpen={setIsDialogOpen}
+            />
+          </Suspense>
+        )}
       </header>
 
       {/* Stats Section */}
@@ -66,7 +67,7 @@ const Dashboard = () => {
         aria-label="Project statistics"
         className="mb-10"
       >
-        <Suspense fallback={<StatsGridSkeleton/>}>
+        <Suspense fallback={<StatsGridSkeleton />}>
           <StatsGrid />
         </Suspense>
       </section>
@@ -81,13 +82,13 @@ const Dashboard = () => {
             <ProjectOverview />
           </Suspense>
 
-          <Suspense fallback={<RecentActivitySkeleton/>}>
+          <Suspense fallback={<RecentActivitySkeleton />}>
             <RecentActivity />
           </Suspense>
         </div>
 
         <aside aria-label="Tasks summary">
-          <Suspense fallback={<TaskSummarySkeleton/>}>
+          <Suspense fallback={<TaskSummarySkeleton />}>
             <TasksSummary />
           </Suspense>
         </aside>

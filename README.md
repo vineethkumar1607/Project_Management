@@ -80,9 +80,28 @@ Performance Optimizations
 - Touch-friendly overlay  
 - Click outside to close  
 - Escape key support  
-- ARIA role-based navigation  
+- ARIA role-based navigation 
 
-##  6. Error Handling
+## 6. Create Project Dialog (Optimized Modal)
+
+Implemented a reusable **CreateProjectDialog** component for creating new projects.
+
+- Lazy-loaded using React.lazy
+- Conditionally mounted (renders only when opened)
+- Memoized using React.memo to prevent unnecessary re-renders
+- Controlled inputs for stable performance
+- Fully accessible (focus trap, keyboard support, ARIA compliant)
+
+
+- Dialog is lazy-loaded
+- Dialog mounts only when opened
+- Reduces initial bundle size
+- Improves first paint
+- Ensures smooth open/close animations
+
+
+
+##  7. Error Handling
 - Added **NotFound (404) Page**
 - Automatically served for unknown routes
 - Sidebar + Navbar are hidden on 404 page

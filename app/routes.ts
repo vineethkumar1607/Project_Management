@@ -6,6 +6,10 @@ export default [
     file: "routes/Dashboard.tsx",
   },
   {
+    path: "/projects",
+    file: "routes/Projects.tsx"
+  },
+  {
     path: "/login",
     file: "routes/Login.tsx",
   },

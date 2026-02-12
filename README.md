@@ -82,22 +82,52 @@ Performance Optimizations
 - Escape key support  
 - ARIA role-based navigation 
 
-## 6. Create Project Dialog (Optimized Modal)
+### Form System & Design Consistency (Global UI Enhancements)
+
+Standardized form behavior across the entire application by customizing base shadcn/ui components.
+
+Improvements include:
+
+- Consistent labeled form layout for all dialogs
+- Structured 2-column grid alignment for related fields
+- Full-width selects for primary inputs (Lead, Members)
+- Centralized Select dropdown styling with:
+  - Blue hover state
+  - Blue keyboard focus state
+  - Accessible interactions
+- Customized Input & Textarea focus styles:
+  - Thin black border on focus
+  - Removed default ring glow
+  - Cleaner modern SaaS look
+- Updated styles directly inside `/components/ui/*` to avoid repetition
+
+
+
+
+## 6. Create Project Dialog 
 
 Implemented a reusable **CreateProjectDialog** component for creating new projects.
 
+Features:
+
 - Lazy-loaded using React.lazy
 - Conditionally mounted (renders only when opened)
-- Memoized using React.memo to prevent unnecessary re-renders
-- Controlled inputs for stable performance
+- Memoized with React.memo to prevent unnecessary re-renders
+- Structured labeled form layout
+- 2-column responsive grid alignment
+- Status & Priority selectors
+- Start/End date inputs
+- Project Lead and Team Members dropdowns
+- Global Select hover/focus styling
+- Consistent Input & Textarea focus behavior
 - Fully accessible (focus trap, keyboard support, ARIA compliant)
 
-
-- Dialog is lazy-loaded
+Performance:
 - Dialog mounts only when opened
 - Reduces initial bundle size
 - Improves first paint
 - Ensures smooth open/close animations
+
 
 
 

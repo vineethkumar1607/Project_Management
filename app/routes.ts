@@ -6,9 +6,29 @@ export default [
     file: "routes/Dashboard.tsx",
   },
   {
-    path: "/projects",
-    file: "routes/Projects.tsx"
+    path: "/projects/:projectId",
+    file: "routes/ProjectLayout.tsx",
+    children: [
+      {
+        index: true,
+        file: "routes/ProjectTasks.tsx",
+      },
+      {
+        path: "analytics",
+        file: "routes/ProjectAnalytics.tsx",
+      },
+      {
+        path: "calendar",
+        file: "routes/ProjectCalendar.tsx",
+      },
+      {
+        path: "settings",
+        file: "routes/ProjectSettings.tsx",
+      },
+    ],
   },
+
+
   {
     path: "/login",
     file: "routes/Login.tsx",

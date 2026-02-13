@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback } from "react";
 import { NavLink } from "react-router";
+import ProjectSidebar from "./ProjectSideBar";
 // import MyTasksSidebar from "./MyTasksSidebar";
-// import ProjectSidebar from "./ProjectsSidebar";
+
 // import WorkspaceDropdown from "./WorkspaceDropdown";
 import {
   FolderOpen,
@@ -15,6 +16,12 @@ interface SidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: (value: boolean) => void;
 }
+
+const mockProjects = [
+  { id: "1", name: "Website Redesign" },
+  { id: "2", name: "Mobile App MVP" },
+];
+
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -128,6 +135,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) => {
 
           {/* Optional Extra Sections */}
           
+          <ProjectSidebar projects={mockProjects} />
           {/* tasksidebar
           project side bar */}
 

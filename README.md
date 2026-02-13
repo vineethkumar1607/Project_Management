@@ -128,10 +128,34 @@ Performance:
 - Improves first paint
 - Ensures smooth open/close animations
 
+## 7. Projects Module 
+
+Implemented a fully responsive Projects module following feature-based architecture.
+  ## Routing
+- Added /projects route using React Router v7 file-based routing
+- Integrated with global Layout (Navbar + Sidebar)
+- Protected under Clerk authentication
+  ## Projects Page (UI)
+- Responsive layout 
+- Header with contextual page description
+- Gradient “New Project” action button
+- Search input field (UI-ready)
+- Status filter dropdown (shadcn Select)
+- Priority filter dropdown (shadcn Select)
+- Grid-based project layou
+- Accessible semantic structure (<main>, <header>, <section>)
+  ## ProjectCard Component
+- Reusable and memoized
+- Fully typed with strict TypeScript interfaces
+- Status badge with dynamic color mapping
+- Priority display
+- Progress bar with ARIA attributes
+- Accessible navigation via Link
+- Responsive design and hover interactions
 
 
 
-##  7. Error Handling
+##  8. Error Handling
 - Added **NotFound (404) Page**
 - Automatically served for unknown routes
 - Sidebar + Navbar are hidden on 404 page

@@ -32,7 +32,7 @@ interface ProjectSidebarProps {
     * /projects/:projectId/:tab
     */
 const getProjectSubItems = (projectId: string) => [
-    { title: "Tasks", icon: Kanban, path: `/projects/${projectId}/tasks` },
+    { title: "Tasks", icon: Kanban, path: `/projects/${projectId}` },
     { title: "Analytics", icon: BarChart3, path: `/projects/${projectId}/analytics` },
     { title: "Calendar", icon: Calendar, path: `/projects/${projectId}/calendar` },
     { title: "Settings", icon: Settings, path: `/projects/${projectId}/settings` },
@@ -109,6 +109,7 @@ const ProjectSidebar = ({ projects }: ProjectSidebarProps) => {
                                     <NavLink
                                         key={subItem.title}
                                         to={subItem.path}
+                                        end={subItem.title === "Tasks"}
                                         /**
                                          * NavLink provides automatic active state detection.
                                          * Active sub-item gets highlighted.

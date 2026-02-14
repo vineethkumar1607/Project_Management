@@ -22,12 +22,12 @@ const ProjectLayout = () => {
         aria-label="Project sections"
       >
         <NavLink
-          to="tasks"
+          to="."
+          end
           className={({ isActive }) =>
-            `text-sm pb-2 transition ${
-              isActive
-                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                : "text-muted-foreground hover:text-foreground"
+            `text-sm pb-2 transition ${isActive
+              ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+              : "text-muted-foreground hover:text-foreground"
             }`
           }
         >
@@ -37,10 +37,9 @@ const ProjectLayout = () => {
         <NavLink
           to="analytics"
           className={({ isActive }) =>
-            `text-sm pb-2 transition ${
-              isActive
-                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                : "text-muted-foreground hover:text-foreground"
+            `text-sm pb-2 transition ${isActive
+              ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+              : "text-muted-foreground hover:text-foreground"
             }`
           }
         >
@@ -50,10 +49,9 @@ const ProjectLayout = () => {
         <NavLink
           to="calendar"
           className={({ isActive }) =>
-            `text-sm pb-2 transition ${
-              isActive
-                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                : "text-muted-foreground hover:text-foreground"
+            `text-sm pb-2 transition ${isActive
+              ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+              : "text-muted-foreground hover:text-foreground"
             }`
           }
         >
@@ -63,10 +61,9 @@ const ProjectLayout = () => {
         <NavLink
           to="settings"
           className={({ isActive }) =>
-            `text-sm pb-2 transition ${
-              isActive
-                ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-                : "text-muted-foreground hover:text-foreground"
+            `text-sm pb-2 transition ${isActive
+              ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+              : "text-muted-foreground hover:text-foreground"
             }`
           }
         >

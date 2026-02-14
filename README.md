@@ -160,6 +160,40 @@ Implemented a fully responsive Projects module following feature-based architect
 - Automatically served for unknown routes
 - Sidebar + Navbar are hidden on 404 page
 
+## 9. Project Module Architecture (Nested Routing)
+Implemented a scalable nested routing structure for project-level navigation.
+# Dynamic Project Routing
+The application now supports dynamic routes using:
+/projects/:projectId
+
+Each project contains nested sections:
+
+/projects/:projectId/tasks
+/projects/:projectId/analytics
+/projects/:projectId/calendar
+/projects/:projectId/settings
+
+## Project Layout System
+# Created a shared ProjectLayout component that:
+- Uses useParams() to extract projectId
+- Renders shared project header
+- Provides tab-based navigation
+- Uses <Outlet /> for nested rendering
+- Avoids re-rendering full layout on tab switch
+- Nested Routing Configuration
+- Routes are structured using React Router v7 framework mode:
+- Index route defaults to tasks
+- Child routes render inside ProjectLayout
+- Clean separation between layout and content
+
+## Project Sidebar
+- Built a dynamic ProjectSidebar component:
+- Displays workspace projects
+- Uses shadcn/ui Collapsible for expandable navigation
+- Links to dynamic project routes
+- Auto-expands active project based on URL
+- Fully accessible and keyboard-friendly
+
 ---
 
 #  Tech Stack

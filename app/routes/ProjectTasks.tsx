@@ -41,6 +41,14 @@ interface Task {
   dueDate: string;
 }
 
+const formatIndianDate = (dateString: string) => {
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(dateString));
+};
+
 
 /* -------------------------------------------------- */
 /* 2️⃣ Mock Data (Replace With API Later)            */
@@ -126,11 +134,11 @@ const columns = [
   }),
 
   columnHelper.accessor("status", {
-  header: "Status",
-  cell: ({ row }) => (
-    <StatusSelect defaultValue={row.original.status} />
-  ),
-}),
+    header: "Status",
+    cell: ({ row }) => (
+      <StatusSelect defaultValue={row.original.status} />
+    ),
+  }),
 
 
   columnHelper.accessor("priority", {
@@ -156,7 +164,15 @@ const columns = [
 
   columnHelper.accessor("dueDate", {
     header: "Due Date",
+    cell: ({ row }) => {
+      return (
+        <span className="text-sm">
+          {formatIndianDate(row.original.dueDate)}
+        </span>
+      );
+    },
   }),
+
 ];
 
 /* -------------------------------------------------- */

@@ -1,12 +1,30 @@
-import { NavLink, Outlet, useParams } from "react-router";
+import { Outlet, useNavigate, useLocation, useParams } from "react-router";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import {
+  ListTodo,
+  BarChart2,
+  Calendar,
+  Settings,
+} from "lucide-react";
 
 const ProjectLayout = () => {
   const { projectId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine active tab from URL
+  const pathSegments = location.pathname.split("/");
+  const lastSegment = pathSegments[pathSegments.length - 1];
+
+  const currentTab =
+    lastSegment === projectId || lastSegment === "projects"
+      ? "tasks"
+      : lastSegment;
 
   return (
     <div className="space-y-6">
       {/* ---------------- Project Header ---------------- */}
-      <header className="border-b border-gray-200 dark:border-zinc-800 pb-4">
+      <header className="border-b border-border pb-4">
         <h1 className="text-2xl font-semibold">
           Project {projectId}
         </h1>
@@ -16,62 +34,62 @@ const ProjectLayout = () => {
         </p>
       </header>
 
-      {/* ---------------- Project Tabs ---------------- */}
-      <nav
-        className="flex gap-4 border-b border-gray-200 dark:border-zinc-800 pb-2"
-        aria-label="Project sections"
+      {/* ---------------- Segmented Tabs ---------------- */}
+      <Tabs
+        value={currentTab}
+        onValueChange={(value) => {
+          if (value === "tasks") {
+            navigate(".");
+          } else {
+            navigate(value);
+          }
+        }}
       >
-        <NavLink
-          to="."
-          end
-          className={({ isActive }) =>
-            `text-sm pb-2 transition ${isActive
-              ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-              : "text-muted-foreground hover:text-foreground"
-            }`
-          }
-        >
-          Tasks
-        </NavLink>
+        <TabsList className="bg-muted p-1 w-fit gap-2">
+          <TabsTrigger
+            value="tasks"
+            className="flex items-center gap-2 px-4 py-2 text-sm
+        data-[state=active]:bg-background
+        data-[state=active]:shadow-sm"
+          >
+            <ListTodo size={16} />
+            Tasks
+          </TabsTrigger>
 
-        <NavLink
-          to="analytics"
-          className={({ isActive }) =>
-            `text-sm pb-2 transition ${isActive
-              ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-              : "text-muted-foreground hover:text-foreground"
-            }`
-          }
-        >
-          Analytics
-        </NavLink>
+          <TabsTrigger
+            value="analytics"
+            className="flex items-center gap-2 px-4 py-2 text-sm
+        data-[state=active]:bg-background
+        data-[state=active]:shadow-sm"
+          >
+            <BarChart2 size={16} />
+            Analytics
+          </TabsTrigger>
 
-        <NavLink
-          to="calendar"
-          className={({ isActive }) =>
-            `text-sm pb-2 transition ${isActive
-              ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-              : "text-muted-foreground hover:text-foreground"
-            }`
-          }
-        >
-          Calendar
-        </NavLink>
+          <TabsTrigger
+            value="calendar"
+            className="flex items-center gap-2 px-4 py-2 text-sm
+        data-[state=active]:bg-background
+        data-[state=active]:shadow-sm"
+          >
+            <Calendar size={16} />
+            Calendar
+          </TabsTrigger>
 
-        <NavLink
-          to="settings"
-          className={({ isActive }) =>
-            `text-sm pb-2 transition ${isActive
-              ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
-              : "text-muted-foreground hover:text-foreground"
-            }`
-          }
-        >
-          Settings
-        </NavLink>
-      </nav>
+          <TabsTrigger
+            value="settings"
+            className="flex items-center gap-2 px-4 py-2 text-sm
+        data-[state=active]:bg-background
+        data-[state=active]:shadow-sm"
+          >
+            <Settings size={16} />
+            Settings
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-      {/* ---------------- Nested Content ---------------- */}
+
+      {/* ---------------- Nested Route Content ---------------- */}
       <section className="pt-4">
         <Outlet />
       </section>

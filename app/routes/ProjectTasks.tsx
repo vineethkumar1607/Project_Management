@@ -1,31 +1,21 @@
 import { useState } from "react";
 
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  createColumnHelper,
-} from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable, createColumnHelper, } from "@tanstack/react-table";
 
-import type {
-  SortingState,
-} from "@tanstack/react-table";
+import type { SortingState, } from "@tanstack/react-table";
 
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "~/components/ui/table";
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, } from "~/components/ui/table";
+import { useMemo } from "react";
+import TaskFilterBar from "~/components/TaskFilterBar";
+
+import { filterTasks } from "~/lib/filtertasks";
 
 import { ArrowUpDown } from "lucide-react";
 import StatusSelect from "~/components/StatusSelect";
+import { useTaskFilters } from "~/hooks/useTaskFilters";
 
 /* -------------------------------------------------- */
-/* 1️⃣ Task Type Definition                          */
+/* Task Type Definition                          */
 /* -------------------------------------------------- */
 
 interface Task {
@@ -51,7 +41,7 @@ const formatIndianDate = (dateString: string) => {
 
 
 /* -------------------------------------------------- */
-/* 2️⃣ Mock Data (Replace With API Later)            */
+/* Mock Data           */
 /* -------------------------------------------------- */
 
 const tasks: Task[] = [
@@ -95,7 +85,7 @@ const tasks: Task[] = [
 
 
 /* -------------------------------------------------- */
-/* 3️⃣ Column Helper (Official v8 Pattern)           */
+/* Column Helper (Official v8 Pattern)           */
 /* -------------------------------------------------- */
 
 const columnHelper = createColumnHelper<Task>();
@@ -175,21 +165,46 @@ const columns = [
 
 ];
 
+
+
+
 /* -------------------------------------------------- */
-/* 4️⃣ Main Component                                */
+/* Main Component                                */
 /* -------------------------------------------------- */
 
 const ProjectTasks = () => {
+  const { filters } = useTaskFilters();
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  // Apply filtering
+  const filteredTasks = useMemo(
+    () => filterTasks(tasks, filters),
+    [tasks, filters]
+  );
+
+
   const table = useReactTable({
-    data: tasks,
+    data: filteredTasks,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  // Get unique assignees
+  const assignees = useMemo<string[]>(() => {
+    return Array.from(
+      new Set(
+        tasks
+          .map((t: Task) => t.assignee?.name)
+          .filter((name): name is string => Boolean(name))
+      )
+    );
+  }, [tasks]);
+
+
+
 
   return (
     <section className="space-y-6">
@@ -200,6 +215,7 @@ const ProjectTasks = () => {
           Manage and track project tasks
         </p>
       </header>
+      <TaskFilterBar assignees={assignees} />
 
       {/* ---------------- Table ---------------- */}
       <div className="rounded-md border overflow-hidden">

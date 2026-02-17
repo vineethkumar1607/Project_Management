@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useSearchParams } from "react-router";
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 type TaskType = "BUG" | "FEATURE" | "TASK";
@@ -22,28 +23,32 @@ export function useTaskFilters() {
     const [searchParams, setSearchParams] = useSearchParams();
 
     // Read current filters from URL
-    const filters: TaskFilters = {
+    const filters = useMemo<TaskFilters>(() => ({
         status: searchParams.get("status") as any,
         type: searchParams.get("type") as any,
         priority: searchParams.get("priority") as any,
         assignee: searchParams.get("assignee") as any,
-    };
+    }), [searchParams]);
+
 
     /**
      * Updates a single filter in URL
      */
     const updateFilter = (key: keyof TaskFilters & string, value?: string) => {
+        setSearchParams((prev) => {
+            const params = new URLSearchParams(prev);
 
-        const params = new URLSearchParams(searchParams);
+            if (!value) {
+                params.delete(key);
+            } else {
+                params.set(key, value);
+            }
 
-        if (!value) {
-            params.delete(key); // removes if empty
-        } else {
-            params.set(key, value);
-        }
-
-        setSearchParams(params);
+            return params;
+        });
     };
+
+
 
     /**
      * Reset all filters

@@ -9,6 +9,9 @@ The project follows real-world production architecture, focusing on:
  - Clean separation of concerns
  - Accessibility and performance best practices
 
+ This project is built in React Router v7 framework mode (file-based routing).
+Routes must be defined inside app/routes.
+
 # Features Implemented (Detailed Overview)+
 
 ##  1. Application Architecture
@@ -193,6 +196,28 @@ Each project contains nested sections:
 - Links to dynamic project routes
 - Auto-expands active project based on URL
 - Fully accessible and keyboard-friendly
+
+
+### 10. Tasks Module (Production-Level Data Table)
+Implemented a scalable and extensible task management system inside each project.
+## Tasks Routing
+Tasks are rendered via nested routing under:
+- /projects/:projectId
+The default index route renders the Tasks module.
+
+## Tasks Table Implementation
+- Built using @tanstack/react-table v8
+- Integrated with shadcn/ui Table components
+- Fully typed using strict TypeScript generics
+# Supports:
+  - Column sorting
+  - Custom cell rendering
+  - Status badges
+  - Priority formatting
+  - Empty state handling
+- Responsive container with horizontal scroll
+- Accessible semantic table structure
+
 
 ---
 

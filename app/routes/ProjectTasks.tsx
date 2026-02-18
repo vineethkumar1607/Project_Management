@@ -1,30 +1,21 @@
 import { useState } from "react";
 
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  createColumnHelper,
-} from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable, createColumnHelper, } from "@tanstack/react-table";
 
-import type {
-  SortingState,
-} from "@tanstack/react-table";
+import type { SortingState, } from "@tanstack/react-table";
 
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "~/components/ui/table";
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, } from "~/components/ui/table";
+import { useMemo } from "react";
+import TaskFilterBar from "~/components/TaskFilterBar";
+
+import { filterTasks } from "~/lib/filtertasks";
 
 import { ArrowUpDown } from "lucide-react";
+import StatusSelect from "~/components/StatusSelect";
+import { useTaskFilters } from "~/hooks/useTaskFilters";
 
 /* -------------------------------------------------- */
-/* 1️⃣ Task Type Definition                          */
+/* Task Type Definition                          */
 /* -------------------------------------------------- */
 
 interface Task {
@@ -32,11 +23,25 @@ interface Task {
   title: string;
   status: "TODO" | "IN_PROGRESS" | "DONE";
   priority: "LOW" | "MEDIUM" | "HIGH";
+  type: "BUG" | "FEATURE" | "TASK";
+  assignee: {
+    name: string;
+    avatar: string;
+  };
   dueDate: string;
 }
 
+const formatIndianDate = (dateString: string) => {
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(dateString));
+};
+
+
 /* -------------------------------------------------- */
-/* 2️⃣ Mock Data (Replace With API Later)            */
+/* Mock Data           */
 /* -------------------------------------------------- */
 
 const tasks: Task[] = [
@@ -45,26 +50,42 @@ const tasks: Task[] = [
     title: "Design login page",
     status: "IN_PROGRESS",
     priority: "HIGH",
+    type: "FEATURE",
+    assignee: {
+      name: "Vineeth",
+      avatar: "https://i.pravatar.cc/40?img=1",
+    },
     dueDate: "2026-02-20",
   },
   {
     id: "2",
-    title: "Setup database schema",
+    title: "Fix auth bug",
     status: "TODO",
     priority: "MEDIUM",
+    type: "BUG",
+    assignee: {
+      name: "Shruthi",
+      avatar: "https://i.pravatar.cc/40?img=2",
+    },
     dueDate: "2026-02-25",
   },
   {
     id: "3",
-    title: "Implement authentication",
+    title: "Database migration",
     status: "DONE",
     priority: "HIGH",
+    type: "TASK",
+    assignee: {
+      name: "Rahul",
+      avatar: "https://i.pravatar.cc/40?img=3",
+    },
     dueDate: "2026-02-15",
   },
 ];
 
+
 /* -------------------------------------------------- */
-/* 3️⃣ Column Helper (Official v8 Pattern)           */
+/* Column Helper (Official v8 Pattern)           */
 /* -------------------------------------------------- */
 
 const columnHelper = createColumnHelper<Task>();
@@ -82,50 +103,108 @@ const columns = [
     ),
   }),
 
-  columnHelper.accessor("status", {
-    header: "Status",
+  columnHelper.accessor("type", {
+    header: "Type",
     cell: ({ row }) => {
-      const status = row.original.status;
+      const type = row.original.type;
 
       const color =
-        status === "DONE"
-          ? "bg-green-100 text-green-700"
-          : status === "IN_PROGRESS"
-          ? "bg-blue-100 text-blue-700"
-          : "bg-gray-100 text-gray-700";
+        type === "BUG"
+          ? "bg-red-100 text-red-700"
+          : type === "FEATURE"
+            ? "bg-blue-100 text-blue-700"
+            : "bg-purple-100 text-purple-700";
 
       return (
         <span className={`px-2 py-1 rounded text-xs font-medium ${color}`}>
-          {status.replace("_", " ")}
+          {type}
         </span>
       );
     },
   }),
 
+  columnHelper.accessor("status", {
+    header: "Status",
+    cell: ({ row }) => (
+      <StatusSelect defaultValue={row.original.status} />
+    ),
+  }),
+
+
   columnHelper.accessor("priority", {
     header: "Priority",
+  }),
+  columnHelper.accessor("assignee", {
+    header: "Assignee",
+    cell: ({ row }) => {
+      const assignee = row.original.assignee;
+
+      return (
+        <div className="flex items-center gap-2">
+          <img
+            src={assignee.avatar}
+            alt={assignee.name}
+            className="w-6 h-6 rounded-full"
+          />
+          <span className="text-sm">{assignee.name}</span>
+        </div>
+      );
+    },
   }),
 
   columnHelper.accessor("dueDate", {
     header: "Due Date",
+    cell: ({ row }) => {
+      return (
+        <span className="text-sm">
+          {formatIndianDate(row.original.dueDate)}
+        </span>
+      );
+    },
   }),
+
 ];
 
+
+
+
 /* -------------------------------------------------- */
-/* 4️⃣ Main Component                                */
+/* Main Component                                */
 /* -------------------------------------------------- */
 
 const ProjectTasks = () => {
+  const { filters } = useTaskFilters();
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  // Apply filtering
+  const filteredTasks = useMemo(
+    () => filterTasks(tasks, filters),
+    [tasks, filters]
+  );
+
+
   const table = useReactTable({
-    data: tasks,
+    data: filteredTasks,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  // Get unique assignees
+  const assignees = useMemo<string[]>(() => {
+    return Array.from(
+      new Set(
+        tasks
+          .map((t: Task) => t.assignee?.name)
+          .filter((name): name is string => Boolean(name))
+      )
+    );
+  }, [tasks]);
+
+
+
 
   return (
     <section className="space-y-6">
@@ -136,6 +215,7 @@ const ProjectTasks = () => {
           Manage and track project tasks
         </p>
       </header>
+      <TaskFilterBar assignees={assignees} />
 
       {/* ---------------- Table ---------------- */}
       <div className="rounded-md border overflow-hidden">
@@ -149,9 +229,9 @@ const ProjectTasks = () => {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableHead>
                 ))}
               </TableRow>

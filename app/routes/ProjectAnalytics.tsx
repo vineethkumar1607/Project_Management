@@ -1,12 +1,195 @@
-import React from 'react'
+import React, { useMemo } from "react";
+import { CheckCircle, Clock, AlertTriangle, Users } from "lucide-react";
 
-const ProjectAnalytics = () => {
-  return (
-    <div>
-        Project Analytics
-      
-    </div>
-  )
+import MetricCard from "../components/MetricCard";
+import StatusBarChart from "../components/StatusBarChart";
+import TypePieChart from "../components/TypePieChart";
+import PriorityBreakdown from "../components/PriorityBreakdown";
+
+import type {
+  Task,
+  Project,
+  ChartData,
+  PriorityChartData,
+} from "../lib/analyticsTypes";
+
+interface ProjectAnalyticsProps {
+  project: Project;
+  tasks?: Task[];
 }
 
-export default ProjectAnalytics
+/* =====================================================
+   🔥 TEMP MOCK DATA (REMOVE WHEN BACKEND IS READY)
+===================================================== */
+const mockTasks: Task[] = [
+  {
+    id: "1",
+    title: "Design Login Page",
+    status: "DONE",
+    type: "FEATURE",
+    priority: "HIGH",
+    due_date: "2025-02-01",
+  },
+  {
+    id: "2",
+    title: "Fix API Bug",
+    status: "IN_PROGRESS",
+    type: "BUG",
+    priority: "MEDIUM",
+    due_date: "2025-02-10",
+  },
+  {
+    id: "3",
+    title: "Improve Dashboard",
+    status: "TODO",
+    type: "IMPROVEMENT",
+    priority: "LOW",
+    due_date: "2025-02-15",
+  },
+  {
+    id: "4",
+    title: "Payment Integration",
+    status: "DONE",
+    type: "FEATURE",
+    priority: "HIGH",
+    due_date: "2025-01-20",
+  },
+];
+
+/**
+ * Main analytics container component.
+ * Uses mock data automatically if real tasks are missing.
+ */
+const ProjectAnalytics: React.FC<ProjectAnalyticsProps> = ({
+  project,
+  tasks,
+}) => {
+  // Uses real tasks if available, otherwise fallback to mock
+  const effectiveTasks =
+    tasks && tasks.length > 0 ? tasks : mockTasks;
+
+  const analytics = useMemo(() => {
+    const now = new Date();
+    const total = effectiveTasks.length;
+
+    const statusMap: Record<string, number> = {
+      TODO: 0,
+      IN_PROGRESS: 0,
+      DONE: 0,
+    };
+
+    const typeMap: Record<string, number> = {};
+    const priorityMap: Record<string, number> = {
+      LOW: 0,
+      MEDIUM: 0,
+      HIGH: 0,
+    };
+
+    let completed = 0;
+    let inProgress = 0;
+    let overdue = 0;
+
+    effectiveTasks.forEach((task) => {
+      if (task.status === "DONE") completed++;
+      if (task.status === "IN_PROGRESS") inProgress++;
+      if (
+        new Date(task.due_date) < now &&
+        task.status !== "DONE"
+      )
+        overdue++;
+
+      statusMap[task.status]++;
+      typeMap[task.type] =
+        (typeMap[task.type] || 0) + 1;
+      priorityMap[task.priority]++;
+    });
+
+    const statusData: ChartData[] = Object.entries(
+      statusMap
+    ).map(([name, value]) => ({ name, value }));
+
+    const typeData: ChartData[] = Object.entries(
+      typeMap
+    ).map(([name, value]) => ({ name, value }));
+
+    const priorityData: PriorityChartData[] =
+      Object.entries(priorityMap).map(([name, value]) => ({
+        name,
+        value,
+        percentage: total
+          ? Math.round((value / total) * 100)
+          : 0,
+      }));
+
+    return {
+      total,
+      completed,
+      inProgress,
+      overdue,
+      statusData,
+      typeData,
+      priorityData,
+    };
+  }, [effectiveTasks]);
+
+  const completionRate = analytics.total
+    ? Math.round(
+      (analytics.completed / analytics.total) * 100
+    )
+    : 0;
+
+  return (
+    <main className="space-y-10">
+
+      {/* ================= HEADER ================= */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
+            Project Analytics
+          </h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Overview of task distribution and performance insights
+          </p>
+        </div>
+      </div>
+      {/* ================= KPI CARDS ================= */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <MetricCard
+          title="Completion Rate"
+          value={`${completionRate}%`}
+          icon={<CheckCircle className="text-green-500" />}
+          color="text-green-500"
+        />
+        <MetricCard
+          title="Active Tasks"
+          value={analytics.inProgress}
+          icon={<Clock className="text-blue-500" />}
+          color="text-blue-500"
+        />
+        <MetricCard
+          title="Overdue Tasks"
+          value={analytics.overdue}
+          icon={<AlertTriangle className="text-red-500" />}
+          color="text-red-500"
+        />
+        <MetricCard
+          title="Team Size"
+          value={project?.members?.length || 0}
+          icon={<Users className="text-purple-500" />}
+          color="text-purple-500"
+        />
+      </section>
+
+      {/* ================= CHARTS ================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <StatusBarChart data={analytics.statusData} />
+        <TypePieChart data={analytics.typeData} />
+      </div>
+
+      {/* ================= PRIORITY ================= */}
+      <PriorityBreakdown data={analytics.priorityData} />
+    </main>
+  );
+};
+
+export default React.memo(ProjectAnalytics);

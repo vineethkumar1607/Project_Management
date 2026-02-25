@@ -198,7 +198,7 @@ Each project contains nested sections:
 - Fully accessible and keyboard-friendly
 
 
-### 10. Tasks Module (Production-Level Data Table)
+### 10. Tasks Module (Data Table)
 Implemented a scalable and extensible task management system inside each project.
 ## Tasks Routing
 Tasks are rendered via nested routing under:
@@ -218,7 +218,45 @@ The default index route renders the Tasks module.
 - Responsive container with horizontal scroll
 - Accessible semantic table structure
 
+## 11. Project Settings Module
 
+Implemented a responsive and accessible Project Settings module under:
+
+
+### Layout
+- Replaced tab-based layout with responsive 2-column grid
+- Left: General project configuration
+- Right: Project members management
+- Consistent bordered sections aligned with Tasks module UI
+- Mobile-first responsive design
+
+### General Settings
+- Fully typed form using React Hook Form + Zod
+- Editable fields:
+  - Project Name
+  - Description
+  - Start & End Dates
+  - Status
+  - Priority
+- Accessible labels and ARIA attributes
+- Clean focus states aligned with global UI system
+
+### Members Management
+- Responsive member list
+- Role display (Team Lead / Member)
+- Change Role action
+- Remove member action
+- Improved mobile layout:
+  - Stacked action buttons
+  - Equal button width
+  - Proper alignment
+- Semantic structure using <section>, <ul>, and <li>
+
+UI Improvements:
+- Refined button alignment for better UX
+- Improved spacing consistency
+- Reduced visual imbalance in action buttons
+- Fully responsive and accessible design
 ---
 
 #  Tech Stack

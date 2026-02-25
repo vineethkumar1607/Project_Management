@@ -1,27 +1,50 @@
 // ProjectSettings.tsx
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
+
 import ProjectDetailsForm from "~/components/ProjectDetailsForm"
 import ProjectMembers from "~/components/ProjectMembers"
 
-export default function ProjectSettings() {
+const ProjectSettings = () => {
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 sm:p-6">
-      <h1 className="text-2xl font-semibold mb-6">Project Settings</h1>
+    <section className="space-y-6">
 
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-        </TabsList>
+      {/* -------- Header (Same Pattern as Tasks) -------- */}
+      <header>
+        <h2 className="text-lg font-semibold">Project Settings</h2>
+        <p className="text-sm text-muted-foreground">
+          Manage project configuration and team members
+        </p>
+      </header>
 
-        <TabsContent value="general">
+      {/* -------- Main Layout -------- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* -------- General Settings -------- */}
+        <div className="rounded-md border p-4 space-y-4">
+          <div className="mb-4">
+            <h3 className="text-md font-semibold">General</h3>
+            <p className="text-sm text-muted-foreground">
+              Update project information
+            </p>
+          </div>
+
           <ProjectDetailsForm />
-        </TabsContent>
+        </div>
 
-        <TabsContent value="members">
+        {/* -------- Members Section -------- */}
+        <div className="rounded-md border p-4">
+          <div className="mb-4">
+            <h3 className="text-md font-semibold">Members</h3>
+            <p className="text-sm text-muted-foreground">
+              Manage project team members and roles
+            </p>
+          </div>
+
           <ProjectMembers />
-        </TabsContent>
-      </Tabs>
-    </div>
+        </div>
+
+      </div>
+    </section>
   )
 }
+
+export default ProjectSettings

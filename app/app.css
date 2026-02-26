@@ -121,3 +121,10 @@
   }
 }
 
+
+
+/* Remove default event rendering */
+.fc .fc-event {
+  display: none !important;
+}
+

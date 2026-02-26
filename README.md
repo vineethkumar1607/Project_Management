@@ -259,6 +259,183 @@ UI Improvements:
 - Fully responsive and accessible design
 ---
 
+
+
+## 12. Project Calendar Module
+
+Implemented a fully interactive and responsive Calendar module under:
+
+/projects/:projectId/calendar
+
+### Overview
+
+The Calendar module provides a visual task scheduling interface within each project.  
+It is built using **FullCalendar** and follows performance, scalability, and accessibility best practices.
+
+### Calendar Features
+
+- Monthly grid view (DayGridMonth)
+- Custom day cell rendering
+- Full-cell highlighting for task dates
+- Dynamic task badge injection
+- Date click → opens Task Modal
+- Drag-and-drop support (UI-ready for backend integration)
+- Responsive layout with sidebar integration
+- Derived Upcoming & Overdue task panels
+- Optimized event lookup using Map for constant-time access (O(1))
+
+### Layout Structure
+
+The Calendar page uses a responsive grid system:
+
+- Desktop → 2/3 Calendar | 1/3 Sidebar (Upcoming & Overdue)
+- Tablet → Stacked layout
+- Mobile → Fully stacked vertical layout
+
+Sidebar includes:
+
+- Upcoming Tasks
+- Overdue Tasks
+
+Both sections:
+- Use semantic `<section>` and `<ul>` structures
+- Implement accessible `<time>` elements
+- Follow consistent UI system styling
+- Support keyboard navigation and focus states
+
+### Performance Optimizations
+
+- Events transformed using a custom `useCalendarEvents` hook
+- Precomputed `Map` for constant-time date lookups
+- Memoized derived state (upcoming & overdue tasks)
+- Avoided repeated `.find()` operations inside calendar cells
+- Local modal state (no unnecessary global state usage)
+
+### Accessibility
+
+- ARIA-labelled sections
+- Semantic HTML structure
+- Focus-visible styling
+- Screen-reader friendly time elements
+- Keyboard-accessible interactions
+
+## 13. Project Analytics Module
+
+Implemented a fully responsive and data-driven Analytics module under:
+
+/projects/:projectId/analytics
+
+### Overview
+
+The Analytics module provides real-time project insights using visual KPIs and interactive charts.  
+It transforms raw task data into meaningful performance metrics using memoized calculations and responsive visualizations.
+
+Built with:
+
+- Recharts (Bar & Pie charts)
+- Lucide React (icons)
+- TailwindCSS design system
+- Semantic & accessible chart structures
+- React.memo for render optimization
+
+---
+
+### Key Metrics (KPI Cards)
+
+Displayed at the top of the page:
+
+- Completion Rate (%)
+- Active Tasks (IN_PROGRESS)
+- Overdue Tasks
+- Team Size
+
+Each KPI:
+- Uses a reusable `MetricCard` component
+- Is memoized with React.memo
+- Supports semantic structure using `<article>`
+- Uses accessible ARIA labels
+- Includes smooth hover micro-interactions
+
+---
+
+### Charts Implemented
+
+#### 1. Tasks by Status (Bar Chart)
+
+- Displays TODO, IN_PROGRESS, DONE counts
+- Dynamic semantic color mapping
+- No deprecated `<Cell>` usage
+- Uses data-driven `fill` property
+- Custom tooltip component
+- Responsive via `ResponsiveContainer`
+- Accessible via `<section>` + `<figure>` + `<figcaption>`
+
+#### 2. Tasks by Type (Pie Chart)
+
+- Displays distribution of task types (Feature, Bug, Improvement, etc.)
+- Custom tooltip styling
+- Animated transitions
+- Legend support
+- Fully responsive container
+- Screen-reader friendly structure
+
+#### 3. Priority Breakdown
+
+- Calculates LOW / MEDIUM / HIGH distribution
+- Displays percentage relative to total tasks
+- Derived from memoized analytics logic
+- Fully typed using strict TypeScript interfaces
+
+---
+
+### Data Processing & Performance
+
+All analytics calculations are wrapped inside `useMemo()` to prevent unnecessary recalculations.
+
+Derived values include:
+
+- Total tasks
+- Completed tasks
+- In-progress tasks
+- Overdue tasks
+- Status distribution
+- Type distribution
+- Priority percentage breakdown
+
+Benefits:
+
+- Prevents redundant loops
+- Ensures stable chart data
+- Optimizes re-renders
+- Keeps analytics computation isolated from UI
+
+### Accessibility & Semantics
+
+- Semantic `<main>`, `<section>`, `<header>`, `<article>` structure
+- ARIA-labelled chart sections
+- Screen-reader descriptions using `<figcaption class="sr-only">`
+- Accessible tooltip contrast
+- Keyboard-friendly UI structure
+- Clear color contrast in charts
+
+### Layout Structure
+
+- Responsive KPI grid (1 → 2 → 4 columns)
+- Two-column chart layout on large screens
+- Stacked layout on mobile
+- Consistent bordered container system (aligned with Tasks & Settings modules)
+- Dark mode fully supported
+
+### Architecture Highlights
+
+- Reusable `MetricCard`, `StatusBarChart`, and `TypePieChart` components
+- Strict TypeScript typing for analytics data models
+- Clean separation between data processing and visualization
+- Future-ready for backend integration
+
+---
+
+
 #  Tech Stack
 
 | Area | Technology |

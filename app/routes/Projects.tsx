@@ -1,19 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Search } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "~/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "~/components/ui/select";
 
 import ProjectCard from "~/components/ProjectCard";
 import type { Project } from "~/components/ProjectCard";
+import { filterProjects } from "~/lib/filterProjects";
 
+// Mock data for development (replace with API data later)
 const mockProjects: Project[] = [
   {
     id: "1",
@@ -34,13 +30,19 @@ const mockProjects: Project[] = [
 ];
 
 const Projects = () => {
+  // Local state for client-side filtering controls
   const [searchTerm, setSearchTerm] = useState("");
   const [status, setStatus] = useState("ALL");
   const [priority, setPriority] = useState("ALL");
 
+  // Derived data: recompute only when filter inputs change
+  const filteredProjects = useMemo(
+    () => filterProjects(mockProjects, { searchTerm, status, priority }),
+    [searchTerm, status, priority]
+  );
+
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* ---------------- Header ---------------- */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Projects</h1>
@@ -49,15 +51,14 @@ const Projects = () => {
           </p>
         </div>
 
-        <Button  variant="gradient" >
+        <Button variant="gradient">
           <Plus className="size-4 mr-2" />
           New Project
         </Button>
       </header>
 
-      {/* ---------------- Search + Filters ---------------- */}
+      {/* Client-side filtering UI */}
       <section className="flex flex-col md:flex-row gap-4">
-        {/* Search */}
         <div className="relative w-full md:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -68,7 +69,6 @@ const Projects = () => {
           />
         </div>
 
-        {/* Status */}
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Status" />
@@ -83,7 +83,6 @@ const Projects = () => {
           </SelectContent>
         </Select>
 
-        {/* Priority */}
         <Select value={priority} onValueChange={setPriority}>
           <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Priority" />
@@ -98,9 +97,9 @@ const Projects = () => {
         </Select>
       </section>
 
-      {/* ---------------- Projects Grid ---------------- */}
+      {/* Render filtered results */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockProjects.map((project) => (
+        {filteredProjects.map((project) => (
           <ProjectCard key={project.id} project={project} />
         ))}
       </section>

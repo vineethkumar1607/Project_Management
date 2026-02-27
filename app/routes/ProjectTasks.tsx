@@ -219,7 +219,7 @@ const ProjectTasks = () => {
 
       {/* ---------------- Table ---------------- */}
       <div className="rounded-md border overflow-hidden">
-        <Table>
+        <Table className="table-fixed w-full">
           {/* Header */}
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

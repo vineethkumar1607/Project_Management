@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 type ProjectStatus =
   | "PLANNING"
@@ -37,7 +37,11 @@ const statusColors: Record<ProjectStatus, string> = {
 };
 
 const ProjectCard = ({ project }: ProjectCardProps) => {
-  const progressValue = Math.min(Math.max(project.progress ?? 0, 0), 100);
+  const progressValue = useMemo(() => {
+    return Math.min(Math.max(project.progress ?? 0, 0), 100);
+  }, [project.progress]);
+
+  const projectPath = `/projects/${project.id}`;
 
   return (
     <article
@@ -45,7 +49,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
       aria-labelledby={`project-title-${project.id}`}
     >
       <Link
-        to={`/projectsDetail?id=${project.id}&tab=tasks`}
+        to={projectPath}
         aria-label={`Open project ${project.name}`}
         className="block h-full bg-white dark:bg-zinc-950 
                    dark:bg-linear-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 
@@ -73,9 +77,8 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
         {/* Meta Info */}
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <span
-            className={`px-2 py-0.5 rounded text-xs font-medium ${
-              statusColors[project.status]
-            }`}
+            className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[project.status]
+              }`}
           >
             {project.status.replace("_", " ")}
           </span>

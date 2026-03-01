@@ -11,6 +11,42 @@ const ProjectOverview = lazy(() => import("../components/ProjectOverview"));
 const RecentActivity = lazy(() => import("../components/RecentActivity"));
 const TasksSummary = lazy(() => import("../components/dashboard/TasksSummary"));
 const CreateProjectDialogBox = lazy(() => import("../components/CreateProjectDialogBox"));
+import { FolderOpen, CheckCircle, Users, AlertTriangle } from "lucide-react"
+
+const statsData = [
+  {
+    title: "Total Projects",
+    value: 12,
+    icon: FolderOpen,
+    description: "projects in workspace",
+    iconBgColor: "bg-blue-500/10",
+    iconColor: "text-blue-500",
+  },
+  {
+    title: "Completed Projects",
+    value: 5,
+    icon: CheckCircle,
+    description: "of 12 total",
+    iconBgColor: "bg-emerald-500/10",
+    iconColor: "text-emerald-500",
+  },
+  {
+    title: "My Tasks",
+    value: 14,
+    icon: Users,
+    description: "assigned to me",
+    iconBgColor: "bg-purple-500/10",
+    iconColor: "text-purple-500",
+  },
+  {
+    title: "Overdue",
+    value: 3,
+    icon: AlertTriangle,
+    description: "need attention",
+    iconBgColor: "bg-amber-500/10",
+    iconColor: "text-amber-500",
+  }
+]
 
 // Types
 interface User {
@@ -43,6 +79,7 @@ const Dashboard = () => {
         </div>
 
         {/* New Project Button */}
+
         <button
           onClick={() => setIsDialogOpen(true)}
           className="flex items-center gap-2 px-5 py-2 text-sm rounded bg-linear-to-br from-blue-500 to-blue-600 text-white hover:opacity-90 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -68,7 +105,7 @@ const Dashboard = () => {
         className="mb-10"
       >
         <Suspense fallback={<StatsGridSkeleton />}>
-          <StatsGrid />
+          <StatsGrid stats={statsData} />
         </Suspense>
       </section>
 

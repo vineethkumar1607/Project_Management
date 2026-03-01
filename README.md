@@ -433,6 +433,137 @@ Benefits:
 - Clean separation between data processing and visualization
 - Future-ready for backend integration
 
+
+## 14. Team Module
+
+Implemented a fully scalable and production-ready Team Management module.
+
+Route:
+- `/team`
+
+### Overview
+
+The Team module allows workspace-level team management with a consistent UI system aligned with the Projects module.
+
+Built with:
+
+- TanStack React Table v8
+- shadcn/ui components
+- Controlled dialog pattern
+- Strict TypeScript typing
+- Reusable StatsGrid integration
+
+### Team Page Structure
+
+The Team page includes:
+
+- Header with primary CTA (Invite Member)
+- Stats overview grid
+- Search input for member filtering
+- Sortable team data table
+
+All sections follow semantic HTML structure using:
+
+- `<main>`
+- `<header>`
+- `<section>`
+
+### Team Statistics Grid
+
+Reused the existing `StatsGrid` component from Dashboard.
+
+Displays:
+
+- Total Members
+- Active Projects
+- Total Tasks
+
+Ensures:
+- Component reuse
+- Design consistency
+- Avoided duplicate UI logic
+
+### Team Table (TanStack Integration)
+
+Implemented using:
+
+- `@tanstack/react-table v8`
+- `createColumnHelper`
+- `getCoreRowModel`
+- `getSortedRowModel`
+
+Features:
+
+- Sortable Name column
+- Custom cell rendering
+- Role-based badge color mapping
+- Dynamic avatar color generation
+- Empty state handling
+- Fully typed column definitions
+- Semantic and accessible table structure
+
+#### Avatar Enhancements
+
+- Deterministic avatar background colors
+- Generated using character-based hashing
+- Improves visual differentiation between users
+
+#### Role Badge Styling
+
+- Role-based color mapping using a scalable object pattern
+- Avoided nested ternary conditions
+- Easily extensible for additional roles
+
+### Invite Member Dialog
+
+Refactored to follow the same architecture pattern as CreateProjectDialog.
+
+Improvements:
+
+- Controlled dialog pattern (`open` + `onOpenChange`)
+- Parent-managed state
+- Memoized component using `React.memo`
+- useCallback for submit handler
+- Accessible form structure
+- Role selector using shadcn Select
+- Loading state handling
+- DialogFooter consistency
+
+Performance:
+
+- Prevents unnecessary re-renders
+- Keeps modal logic isolated
+- Enables permission-based rendering in future
+
+### UI Consistency Improvements
+
+Standardized CTA button styling across:
+
+- New Project
+- Invite Member
+
+Ensures:
+
+- Consistent primary button design
+- Shared visual identity
+- Reduced styling duplication
+- Scalable design-system alignment
+
+### Search Functionality
+
+Implemented client-side filtering:
+
+- Filters members by name
+- Case-insensitive matching
+- Ready for debounce integration
+
+### Architecture Highlights
+
+- Feature-based modular design
+- Clean separation of UI and logic
+- Reusable data table pattern
+- Type-safe role management
+- Future-ready for backend integration
 ---
 
 
@@ -451,32 +582,4 @@ Benefits:
 | **Auth** | Clerk |
 | **Database (Upcoming)** | Neon PostgreSQL |
 
----
 
-#  Folder Structure 
-
-app/
-├── components/
-│   ├── layout/
-│   │   ├── Navbar.tsx
-│   │   └── Sidebar.tsx
-│   │
-│   ├── dashboard/
-│   │   ├── StatsGrid.tsx
-│   │   ├── StatsGridSkeleton.tsx
-│   │   ├── TasksSummary.tsx
-│   │   └── TasksSummarySkeleton.tsx
-│   │
-│   └── ui/
-│       
-│
-├── routes/
-│   ├── Dashboard.tsx
-│   ├── Login.tsx
-│   └── NotFound.tsx
-│
-├── assets/
-│   └── profile.svg
-│
-├── root.tsx
-└── app.css

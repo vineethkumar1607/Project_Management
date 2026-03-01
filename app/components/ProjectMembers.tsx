@@ -1,5 +1,5 @@
 import { Button } from "~/components/ui/button"
-import AddMemberDialog from "./AddMemberDialog"
+import AddMemberDialog from "./InviteMemberDialog"
 
 const PROJECT_ROLES = {
   MEMBER: "MEMBER",

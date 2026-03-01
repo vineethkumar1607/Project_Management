@@ -224,7 +224,7 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
               Cancel
             </Button>
 
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} variant={"gradient"}>
               {isSubmitting ? "Creating..." : "Create Project"}
             </Button>
           </DialogFooter>

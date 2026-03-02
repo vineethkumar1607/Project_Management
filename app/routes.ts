@@ -2,7 +2,7 @@ import { type RouteConfig } from "@react-router/dev/routes";
 
 export default [
   {
-    path: "/",                     // Home = Dashboard
+    path: "/",
     file: "routes/Dashboard.tsx",
   },
   {
@@ -31,6 +31,13 @@ export default [
       },
     ],
   },
+
+  // ✅ ADD THIS
+  {
+    path: "/tasks/:taskId",
+    file: "routes/TaskDetails.tsx",
+  },
+
   {
     path: "/team",
     file: "routes/Teampage.tsx",
@@ -40,7 +47,7 @@ export default [
     file: "routes/Login.tsx",
   },
   {
-    path: "*",                     // Catch-all for not found
+    path: "*",
     file: "routes/NotFound.tsx",
   },
 ] satisfies RouteConfig;

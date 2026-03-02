@@ -1,88 +1,194 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Users, FolderOpen, ListChecks, UserPlus } from "lucide-react";
 import StatsGrid from "~/components/dashboard/StatsGrid";
 import SearchInput from "~/components/SearchInput";
 import TeamTable from "~/components/TeamTable";
-import InviteMemberDialog from "../components/InviteMemberDialog"
+import InviteMemberDialog from "../components/InviteMemberDialog";
 import { Button } from "~/components/ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "~/components/ui/select";
+import { Badge } from "~/components/ui/badge";
+
+type Role = "ADMIN" | "MEMBER";
+
+interface Member {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+}
 
 export default function TeamPage() {
-    const [searchQuery, setSearchQuery] = useState("");
-    const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<Role | "ALL">("ALL");
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-    const handleSearch = (query: string) => {
-        setSearchQuery(query);
-        console.log("Searching for:", query);
+  const members: Member[] = [
+    { id: "1", name: "Vineeth", email: "oliverwatts@example.com", role: "ADMIN" },
+    { id: "2", name: "Shruthi", email: "alexsmith@example.com", role: "ADMIN" },
+    { id: "3", name: "Rahul", email: "johnwarrel@example.com", role: "MEMBER" },
+  ];
+
+  // Memoized role summary
+  const roleSummary = useMemo(() => {
+    const admins = members.filter((m) => m.role === "ADMIN").length;
+    const teamMembers = members.filter((m) => m.role === "MEMBER").length;
+
+    return {
+      admins,
+      teamMembers,
+      total: members.length,
     };
+  }, [members]);
 
-    const stats = [
-        {
-            title: "Total Members",
-            value: 3,
-            icon: Users,
-            iconBgColor: "bg-blue-500/10",
-            iconColor: "text-blue-500",
-        },
-        {
-            title: "Active Projects",
-            value: 2,
-            icon: FolderOpen,
-            iconBgColor: "bg-green-500/10",
-            iconColor: "text-green-500",
-        },
-        {
-            title: "Total Tasks",
-            value: 6,
-            icon: ListChecks,
-            iconBgColor: "bg-purple-500/10",
-            iconColor: "text-purple-500",
-        },
-    ];
+  // Combined filtering
+  const filteredMembers = useMemo(() => {
+    return members.filter((member) => {
+      const matchesSearch = member.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
 
-    const members = [
-        { id: "1", name: "Vineeth ", email: "oliverwatts@example.com", role: "ADMIN" as const },
-        { id: "2", name: "Shruthi", email: "alexsmith@example.com", role: "ADMIN" as const },
-        { id: "3", name: "Rahul", email: "johnwarrel@example.com", role: "ADMIN" as const },
-    ];
+      const matchesRole =
+        roleFilter === "ALL" || member.role === roleFilter;
 
-    // Logic to filter members based on search (to be connected with your debounce hook)
-    const filteredMembers = members.filter((m) =>
-        m.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+      return matchesSearch && matchesRole;
+    });
+  }, [members, searchQuery, roleFilter]);
 
-    return (
-        <main className="space-y-6 p-6">
-            <header className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold">Team</h1>
-                    <p className="text-muted-foreground text-sm">
-                        Manage team members and their contributions
-                    </p>
-                </div>
+  const stats = [
+    {
+      title: "Total Members",
+      value: roleSummary.total,
+      icon: Users,
+      iconBgColor: "bg-blue-500/20",
+      iconColor: "text-blue-600",
+    },
+    {
+      title: "Active Projects",
+      value: 2,
+      icon: FolderOpen,
+      iconBgColor: "bg-emerald-500/20",
+      iconColor: "text-emerald-600",
+    },
+    {
+      title: "Total Tasks",
+      value: 6,
+      icon: ListChecks,
+      iconBgColor: "bg-purple-500/20",
+      iconColor: "text-purple-600",
+    },
+  ];
 
-                <Button
-                    onClick={() => setIsInviteOpen(true)}
-                    variant="gradient"
-                    className="inline-flex items-center gap-2"
-                >
-                    <UserPlus size={16} />
-                    Invite Member
-                </Button>
+  return (
+    <main className="max-w-7xl mx-auto space-y-10 p-6">
 
-                <InviteMemberDialog
-                    isOpen={isInviteOpen}
-                    setIsOpen={setIsInviteOpen}
-                />
-            </header>
+      {/* Header */}
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Team Management
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Manage team members, roles and contributions
+          </p>
+        </div>
 
-            <StatsGrid stats={stats} />
+        <Button
+          onClick={() => setIsInviteOpen(true)}
+          variant="gradient"
+          className="inline-flex items-center gap-2 shadow-sm"
+        >
+          <UserPlus size={16} />
+          Invite Member
+        </Button>
+      </header>
 
-            <SearchInput
-                placeholder="Search team members..."
-                onSearch={handleSearch}
+      {/* Stats */}
+      <section aria-label="Team statistics">
+        <StatsGrid stats={stats} />
+      </section>
+
+      {/* Role Summary */}
+      <section className="flex flex-wrap gap-3">
+        <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+          Total: {roleSummary.total}
+        </Badge>
+
+        <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+          Admins: {roleSummary.admins}
+        </Badge>
+
+        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+          Members: {roleSummary.teamMembers}
+        </Badge>
+      </section>
+
+      {/* Search + Filter Section */}
+      <section className="bg-muted/40 shadow rounded-xl p-6 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
+        
+        <div className="w-full lg:w-2/3">
+          <SearchInput
+            placeholder="Search team members..."
+            onSearch={setSearchQuery}
+          />
+        </div>
+
+        <Select
+          value={roleFilter}
+          onValueChange={(value: Role | "ALL") =>
+            setRoleFilter(value)
+          }
+        >
+          <SelectTrigger className="w-full lg:w-48">
+            <SelectValue placeholder="Filter Role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All</SelectItem>
+            <SelectItem value="ADMIN">Admin</SelectItem>
+            <SelectItem value="MEMBER">Member</SelectItem>
+          </SelectContent>
+        </Select>
+      </section>
+
+      {/* Table or Empty State */}
+    <section className=" min-h-[450px]  ">
+        {filteredMembers.length > 0 ? (
+          <TeamTable members={filteredMembers} />
+        ) : (
+          <div className="border rounded-xl p-12 text-center bg-card shadow-sm">
+            <Users
+              className="mx-auto mb-4 text-blue-500"
+              size={40}
             />
+            <p className="text-xl font-semibold">
+              No team members found
+            </p>
+            <p className="text-muted-foreground text-sm mt-2">
+              Adjust your filters or invite a new member.
+            </p>
 
-            <TeamTable members={filteredMembers} />
-        </main>
-    );
+            <Button
+              onClick={() => setIsInviteOpen(true)}
+              variant="gradient"
+              className="mt-6 inline-flex items-center gap-2"
+            >
+              <UserPlus size={16} />
+              Invite Member
+            </Button>
+          </div>
+        )}
+      </section>
+
+      {/* Dialog */}
+      <InviteMemberDialog
+        isOpen={isInviteOpen}
+        setIsOpen={setIsInviteOpen}
+      />
+    </main>
+  );
 }

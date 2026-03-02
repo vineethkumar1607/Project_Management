@@ -45,7 +45,7 @@ const ProjectSidebar = ({ projects }: ProjectSidebarProps) => {
 
     return (
 
-        <nav className="mt-6 px-3" aria-label="Project navigation">
+        <nav className="mt- px-3" aria-label="Project navigation">
 
             {/* Sidebar section header */}
             <div className="flex items-center justify-between px-3 py-2">

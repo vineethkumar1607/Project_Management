@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Search, PanelLeft, Moon, Sun } from "lucide-react";
 import { UserButton } from "@clerk/clerk-react";
-import { images } from "~/assets";
-
 
 interface NavbarProps {
   isSidebarOpen: boolean;
@@ -10,10 +8,14 @@ interface NavbarProps {
 }
 
 const Navbar = ({ isSidebarOpen, setIsSidebarOpen }: NavbarProps) => {
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+
+    // Optional: Apply to document for actual dark mode support
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
   return (
@@ -37,7 +39,7 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen }: NavbarProps) => {
             <PanelLeft size={20} aria-hidden="true" />
           </button>
 
-          {/* Search Form */}
+          {/* Search */}
           <form
             role="search"
             className="relative flex-1 max-w-sm"
@@ -46,11 +48,13 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen }: NavbarProps) => {
             <label htmlFor="navbar-search" className="sr-only">
               Search projects or tasks
             </label>
+
             <Search
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-400"
               size={16}
               aria-hidden="true"
             />
+
             <input
               id="navbar-search"
               type="search"
@@ -66,31 +70,35 @@ const Navbar = ({ isSidebarOpen, setIsSidebarOpen }: NavbarProps) => {
           <button
             type="button"
             onClick={toggleTheme}
-            aria-label={`Activate ${theme === "light" ? "dark" : "light"} mode`}
-            className="size-9 flex items-center justify-center bg-white dark:bg-zinc-800 shadow rounded-lg transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-2"
+            aria-label={`Activate ${
+              theme === "light" ? "dark" : "light"
+            } mode`}
+            className="size-9 flex items-center justify-center bg-white dark:bg-zinc-800 shadow rounded-lg transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {theme === "light" ? (
-              <Moon className="text-gray-800 dark:text-gray-200" size={18} aria-hidden="true" />
+              <Moon
+                className="text-gray-800 dark:text-gray-200"
+                size={18}
+                aria-hidden="true"
+              />
             ) : (
-              <Sun className="text-yellow-400" size={18} aria-hidden="true" />
+              <Sun
+                className="text-yellow-400"
+                size={18}
+                aria-hidden="true"
+              />
             )}
           </button>
 
-          {/* User Avatar */}
+          {/* Clerk User Button */}
           <UserButton
+            afterSignOutUrl="/"
             appearance={{
               elements: {
                 avatarBox: "size-8",
               },
             }}
-          >
-            <img
-              src={images.profile}
-              alt="User profile"
-              className="size-8 rounded-full object-cover"
-            />
-          </UserButton>
-
+          />
         </div>
       </nav>
     </header>

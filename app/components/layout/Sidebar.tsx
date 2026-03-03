@@ -3,6 +3,7 @@ import { NavLink } from "react-router"
 import ProjectSidebar from "./ProjectSideBar"
 import MyTasksSidebar from "./MyTasksSidebar"
 import { FolderOpen, LayoutDashboard, Settings, Users, X } from "lucide-react"
+import { WorkspaceDropdown } from "../WorkspaceDropdown"
 
 interface SidebarProps {
   isSidebarOpen: boolean
@@ -65,6 +66,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
         className={`fixed sm:static z-30 top-0 left-0 h-screen ${SIDEBAR_WIDTH} bg-background border-r flex flex-col transform transition-transform duration-300
         ${isSidebarOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"}`}
       >
+        <WorkspaceDropdown />
         {/* A mobile-only close button located at the top right */}
         <button
           type="button"
@@ -85,8 +87,8 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
                   end
                   className={({ isActive }) => `
                     flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500
-                    ${isActive 
-                      ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium border border-blue-100 dark:border-blue-500/20" 
+                    ${isActive
+                      ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 font-medium border border-blue-100 dark:border-blue-500/20"
                       : "text-muted-foreground hover:bg-accent hover:text-foreground"}
                   `}
                 >

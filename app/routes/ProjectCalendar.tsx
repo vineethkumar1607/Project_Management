@@ -88,7 +88,7 @@ const ProjectCalendar = () => {
       {/* 
           LEFT SECTION — CALENDAR
           */}
-      <div className="lg:col-span-2 bg-white rounded-2xl p-4 shadow-sm">
+      <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-sm">
         <FullCalendar
           plugins={[dayGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
@@ -119,7 +119,7 @@ const ProjectCalendar = () => {
               const frame = arg.el.querySelector(".fc-daygrid-day-frame")
 
               // Applies full-cell highlight
-              frame?.classList.add("bg-blue-500", "text-white")
+              frame?.classList.add("bg-blue-500", "dark:bg-blue-600", "text-white")
 
               // Removes default FullCalendar event UI
               arg.el.querySelectorAll(".fc-event").forEach((el) => el.remove())
@@ -128,7 +128,7 @@ const ProjectCalendar = () => {
               const badge = document.createElement("div")
               badge.innerText = eventForDay?.title || ""
               badge.className =
-                "absolute bottom-2 left-2 text-xs bg-white text-blue-600 px-2 py-1 rounded-md font-semibold"
+                "absolute bottom-2 left-2 text-xs bg-white dark:bg-zinc-800 text-blue-600 px-2 py-1 rounded-md font-semibold"
 
               frame?.appendChild(badge)
             }

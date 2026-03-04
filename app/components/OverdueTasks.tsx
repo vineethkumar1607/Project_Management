@@ -8,7 +8,7 @@ const OverdueTasks = ({ tasks }: Props) => {
   return (
     <section
       aria-labelledby="overdue-heading"
-      className="bg-white rounded-2xl p-4 shadow-sm"
+      className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-sm"
     >
       <h2
         id="overdue-heading"
@@ -18,7 +18,7 @@ const OverdueTasks = ({ tasks }: Props) => {
       </h2>
 
       {tasks.length === 0 ? (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-zinc-400">
           No overdue tasks 🚀
         </p>
       ) : (
@@ -26,15 +26,15 @@ const OverdueTasks = ({ tasks }: Props) => {
           {tasks.map((task) => (
             <li
               key={task.id}
-              className="p-3 rounded-xl border border-red-200 bg-red-50 focus-within:ring-2 focus-within:ring-red-500"
+              className="p-3 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 focus-within:ring-2 focus-within:ring-red-500"
             >
-              <p className="font-medium text-red-700">
+              <p className="font-medium text-red-700 dark:text-red-400">
                 {task.title}
               </p>
 
               <time
                 dateTime={task.date}
-                className="text-xs text-red-500"
+                className="text-xs text-red-500 dark:text-red-300"
               >
                 {task.date}
               </time>

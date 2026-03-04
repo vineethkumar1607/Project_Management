@@ -3,15 +3,16 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
-import { Provider, useSelector } from "react-redux";
+import { Provider, } from "react-redux";
 import { store } from "./store/store";
 import { dark } from "@clerk/themes";
 
 import "./app.css";
-import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import { Navigate } from "react-router";
 import { useAppSelector } from "./store/hooks";
 import ClerkThemeSync from "./components/ClerkThemeSync";
+import ThemeInitializer from "./components/ThemeInitializer";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
@@ -41,7 +42,7 @@ export const links = () => [
 --------------------------------------------------- */
 export function Layout({ children }: { children: React.ReactNode }) {
 
-  const theme = useAppSelector((state) => state.theme.theme);
+
   return (
     <html lang="en">
       <head>
@@ -50,51 +51,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
           dangerouslySetInnerHTML={{
             __html: `
       /*
-        This script runs immediately when the HTML loads.
-        It executes before React hydrates the app.
+        This script runs immediately when the HTML loads,
+        before React hydration.
 
-        Goal:
+        Purpose:
         Prevent flash of incorrect theme (FOUC).
-        We apply the correct theme class to <html> before UI renders.
-      */
-      (function() {
-        // Read the saved theme from localStorage
-        const savedTheme = localStorage.getItem("theme");
 
-        // Reference to <html> element
+        We read the theme from localStorage and
+        apply the correct class to the <html> element
+        before React mounts.
+      */
+      (function () {
+        const savedTheme = localStorage.getItem("theme");
         const root = document.documentElement;
 
-        /*
-          If user explicitly selected dark mode,
-          immediately apply the dark class.
-        */
+        // If user previously selected dark theme
         if (savedTheme === "dark") {
           root.classList.add("dark");
         }
 
-        /*
-          If user explicitly selected light mode,
-          ensure dark class is removed.
-        */
-        else if (savedTheme === "light") {
-          root.classList.remove("dark");
-        }
-
-        /*
-          If theme is "system" or not set,
-          detect user's OS preference and apply accordingly.
-        */
+        // If user selected light theme or no theme stored
         else {
-          const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-          if (systemDark) {
-            root.classList.add("dark");
-          }
+          root.classList.remove("dark");
         }
       })();
     `,
           }}
         />
+
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
         {/* Dynamic <title>, <meta> from routes */}
@@ -108,6 +92,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* This is your App UI */}
         <Provider store={store}>
           <ClerkThemeSync>
+            <ThemeInitializer />
             {children}
           </ClerkThemeSync>
         </Provider>
@@ -141,13 +126,9 @@ export default function App() {
     const root = document.documentElement;
 
     root.classList.remove("light", "dark");
+    root.classList.add(theme);
 
-    if (theme === "system") {
-      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.add(systemDark ? "dark" : "light");
-    } else {
-      root.classList.add(theme);
-    }
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
   /* --------------------------------------------------

@@ -30,23 +30,20 @@ export default function ThemeInitializer() {
   }, [dispatch]);
 
   /*
-    Apply theme to DOM whenever it changes.
-    This controls Tailwind dark mode.
-  */
+      Apply theme to DOM whenever it changes.
+      This controls Tailwind dark mode.
+    */
   useEffect(() => {
     const root = document.documentElement;
 
     root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.add(systemDark ? "dark" : "light");
-    } else {
-      root.classList.add(theme);
-    }
+    root.classList.add(theme);
 
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+
+
 
   return null;
 }

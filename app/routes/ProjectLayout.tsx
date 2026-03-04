@@ -58,9 +58,17 @@ const ProjectLayout = () => {
 
           <TabsTrigger
             value="analytics"
-            className="flex items-center gap-2 px-4 py-2 text-sm
-        data-[state=active]:bg-background
-        data-[state=active]:shadow-sm"
+            className="
+flex items-center gap-2 px-4 py-2 text-sm
+text-muted-foreground
+hover:text-foreground
+hover:bg-accent
+transition-colors
+
+data-[state=active]:bg-background
+data-[state=active]:text-foreground
+data-[state=active]:shadow-sm
+"
           >
             <BarChart2 size={16} />
             Analytics

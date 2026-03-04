@@ -140,3 +140,56 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+
+/* ===============================
+   FullCalendar Dark Mode Support
+   =============================== */
+
+/* calendar background */
+.dark .fc {
+  background-color: transparent;
+  color: white;
+}
+
+/* header row (Sun Mon Tue...) */
+.dark .fc-col-header-cell {
+  background-color: #18181b;
+  color: white;
+}
+
+/* calendar day cells */
+.dark .fc-daygrid-day {
+  background-color: #18181b;
+}
+
+/* borders */
+.dark .fc-theme-standard td,
+.dark .fc-theme-standard th {
+  border-color: #3f3f46;
+}
+
+/* day numbers */
+.dark .fc-daygrid-day-number {
+  color: #e4e4e7;
+}
+
+/* today highlight */
+.dark .fc-day-today {
+  background-color: #27272a !important;
+}
+
+/* toolbar title */
+.dark .fc-toolbar-title {
+  color: white;
+}
+
+/* buttons */
+.dark .fc-button {
+  background-color: #3f3f46;
+  border: none;
+}
+
+.dark .fc-button:hover {
+  background-color: #52525b;
+}

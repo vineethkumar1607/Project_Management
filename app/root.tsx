@@ -5,14 +5,15 @@ import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
 import { Provider, } from "react-redux";
 import { store } from "./store/store";
-import { dark } from "@clerk/themes";
+import AuthProvider from "./providers/AuthProvider";
 
 import "./app.css";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import { CreateOrganization, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
 import { Navigate } from "react-router";
-import { useAppSelector } from "./store/hooks";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
 import ClerkThemeSync from "./components/ClerkThemeSync";
 import ThemeInitializer from "./components/ThemeInitializer";
+import { fetchWorkspaces } from "./store/workspaceThunk";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
@@ -89,11 +90,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
 
       <body>
-        {/* This is your App UI */}
+        {/* This is App UI */}
         <Provider store={store}>
           <ClerkThemeSync>
             <ThemeInitializer />
-            {children}
+
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+
           </ClerkThemeSync>
         </Provider>
         {/* Remembers scroll position between routes */}
@@ -121,6 +126,10 @@ export default function App() {
   const hideLayoutRoutes = ["/login", "/404"];
   const shouldHideLayout = hideLayoutRoutes.includes(location.pathname);
 
+  const { user, isLoaded } = useUser();
+  const dispatch = useAppDispatch();
+  const { workspaces } = useAppSelector((state) => state.workspace);
+
 
   useEffect(() => {
     const root = document.documentElement;
@@ -130,6 +139,17 @@ export default function App() {
 
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  // useEffect(() => {
+  //   if (isLoaded && user && workspaces.length === 0) {
+  //     dispatch(fetchWorkspaces());
+  //   }
+  // }, [isLoaded, user, workspaces.length, dispatch]);
+  useEffect(() => {
+    if (isLoaded && user) {
+      dispatch(fetchWorkspaces());
+    }
+  }, [isLoaded, user, dispatch]);
 
   /* --------------------------------------------------
       Main App Layout (Dashboard Pages)
@@ -147,6 +167,10 @@ export default function App() {
       <SignedIn>
         {shouldHideLayout ? (
           <Outlet />
+        ) : workspaces.length === 0 ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <CreateOrganization afterCreateOrganizationUrl="/" />
+          </div>
         ) : (
           <div className="flex bg-white dark:bg-zinc-950 min-h-screen">
             <Sidebar

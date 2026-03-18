@@ -14,9 +14,10 @@ import {
 } from "~/components/ui/dropdown-menu"
 
 import { Button } from "~/components/ui/button"
-import {type  RootState } from "~/store/store"
+import { type RootState } from "~/store/store"
 import { setCurrentWorkspace } from "~/store/workspaceSlice"
-import { dummyWorkspaces } from "~/assets/data"
+
+
 
 /**
  * WorkspaceDropdown
@@ -41,11 +42,12 @@ export function WorkspaceDropdown() {
   const navigate = useNavigate()
 
   // Get workspace state from Redux
-  const { currentWorkspaceId } = useSelector(
-    (state: RootState) => state.workspace
-  )
 
-  const currentWorkspace = dummyWorkspaces.find(
+  const { workspaces, currentWorkspaceId } = useSelector(
+    (state: RootState) => state.workspace
+  );
+
+  const currentWorkspace = workspaces.find(
     ws => ws.id === currentWorkspaceId
   )
 
@@ -57,7 +59,7 @@ export function WorkspaceDropdown() {
   return (
     <div className="px-3 py-3 border-b">
       <DropdownMenu>
-        {/* Trigger Button */}
+        {/* Trigger */}
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
@@ -65,16 +67,21 @@ export function WorkspaceDropdown() {
           >
             <div className="flex items-center gap-3 min-w-0">
               <img
-                src={currentWorkspace?.image}
+                src={
+                  currentWorkspace?.image_url ||
+                  "/default-avatar.png"
+                }
                 alt={currentWorkspace?.name}
                 className="w-8 h-8 rounded-md object-cover"
               />
+
               <div className="text-left min-w-0">
                 <p className="text-sm font-semibold truncate">
                   {currentWorkspace?.name ?? "Select Workspace"}
                 </p>
+
                 <p className="text-xs text-muted-foreground">
-                  {dummyWorkspaces.length} workspaces
+                  {workspaces.length} workspaces
                 </p>
               </div>
             </div>
@@ -83,18 +90,15 @@ export function WorkspaceDropdown() {
           </Button>
         </DropdownMenuTrigger>
 
-        {/* Dropdown Content */}
-        <DropdownMenuContent
-          align="start"
-          className="w-64"
-        >
+        {/* Dropdown */}
+        <DropdownMenuContent align="start" className="w-64">
           <DropdownMenuLabel>
             Workspaces
           </DropdownMenuLabel>
 
           <DropdownMenuSeparator />
 
-          {dummyWorkspaces.map(workspace => {
+          {workspaces.map(workspace => {
             const isActive =
               workspace.id === currentWorkspaceId
 
@@ -107,7 +111,10 @@ export function WorkspaceDropdown() {
                 className="flex items-center gap-3"
               >
                 <img
-                  src={workspace.image}
+                  src={
+                    workspace.image_url ||
+                    "/default-avatar.png"
+                  }
                   alt={workspace.name}
                   className="w-6 h-6 rounded-md"
                 />

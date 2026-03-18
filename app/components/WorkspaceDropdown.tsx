@@ -3,6 +3,8 @@
 import { Check, ChevronDown, Plus } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router"
+import { useClerk, useOrganizationList } from "@clerk/clerk-react"
+import { useEffect } from "react"
 
 import {
   DropdownMenu,
@@ -17,44 +19,52 @@ import { Button } from "~/components/ui/button"
 import { type RootState } from "~/store/store"
 import { setCurrentWorkspace } from "~/store/workspaceSlice"
 
-
-
 /**
  * WorkspaceDropdown
- *
- * Purpose:
  * Allows user to switch between workspaces in SaaS application.
- *
- * Behavior:
- * - Updates Redux workspace state
- * - Navigates to workspace-specific route
- * - Automatically updates sidebar/project context
- *
- * Built with shadcn for:
- * - Accessibility
- * - Keyboard navigation
- * - Escape handling
- * - Focus management
+ 
+ * Handles:
+ * - Workspace switching
+ * - Clerk org sync
+ * - Redux state update
+ * - Navigation
  */
 
 export function WorkspaceDropdown() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  // Get workspace state from Redux
+  // Clerk org control
+  const { setActive, isLoaded } = useOrganizationList()
 
+  // Clerk modal trigger
+  const { openCreateOrganization } = useClerk()
+
+  // Redux workspace state
   const { workspaces, currentWorkspaceId } = useSelector(
     (state: RootState) => state.workspace
-  );
-
-  const currentWorkspace = workspaces.find(
-    ws => ws.id === currentWorkspaceId
   )
 
-  const handleWorkspaceSelect = (workspaceId: string) => {
+  // Current workspace for UI
+  const currentWorkspace = workspaces.find(
+    (ws) => ws.id === currentWorkspaceId
+  )
+
+  // Switch workspace: Clerk + Redux + route
+  const handleWorkspaceSelect = async (workspaceId: string) => {
+    if (!isLoaded) return
+
+    await setActive({ organization: workspaceId })
     dispatch(setCurrentWorkspace(workspaceId))
     navigate(`/workspace/${workspaceId}`)
   }
+
+  // Sync Clerk when Redux changes
+  useEffect(() => {
+    if (currentWorkspaceId && isLoaded) {
+      setActive({ organization: currentWorkspaceId })
+    }
+  }, [currentWorkspaceId, isLoaded])
 
   return (
     <div className="px-3 py-3 border-b">
@@ -67,10 +77,7 @@ export function WorkspaceDropdown() {
           >
             <div className="flex items-center gap-3 min-w-0">
               <img
-                src={
-                  currentWorkspace?.image_url ||
-                  "/default-avatar.png"
-                }
+                src={currentWorkspace?.image_url || "/default-avatar.png"}
                 alt={currentWorkspace?.name}
                 className="w-8 h-8 rounded-md object-cover"
               />
@@ -92,29 +99,22 @@ export function WorkspaceDropdown() {
 
         {/* Dropdown */}
         <DropdownMenuContent align="start" className="w-64">
-          <DropdownMenuLabel>
-            Workspaces
-          </DropdownMenuLabel>
+          <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
 
           <DropdownMenuSeparator />
 
-          {workspaces.map(workspace => {
-            const isActive =
-              workspace.id === currentWorkspaceId
+          {/* Workspace list */}
+          {workspaces.map((workspace) => {
+            const isActive = workspace.id === currentWorkspaceId
 
             return (
               <DropdownMenuItem
                 key={workspace.id}
-                onClick={() =>
-                  handleWorkspaceSelect(workspace.id)
-                }
+                onClick={() => handleWorkspaceSelect(workspace.id)}
                 className="flex items-center gap-3"
               >
                 <img
-                  src={
-                    workspace.image_url ||
-                    "/default-avatar.png"
-                  }
+                  src={workspace.image_url || "/default-avatar.png"}
                   alt={workspace.name}
                   className="w-6 h-6 rounded-md"
                 />
@@ -132,7 +132,11 @@ export function WorkspaceDropdown() {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem className="text-blue-600">
+          {/* Create workspace (Clerk modal trigger) */}
+          <DropdownMenuItem
+            className="text-blue-600"
+            onClick={() => openCreateOrganization()}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Create Workspace
           </DropdownMenuItem>

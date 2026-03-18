@@ -519,7 +519,6 @@ Features:
 Refactored to follow the same architecture pattern as CreateProjectDialog.
 
 Improvements:
-
 - Controlled dialog pattern (`open` + `onOpenChange`)
 - Parent-managed state
 - Memoized component using `React.memo`
@@ -530,7 +529,6 @@ Improvements:
 - DialogFooter consistency
 
 Performance:
-
 - Prevents unnecessary re-renders
 - Keeps modal logic isolated
 - Enables permission-based rendering in future
@@ -538,12 +536,10 @@ Performance:
 ### UI Consistency Improvements
 
 Standardized CTA button styling across:
-
 - New Project
 - Invite Member
 
 Ensures:
-
 - Consistent primary button design
 - Shared visual identity
 - Reduced styling duplication
@@ -564,7 +560,189 @@ Implemented client-side filtering:
 - Reusable data table pattern
 - Type-safe role management
 - Future-ready for backend integration
----
+
+# API Integration & State Management
+The application integrates with a backend service using a structured API layer and centralized state management.
+
+## API Client Architecture
+A reusable Axios client is configured to handle all API requests.
+
+### Features:
+
+* Centralized base URL configuration
+* Automatic JSON headers
+* Request interceptor for authentication token injection
+* Scalable structure for all API modules
+
+apiClient.interceptors.request.use(async (config) => {
+  const token = await getToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+
+## Authentication Flow (Clerk Integration)
+Authentication is managed using Clerk.
+
+### Flow:
+
+1. Clerk provides `getToken()` via `useAuth()`
+2. Token is stored globally using a setter function
+3. Axios interceptor attaches token to every request
+
+### Components:
+
+* `AuthProvider`
+* `authToken.ts`
+
+This ensures all API requests are automatically authenticated.
+
+
+## Workspace API Layer
+A dedicated API module handles all workspace-related backend communication.
+
+### Example:
+
+export const workspaceApi = {
+  getAll: async () => {
+    const res = await apiClient.get("/api/workspace");
+    return res.data.data;
+  }
+};
+
+## Redux State Management
+Redux Toolkit is used for global state management.
+
+### Workspace Slice Features:
+
+* Stores all user workspaces
+* Maintains current workspace selection
+* Persists workspace ID in localStorage
+* Handles API loading and error states
+
+### Async Thunks:
+
+* `fetchWorkspaces` → fetches workspace data from backend
+* `setWorkspaceWithPersistence` → syncs Redux + localStorage
+* `deleteWorkspaceWithCleanup` → removes workspace safely
+
+## Workspace Persistence Logic
+
+The selected workspace is persisted using localStorage:
+
+* Automatically restored on app reload
+* Falls back to first available workspace if invalid
+* Ensures consistent user experience across sessions
+
+## Task State Management
+A dedicated task slice is implemented for managing task data.
+
+### Features:
+* Add, update, delete tasks
+* Store project-specific tasks
+* Designed for future backend integration
+
+## Type Safety
+All API responses and state are strictly typed using TypeScript.
+
+### Example:
+export interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+  image_url?: string;
+}
+
+This ensures:
+* Safer API integration
+* Better developer experience
+* Fewer runtime errors
+
+## Architecture Summary
+
+Clerk Auth → Token → Axios Interceptor
+        ↓
+   API Layer (workspaceApi)
+        ↓
+   Redux Thunks
+        ↓
+   Redux Store (workspaceSlice)
+        ↓
+   UI Components
+
+This layered architecture ensures:
+
+* Clean separation of concerns
+* Scalability
+* Maintainability
+
+
+
+## Workspace & Organization Management
+
+Implemented a multi-tenant workspace system using Clerk Organizations integrated with Redux state.
+
+### Workspace Dropdown
+
+- Displays all available workspaces (organizations)
+- Highlights the currently active workspace
+- Allows seamless switching between workspaces
+- Updates:
+  - Clerk active organization (auth context)
+  - Redux workspace state (UI context)
+  - Application route (`/workspace/:workspaceId`)
+
+### Organization Switching Flow
+
+Workspace selection follows a synchronized flow:
+
+1. Clerk `setActive()` updates the organization context
+2. Redux updates the current workspace state
+3. Application navigates to workspace-specific route
+
+This ensures:
+- Consistent auth context
+- Correct API scoping
+- UI state synchronization
+
+### Create Workspace (Clerk Integration)
+
+- Uses Clerk's `openCreateOrganization()` API
+- Opens a fully managed modal (centered, responsive)
+- Handles:
+  - Organization creation
+  - Validation
+  - Closing interactions (ESC, outside click)
+
+No custom modal implementation is required.
+
+### State Synchronization
+
+- Redux stores `currentWorkspaceId`
+- `useEffect` ensures Clerk stays in sync with Redux
+- Prevents mismatch between UI and auth context
+
+### Persistence
+
+- Workspace ID is persisted in localStorage
+- Automatically restored on reload
+- Falls back to a valid workspace if needed
+
+### Architecture Insight
+
+Clerk handles:
+- Authentication
+- Organization context
+
+Redux handles:
+- UI state
+- Workspace selection
+
+This separation ensures scalability and maintainability in a multi-tenant SaaS architecture.
 
 
 #  Tech Stack

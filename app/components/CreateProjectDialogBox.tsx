@@ -1,10 +1,4 @@
-import {
-  memo,
-  useState,
-  useCallback,
-  type FC,
-} from "react";
-
+import { memo, useEffect, type FC } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,11 +7,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "~/components/ui/dialog";
-
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
-
 import {
   Select,
   SelectContent,
@@ -25,6 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+
+import { useDispatch, useSelector } from "react-redux";
+import { createProject } from "~/store/projectThunk";
+import type { AppDispatch, RootState } from "~/store/store";
+import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
+
+import { useForm, Controller } from "react-hook-form";
+import toast from "react-hot-toast";
 
 /* ======================= */
 
@@ -34,65 +34,110 @@ interface CreateProjectDialogProps {
 
 /* ======================= */
 
-const mockMembers = [
-  { id: "1", name: "vineeth@gmail.com" },
-  { id: "2", name: "shruthi@gmail.com" },
-  { id: "3", name: "vikram@gmail.com" },
-  { id: "4", name: "satya@gmail.com" },
-];
+type FormData = {
+  name: string;
+  description?: string; 
+  status: string;
+  priority: string;
+  startDate?: string;
+  endDate?: string;
+  lead?: string;
+  members: string[];
+};
 
 /* ======================= */
 
 const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
   setIsDialogOpen,
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
 
-  const [status, setStatus] = useState("PLANNING");
-  const [priority, setPriority] = useState("MEDIUM");
+  const workspaceId = useSelector(
+    (state: RootState) => state.workspace.currentWorkspaceId
+  );
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const membersList = useSelector(
+    (state: RootState) => state.workspace.members
+  );
+  console.log("membersList", membersList)
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    defaultValues: {
+      name: "",
+      status: "PLANNING",
+      priority: "MEDIUM",
+      startDate: "",
+      endDate: "",
+      lead: "",
+      members: [],
+    },
+  });
 
-  const [lead, setLead] = useState("");
-  const [members, setMembers] = useState<string[]>([]);
+  const members = watch("members");
+
 
   /* ======================= */
 
-  const handleMemberToggle = (id: string) => {
-    setMembers((prev) =>
-      prev.includes(id)
-        ? prev.filter((m) => m !== id)
-        : [...prev, id]
-    );
+  const handleMemberToggle = (email: string) => {
+    const updated = members.includes(email)
+      ? members.filter((m) => m !== email)
+      : [...members, email];
+
+    setValue("members", updated);
   };
 
   /* ======================= */
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: FormData) => {
+    if (!workspaceId) return;
 
-    setIsSubmitting(true);
+    const toastId = toast.loading("Creating project...");
 
-    const payload = {
-      status,
-      priority,
-      startDate,
-      endDate,
-      lead,
-      members,
+    const transformedPayload = {
+      workspaceId,
+      name: data.name,
+     description: data.description || "",
+      status: data.status,
+      priority: data.priority,
+      progress: 0,
+
+      start_date: data.startDate,
+      end_date: data.endDate,
+      team_lead: data.lead,
+      team_members: data.members,
     };
 
-    console.log(payload);
+    console.log("FINAL PAYLOAD:", transformedPayload);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await dispatch(
+        createProject({
+          workspaceId,
+          payload: transformedPayload,
+        })
+      ).unwrap();
+      console.log("CREATED PROJECT:", data);
+
+      toast.success("Project created", { id: toastId });
+
       setIsDialogOpen(false);
-    }, 1000);
-  }, [status, priority, startDate, endDate, lead, members, setIsDialogOpen]);
+    } catch (err: any) {
+      toast.error(err || "Failed", { id: toastId });
+    }
+  };
 
   /* ======================= */
-
+  useEffect(() => {
+    if (workspaceId) {
+      dispatch(fetchWorkspaceMembers(workspaceId));
+    }
+  }, [workspaceId]);
   return (
     <Dialog open onOpenChange={setIsDialogOpen}>
       <DialogContent className="sm:max-w-xl">
@@ -104,19 +149,26 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
           {/* Project Name */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Project Name</label>
-            <Input placeholder="Enter project name" required />
+            <Input
+              {...register("name", { required: "Project name is required" })}
+              placeholder="Enter project name"
+            />
+            {errors.name && (
+              <p className="text-red-500 text-xs">
+                {errors.name.message}
+              </p>
+            )}
           </div>
 
           {/* Description */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Description</label>
-            <Textarea placeholder="Project description" />
+            <Textarea {...register("description")} placeholder="Project description" />
           </div>
 
           {/* Status + Priority */}
@@ -124,97 +176,117 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PLANNING">Planning</SelectItem>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="ON_HOLD">On Hold</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="COMPLETED">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
+
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PLANNING">Planning</SelectItem>
+                      <SelectItem value="ACTIVE">Active</SelectItem>
+                      <SelectItem value="ON_HOLD">On Hold</SelectItem>
+                      <SelectItem value="COMPLETED">Completed</SelectItem>
+                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Priority</label>
-              <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="LOW">Low</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="HIGH">High</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
+              <Controller
+                name="priority"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="LOW">Low</SelectItem>
+                      <SelectItem value="MEDIUM">Medium</SelectItem>
+                      <SelectItem value="HIGH">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+          </div>
 
           {/* Dates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Start Date</label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full"
-              />
+              <Input type="date" {...register("startDate")} />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">End Date</label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full"
-              />
+              <Input type="date" {...register("endDate")} />
             </div>
+
           </div>
 
-
-          {/* Project Lead (FULL WIDTH) */}
+          {/* Lead */}
           <div className="space-y-2 w-full">
             <label className="text-sm font-medium">Project Lead</label>
-            <Select value={lead} onValueChange={setLead}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select lead" />
-              </SelectTrigger>
-              <SelectContent>
-                {mockMembers.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+            <Controller
+              name="lead"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select lead" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {membersList.map((m) => (
+                      <SelectItem key={m.email} value={m.email}>
+                        {m.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
-
-          {/* Team Members (FULL WIDTH) */}
+          {/* Members */}
           <div className="space-y-2 w-full">
             <label className="text-sm font-medium">Team Members</label>
+
             <Select onValueChange={(value) => handleMemberToggle(value)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Add team members" />
               </SelectTrigger>
               <SelectContent>
-                {mockMembers.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {members.includes(m.id) ? `✓ ${m.name}` : m.name}
+                {membersList.map((m) => (
+                  <SelectItem key={m.email} value={m.email}>
+                    {members.includes(m.email) ? `✓ ${m.email}` : m.email}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-
+          {/* Footer */}
           <DialogFooter>
             <Button
               type="button"
@@ -224,13 +296,12 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
               Cancel
             </Button>
 
-            <Button type="submit" disabled={isSubmitting} variant={"gradient"}>
+            <Button type="submit" disabled={isSubmitting} variant="gradient">
               {isSubmitting ? "Creating..." : "Create Project"}
             </Button>
           </DialogFooter>
+
         </form>
-
-
       </DialogContent>
     </Dialog>
   );

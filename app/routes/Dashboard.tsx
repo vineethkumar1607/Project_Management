@@ -1,119 +1,85 @@
-import { Suspense, lazy, useState, memo } from "react";
+import { Suspense, lazy, useState, memo, useEffect } from "react";
 import { Plus } from "lucide-react";
 import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
 import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
 import RecentActivitySkeleton from "~/components/ui/RecentActivitySkeleton";
 import TaskSummarySkeleton from "~/components/ui/TaskSummarySkeleton";
+import { useUser } from "@clerk/clerk-react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchWorkspaces } from "~/store/workspaceThunk";
+import type { AppDispatch, RootState } from "~/store/store";
+import { fetchProjects } from "~/store/projectThunk";
 
-// Lazy-load heavy components 
+// Lazy components
 const StatsGrid = lazy(() => import("../components/dashboard/StatsGrid"));
 const ProjectOverview = lazy(() => import("../components/ProjectOverview"));
 const RecentActivity = lazy(() => import("../components/RecentActivity"));
 const TasksSummary = lazy(() => import("../components/dashboard/TasksSummary"));
 const CreateProjectDialogBox = lazy(() => import("../components/CreateProjectDialogBox"));
-import { FolderOpen, CheckCircle, Users, AlertTriangle } from "lucide-react"
-
-const statsData = [
-  {
-    title: "Total Projects",
-    value: 12,
-    icon: FolderOpen,
-    description: "projects in workspace",
-    iconBgColor: "bg-blue-500/10",
-    iconColor: "text-blue-500",
-  },
-  {
-    title: "Completed Projects",
-    value: 5,
-    icon: CheckCircle,
-    description: "of 12 total",
-    iconBgColor: "bg-emerald-500/10",
-    iconColor: "text-emerald-500",
-  },
-  {
-    title: "My Tasks",
-    value: 14,
-    icon: Users,
-    description: "assigned to me",
-    iconBgColor: "bg-purple-500/10",
-    iconColor: "text-purple-500",
-  },
-  {
-    title: "Overdue",
-    value: 3,
-    icon: AlertTriangle,
-    description: "need attention",
-    iconBgColor: "bg-amber-500/10",
-    iconColor: "text-amber-500",
-  }
-]
-
-// Types
-interface User {
-  fullName: string;
-}
 
 const Dashboard = () => {
-  const user: User = { fullName: "User" };
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const { user, isLoaded } = useUser();
+  const dispatch = useDispatch<AppDispatch>();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const currentWorkspaceId = useSelector(
+    (state: RootState) => state.workspace.currentWorkspaceId
+  );
+  //  Fetch data from 
+  useEffect(() => {
+    dispatch(fetchWorkspaces());
+
+    if (currentWorkspaceId) {
+      dispatch(fetchProjects(currentWorkspaceId));
+    }
+  }, [dispatch, currentWorkspaceId]);
+
+  if (!isLoaded) {
+    return (
+      <main className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <div className="h-5 w-40 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse mb-2" />
+          <div className="h-3 w-64 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <main
-      className="max-w-6xl mx-auto"
-      aria-labelledby="dashboard-heading"
-      role="main"
-    >
-      {/* Header Section */}
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+    <main className="max-w-6xl mx-auto">
+      {/* Header */}
+      <header className="flex flex-col lg:flex-row justify-between gap-6 mb-8">
         <div>
-          <h1
-            id="dashboard-heading"
-            className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-1"
-          >
-            Welcome, {user.fullName}
+          <h1 className="text-lg sm:text-xl font-semibold">
+            Welcome, {user?.fullName || user?.firstName || "User"}
           </h1>
-
-          <p className="text-gray-500 dark:text-zinc-400 text-sm">
+          <p className="text-sm text-gray-500">
             Here’s what’s happening with your projects today.
           </p>
         </div>
 
-        {/* New Project Button */}
-
         <button
           onClick={() => setIsDialogOpen(true)}
-          className="flex items-center gap-2 px-5 py-2 text-sm rounded bg-linear-to-br from-blue-500 to-blue-600 text-white hover:opacity-90 transition focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label="Create new project"
+          className="flex items-center gap-2 px-5 py-2 text-sm rounded bg-blue-600 text-white"
         >
-          <Plus size={16} aria-hidden="true" />
+          <Plus size={16} />
           New Project
         </button>
 
-        {/* Dialog */}
         {isDialogOpen && (
           <Suspense fallback={<div />}>
-            <CreateProjectDialogBox
-              setIsDialogOpen={setIsDialogOpen}
-            />
+            <CreateProjectDialogBox setIsDialogOpen={setIsDialogOpen} />
           </Suspense>
         )}
       </header>
 
-      {/* Stats Section */}
-      <section
-        aria-label="Project statistics"
-        className="mb-10"
-      >
-        <Suspense fallback={<StatsGridSkeleton />}>
-          <StatsGrid stats={statsData} />
-        </Suspense>
-      </section>
+      {/* Stats */}
+      <Suspense fallback={<StatsGridSkeleton />}>
+        <StatsGrid />
+      </Suspense>
 
-      {/* Main Content Grid */}
-      <section
-        aria-label="Dashboard content"
-        className="grid lg:grid-cols-3 gap-8"
-      >
+      {/* Content */}
+      <section className="grid lg:grid-cols-3 gap-8 mt-6">
         <div className="lg:col-span-2 space-y-8">
           <Suspense fallback={<ProjectOverviewSkeleton />}>
             <ProjectOverview />
@@ -124,7 +90,7 @@ const Dashboard = () => {
           </Suspense>
         </div>
 
-        <aside aria-label="Tasks summary">
+        <aside>
           <Suspense fallback={<TaskSummarySkeleton />}>
             <TasksSummary />
           </Suspense>

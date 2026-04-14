@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { fetchWorkspaces } from "./workspaceThunk";
+import { fetchWorkspaceMembers, fetchWorkspaces } from "./workspaceThunk";
 import type { Workspace } from "~/types/workspace";
 
 
@@ -8,6 +8,7 @@ import type { Workspace } from "~/types/workspace";
  */
 interface WorkspaceState {
     workspaces: Workspace[];
+    members: any[];
     currentWorkspaceId: string | null;
     loading: boolean;
     error: string | null;
@@ -15,7 +16,7 @@ interface WorkspaceState {
 
 /**
  * Safely read from localStorage
- * WHY:
+ 
  * localStorage is only available in browser (window object)
  * This prevents crashes in SSR / Node environments
  */
@@ -31,6 +32,7 @@ const getInitialWorkspaceId = (): string | null => {
  */
 const initialState: WorkspaceState = {
     workspaces: [],
+    members: [],
     currentWorkspaceId: getInitialWorkspaceId(),
     loading: false,
     error: null,
@@ -49,9 +51,8 @@ const workspaceSlice = createSlice({
      */
     reducers: {
         /**
-         * Set active workspace
-         * WHY:
-         * We persist it so user doesn't lose selection after refresh
+          Set active workspace
+         We persist it so user doesn't lose selection after refresh
          */
         setCurrentWorkspace(state, action: PayloadAction<string>) {
             state.currentWorkspaceId = action.payload;
@@ -143,8 +144,15 @@ const workspaceSlice = createSlice({
             .addCase(fetchWorkspaces.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
-            });
+            })
+
+            .addCase(fetchWorkspaceMembers.fulfilled, (state, action) => {
+                state.members = action.payload;
+            })
+
+
     },
+
 });
 
 /**

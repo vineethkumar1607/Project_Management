@@ -25,3 +25,15 @@ export const fetchWorkspaces = createAsyncThunk<
         }
     }
 );
+
+export const fetchWorkspaceMembers = createAsyncThunk(
+    "workspace/fetchMembers",
+    async (workspaceId: string, thunkAPI) => {
+        try {
+            const data = await workspaceApi.getMembers(workspaceId);
+            return data;
+        } catch (error: any) {
+            return thunkAPI.rejectWithValue(error.message);
+        }
+    }
+);

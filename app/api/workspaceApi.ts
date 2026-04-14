@@ -15,4 +15,10 @@ export const workspaceApi = {
     delete: async (id: string): Promise<void> => {
         await apiClient.delete(`/api/workspace/${id}`);
     },
+    getMembers: async (workspaceId: string) => {
+        const res = await apiClient.get(
+            `/api/workspace/${workspaceId}/members`
+        );
+        return res.data.data;
+    },
 };

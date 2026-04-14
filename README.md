@@ -37,7 +37,7 @@ The dashboard is composed of multiple independent widgets:
   - Task summary  
 Each widget:
  - Is built as an isolated component
- - Uses mock data for UI validation
+ - Uses real backend data via Redux Toolkit and API integration
  -  Is ready for backend integration
  - Avoids premature global state coupling
 
@@ -131,6 +131,31 @@ Performance:
 - Improves first paint
 - Ensures smooth open/close animations
 
+### Backend Integration
+
+- Integrated with Redux Toolkit (`createProject` thunk)
+- Uses React Hook Form for form handling
+- Transforms frontend payload to backend schema
+- Displays loading and success states using toast notifications
+- Fetches workspace members dynamically from backend
+
+### Payload Structure
+
+The form transforms data before sending:
+
+{
+  name,
+  description,
+  status,
+  priority,
+  start_date,
+  end_date,
+  team_lead,
+  team_members
+}
+
+Ensures compatibility with backend API expectations.
+
 ## 7. Projects Module 
 
 Implemented a fully responsive Projects module following feature-based architecture.
@@ -156,6 +181,22 @@ Implemented a fully responsive Projects module following feature-based architect
 - Accessible navigation via Link
 - Responsive design and hover interactions
 
+
+### Backend Integration
+
+- Projects are fetched from backend using Redux thunk
+- Data is stored in `projectSlice`
+- UI updates automatically when new project is created
+- Eliminates need for manual refresh
+
+### State Flow
+
+Component → Dispatch Thunk → API → Redux Store → UI
+
+Ensures:
+- Single source of truth
+- Predictable state updates
+- Scalable architecture
 
 
 ##  8. Error Handling
@@ -662,6 +703,47 @@ This ensures:
 * Better developer experience
 * Fewer runtime errors
 
+## Project & Workspace Integration
+
+The application is fully integrated with the backend APIs.
+
+### Workspace Flow
+
+- Fetch workspaces using `fetchWorkspaces` thunk
+- Persist current workspace in Redux + localStorage
+- Automatically restore workspace on reload
+
+### Members Flow
+
+- Fetch workspace members using `fetchWorkspaceMembers`
+- Used in:
+  - Project Lead selection
+  - Team Members selection
+
+### Project Flow
+
+- Fetch projects using `fetchProjects`
+- Create project using `createProject` thunk
+- Optimistically updates Redux store after creation
+
+### Data Transformation
+
+Frontend sends:
+
+- team_lead (email)
+- team_members (emails)
+
+Backend:
+
+- Converts emails → user IDs
+- Validates workspace membership
+- Stores relational data using Prisma
+
+This ensures:
+- Clean frontend logic
+- Strong backend validation
+- Secure multi-tenant architecture
+
 ## Architecture Summary
 
 Clerk Auth → Token → Axios Interceptor
@@ -743,6 +825,15 @@ Redux handles:
 - Workspace selection
 
 This separation ensures scalability and maintainability in a multi-tenant SaaS architecture.
+
+## Real-Time UX Enhancements
+
+- Projects update instantly after creation (no reload)
+- Workspace switching updates entire app state
+- Skeleton loaders improve perceived performance
+- Optimistic UI updates for better UX
+
+This mimics real production SaaS behavior.
 
 
 #  Tech Stack

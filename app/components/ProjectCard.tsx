@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { memo, useMemo } from "react";
+import type { Project } from "~/types/workspace";
 
 type ProjectStatus =
   | "PLANNING"
@@ -10,14 +11,7 @@ type ProjectStatus =
 
 type ProjectPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
-export interface Project {
-  id: string;
-  name: string;
-  description?: string | null;
-  status: ProjectStatus;
-  priority: ProjectPriority;
-  progress?: number | null;
-}
+
 
 interface ProjectCardProps {
   project: Project;

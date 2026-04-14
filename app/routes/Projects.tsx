@@ -3,46 +3,83 @@ import { Plus, Search } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "~/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "~/components/ui/select";
 
 import ProjectCard from "~/components/ProjectCard";
-import type { Project } from "~/components/ProjectCard";
+import type { Project } from "~/types/workspace";
 import { filterProjects } from "~/lib/filterProjects";
 
-// Mock data for development (replace with API data later)
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    name: "Website Redesign",
-    description: "Revamping UI and improving UX",
-    status: "ACTIVE",
-    priority: "HIGH",
-    progress: 60,
-  },
-  {
-    id: "2",
-    name: "Mobile App MVP",
-    description: "Initial Android & iOS build",
-    status: "PLANNING",
-    priority: "MEDIUM",
-    progress: 20,
-  },
-];
+import { useSelector } from "react-redux";
+import type { RootState } from "~/store/store";
+import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
+import CreateProjectDialogBox from "~/components/CreateProjectDialogBox";
 
 const Projects = () => {
-  // Local state for client-side filtering controls
+  /* =======================
+     Redux Data
+  ======================= */
+  const { projects, loading, error } = useSelector(
+    (state: RootState) => state.project
+  );
+
+  /* =======================
+     UI State
+  ======================= */
   const [searchTerm, setSearchTerm] = useState("");
   const [status, setStatus] = useState("ALL");
   const [priority, setPriority] = useState("ALL");
+  const [open, setOpen] = useState(false);
 
-  // Derived data: recompute only when filter inputs change
+  /* =======================
+     Filtering
+  ======================= */
   const filteredProjects = useMemo(
-    () => filterProjects(mockProjects, { searchTerm, status, priority }),
-    [searchTerm, status, priority]
+    () => filterProjects(projects, { searchTerm, status, priority }),
+    [projects, searchTerm, status, priority]
   );
+
+  /* =======================
+     Loading
+  ======================= */
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-6">
+        <ProjectOverviewSkeleton />
+      </div>
+    );
+  }
+
+  /* =======================
+     Error
+  ======================= */
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] px-4">
+        <div className="text-center max-w-md w-full">
+          <h2 className="text-lg font-semibold text-red-500 mb-2">
+            Something went wrong
+          </h2>
+          <p className="text-sm text-zinc-500 mb-4">
+            Unable to load projects. Please try again.
+          </p>
+
+          <Button onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Header */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Projects</h1>
@@ -51,13 +88,15 @@ const Projects = () => {
           </p>
         </div>
 
-        <Button variant="gradient">
+        <Button variant="gradient" onClick={() => setOpen(true)}>
           <Plus className="size-4 mr-2" />
           New Project
         </Button>
+
+        {open && <CreateProjectDialogBox setIsDialogOpen={setOpen} />}
       </header>
 
-      {/* Client-side filtering UI */}
+      {/* Filters */}
       <section className="flex flex-col md:flex-row gap-4">
         <div className="relative w-full md:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -92,17 +131,25 @@ const Projects = () => {
             <SelectItem value="HIGH">High</SelectItem>
             <SelectItem value="MEDIUM">Medium</SelectItem>
             <SelectItem value="LOW">Low</SelectItem>
-            <SelectItem value="CRITICAL">Critical</SelectItem>
           </SelectContent>
         </Select>
       </section>
 
-      {/* Render filtered results */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
-      </section>
+      {/* Empty State */}
+      {filteredProjects.length === 0 ? (
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <p className="text-sm text-zinc-500">
+            No projects found
+          </p>
+        </div>
+      ) : (
+        /* Projects Grid */
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProjects.map((project: Project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </section>
+      )}
     </main>
   );
 };

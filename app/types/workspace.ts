@@ -7,9 +7,18 @@ export interface Task {
 
 export interface Project {
   id: string;
-  name?: string;
-  status: "COMPLETED" | "CANCELLED" | "ACTIVE";
-  tasks?: Task[];
+  name: string;
+
+  description?: string | null;
+
+  status: "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
+  priority: "LOW" | "MEDIUM" | "HIGH";
+
+  progress?: number;
+
+  end_date?: string;
+
+  members?: { id: string }[];
 }
 
 export interface Workspace {

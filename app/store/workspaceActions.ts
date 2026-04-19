@@ -15,7 +15,7 @@ export const setWorkspaceWithPersistence = createAsyncThunk(
             }
 
             // Dispatch reducer
-            thunkAPI.dispatch(setCurrentWorkspace(workspaceId));
+            // thunkAPI.dispatch(setCurrentWorkspace(workspaceId));
 
             return workspaceId;
         } catch (error: any) {

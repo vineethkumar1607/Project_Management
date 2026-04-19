@@ -1,14 +1,15 @@
-import { Suspense, lazy, useState, memo, useEffect } from "react";
+import { Suspense, lazy, useState, memo, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
 import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
 import RecentActivitySkeleton from "~/components/ui/RecentActivitySkeleton";
 import TaskSummarySkeleton from "~/components/ui/TaskSummarySkeleton";
-import { useUser } from "@clerk/clerk-react";
+import { useOrganization, useUser } from "@clerk/clerk-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWorkspaces } from "~/store/workspaceThunk";
 import type { AppDispatch, RootState } from "~/store/store";
 import { fetchProjects } from "~/store/projectThunk";
+import { setCurrentWorkspace } from "~/store/workspaceSlice";
 
 // Lazy components
 const StatsGrid = lazy(() => import("../components/dashboard/StatsGrid"));
@@ -22,18 +23,45 @@ const Dashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Redux state
   const currentWorkspaceId = useSelector(
     (state: RootState) => state.workspace.currentWorkspaceId
   );
-  //  Fetch data from 
+
+  const workspaces = useSelector(
+    (state: RootState) => state.workspace.workspaces
+  );
+
+  // Clerk organization
+  const { organization } = useOrganization();
+  const workspaceId = organization?.id;
+
+
+
+  // 🔥 Fetch workspaces once per org
+  // const hasFetched = useRef(false);
+
+  // useEffect(() => {
+  //   if (!workspaceId || hasFetched.current) return;
+
+  //   console.log("✅ Fetching workspaces once");
+
+  //   // dispatch(fetchWorkspaces());
+  //   hasFetched.current = true;
+  // }, [workspaceId]);
+
+  // 🔥 Fetch projects when workspace changes
   useEffect(() => {
-    dispatch(fetchWorkspaces());
+    if (!workspaceId) return;
 
-    if (currentWorkspaceId) {
-      dispatch(fetchProjects(currentWorkspaceId));
-    }
-  }, [dispatch, currentWorkspaceId]);
+    console.log("📦 Fetching projects for:", workspaceId);
 
+    dispatch(fetchProjects(workspaceId));
+  }, [workspaceId]);
+
+  /**
+   * Loading state
+   */
   if (!isLoaded) {
     return (
       <main className="max-w-6xl mx-auto">

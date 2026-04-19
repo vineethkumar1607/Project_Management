@@ -45,3 +45,6 @@ export type CreateProjectPayload = {
   team_lead?: string;
   team_members: string[];
 };
+
+
+export type Role = "org:admin" | "org:member";

@@ -20,12 +20,7 @@ interface WorkspaceState {
  * localStorage is only available in browser (window object)
  * This prevents crashes in SSR / Node environments
  */
-const getInitialWorkspaceId = (): string | null => {
-    if (typeof window !== "undefined") {
-        return localStorage.getItem("currentWorkspaceId");
-    }
-    return null;
-};
+
 
 /**
  * Initial state
@@ -33,7 +28,7 @@ const getInitialWorkspaceId = (): string | null => {
 const initialState: WorkspaceState = {
     workspaces: [],
     members: [],
-    currentWorkspaceId: getInitialWorkspaceId(),
+    currentWorkspaceId: null,
     loading: false,
     error: null,
 };

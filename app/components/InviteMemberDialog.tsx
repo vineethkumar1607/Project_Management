@@ -25,10 +25,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import type { Role } from "~/types/workspace";
 
 /* ======================= */
 
-type Role = "owner" | "admin" | "manager" | "member" | "viewer";
 
 interface InviteMemberDialogProps {
   isOpen: boolean;
@@ -46,7 +46,7 @@ const InviteMemberDialog: FC<InviteMemberDialogProps> = ({
   onInvite,
 }) => {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<Role>("member");
+  const [role, setRole] = useState<Role>("org:member");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /* ======================= */
@@ -63,7 +63,7 @@ const InviteMemberDialog: FC<InviteMemberDialogProps> = ({
         await onInvite?.({ email, role });
 
         setEmail("");
-        setRole("member");
+        setRole("org:member");
 
         setIsOpen(false);
       } finally {
@@ -108,9 +108,9 @@ const InviteMemberDialog: FC<InviteMemberDialogProps> = ({
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                
+                <SelectItem value="org:member">Member</SelectItem>
+                <SelectItem value="org:admin">Admin</SelectItem>
+
               </SelectContent>
             </Select>
           </div>

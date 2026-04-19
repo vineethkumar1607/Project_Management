@@ -1,10 +1,10 @@
 "use client"
 
 import { Check, ChevronDown, Plus } from "lucide-react"
-import { useDispatch, useSelector } from "react-redux"
+import { useSelector } from "react-redux"
 import { useNavigate } from "react-router"
 import { useClerk, useOrganizationList } from "@clerk/clerk-react"
-import { useEffect } from "react"
+
 
 import {
   DropdownMenu,
@@ -17,7 +17,8 @@ import {
 
 import { Button } from "~/components/ui/button"
 import { type RootState } from "~/store/store"
-import { setCurrentWorkspace } from "~/store/workspaceSlice"
+import { useMemo } from "react"
+
 
 /**
  * WorkspaceDropdown
@@ -31,7 +32,6 @@ import { setCurrentWorkspace } from "~/store/workspaceSlice"
  */
 
 export function WorkspaceDropdown() {
-  const dispatch = useDispatch()
   const navigate = useNavigate()
 
   // Clerk org control
@@ -44,27 +44,23 @@ export function WorkspaceDropdown() {
   const { workspaces, currentWorkspaceId } = useSelector(
     (state: RootState) => state.workspace
   )
-
+  console.log("workspaces:", workspaces, "currentWorkspaceId:", currentWorkspaceId)
   // Current workspace for UI
-  const currentWorkspace = workspaces.find(
-    (ws) => ws.id === currentWorkspaceId
-  )
+  const currentWorkspace = useMemo(() => {
+  return workspaces.find((ws) => ws.id === currentWorkspaceId);
+}, [workspaces, currentWorkspaceId]);
 
   // Switch workspace: Clerk + Redux + route
   const handleWorkspaceSelect = async (workspaceId: string) => {
     if (!isLoaded) return
 
     await setActive({ organization: workspaceId })
-    dispatch(setCurrentWorkspace(workspaceId))
+    // dispatch(setCurrentWorkspace(workspaceId))
     navigate(`/workspace/${workspaceId}`)
   }
 
   // Sync Clerk when Redux changes
-  useEffect(() => {
-    if (currentWorkspaceId && isLoaded) {
-      setActive({ organization: currentWorkspaceId })
-    }
-  }, [currentWorkspaceId, isLoaded])
+ 
 
   return (
     <div className="px-3 py-3 border-b">

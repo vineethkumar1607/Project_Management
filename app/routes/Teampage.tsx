@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Users, FolderOpen, ListChecks, UserPlus } from "lucide-react";
 import StatsGrid from "~/components/dashboard/StatsGrid";
 import SearchInput from "~/components/SearchInput";
@@ -13,31 +13,59 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Badge } from "~/components/ui/badge";
+import { useOrganization } from "@clerk/clerk-react";
+import type { Role } from "~/types/workspace";
 
-type Role = "ADMIN" | "MEMBER";
+type InvitePayload = {
+  email: string;
+  role: Role;
+};
 
 interface Member {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  // role: Role;
+  role: "org:admin" | "org:member";
 }
 
 export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<Role | "ALL">("ALL");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const { organization, isLoaded } = useOrganization();
 
-  const members: Member[] = [
-    { id: "1", name: "Vineeth", email: "oliverwatts@example.com", role: "ADMIN" },
-    { id: "2", name: "Shruthi", email: "alexsmith@example.com", role: "ADMIN" },
-    { id: "3", name: "Rahul", email: "johnwarrel@example.com", role: "MEMBER" },
-  ];
+  const [memberships, setMemberships] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!organization) return;
+
+    const loadMembers = async () => {
+      const res = await organization.getMemberships();
+      setMemberships(res.data);
+    };
+
+    loadMembers();
+  }, [organization]);
+
+
+
+  useEffect(() => {
+    console.log("ORG:", organization);
+  }, [organization]);
+
+
+  const members = memberships.map((m: any) => ({
+    id: m.publicUserData?.userId || "",
+    name: m.publicUserData?.firstName || "User",
+    email: m.publicUserData?.identifier || "",
+    role: m.role,
+  }));
 
   // Memoized role summary
   const roleSummary = useMemo(() => {
-    const admins = members.filter((m) => m.role === "ADMIN").length;
-    const teamMembers = members.filter((m) => m.role === "MEMBER").length;
+    const admins = members.filter((m) => m.role === "org:admin").length;
+    const teamMembers = members.filter((m) => m.role === "org:member").length;
 
     return {
       admins,
@@ -83,6 +111,29 @@ export default function TeamPage() {
       iconColor: "text-purple-600",
     },
   ];
+
+
+  const handleInvite = async ({ email, role }: { email: string; role: Role }) => {
+    try {
+      if (!organization) return;
+
+      console.log("🚀 Sending invite...");
+
+      await organization.inviteMember({
+        emailAddress: email,
+        role: role,
+      });
+
+      console.log("✅ Invite sent");
+
+      // 🛑 IMPORTANT: DO NOTHING AFTER THIS
+      // ❌ No dispatch
+      // ❌ No navigation
+      // ❌ No refetch
+    } catch (err) {
+      console.error("Invite failed", err);
+    }
+  };
 
   return (
     <main className="max-w-7xl mx-auto space-y-10 p-6">
@@ -130,7 +181,7 @@ export default function TeamPage() {
 
       {/* Search + Filter Section */}
       <section className="bg-muted/40 shadow rounded-xl p-6 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
-        
+
         <div className="w-full lg:w-2/3">
           <SearchInput
             placeholder="Search team members..."
@@ -156,7 +207,7 @@ export default function TeamPage() {
       </section>
 
       {/* Table or Empty State */}
-    <section className=" min-h-[450px]  ">
+      <section className=" min-h-[450px]  ">
         {filteredMembers.length > 0 ? (
           <TeamTable members={filteredMembers} />
         ) : (
@@ -188,6 +239,7 @@ export default function TeamPage() {
       <InviteMemberDialog
         isOpen={isInviteOpen}
         setIsOpen={setIsInviteOpen}
+        onInvite={handleInvite}
       />
     </main>
   );

@@ -1,10 +1,10 @@
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
-import { Provider, } from "react-redux";
-import { store } from "./store/store";
+import { Provider, useSelector, } from "react-redux";
+import { store, type RootState } from "./store/store";
 import AuthProvider from "./providers/AuthProvider";
 
 import "./app.css";
@@ -14,11 +14,14 @@ import { useAppDispatch, useAppSelector } from "./store/hooks";
 import ClerkThemeSync from "./components/ClerkThemeSync";
 import ThemeInitializer from "./components/ThemeInitializer";
 import { fetchWorkspaces } from "./store/workspaceThunk";
+import { useClerk, } from "@clerk/clerk-react";
+import { setCurrentWorkspace } from "./store/workspaceSlice";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
   throw new Error("Add your Clerk Publishable Key to the .env file");
 }
+
 
 /* --------------------------------------------------
    <Links /> – Used to inject <link> tags into <head>
@@ -128,8 +131,10 @@ export default function App() {
 
   const { user, isLoaded } = useUser();
   const dispatch = useAppDispatch();
-  const { workspaces } = useAppSelector((state) => state.workspace);
 
+
+
+  const { setActive } = useClerk();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -140,17 +145,27 @@ export default function App() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // useEffect(() => {
-  //   if (isLoaded && user && workspaces.length === 0) {
-  //     dispatch(fetchWorkspaces());
-  //   }
-  // }, [isLoaded, user, workspaces.length, dispatch]);
-  useEffect(() => {
-    if (isLoaded && user) {
-      dispatch(fetchWorkspaces());
-    }
-  }, [isLoaded, user, dispatch]);
+  // need to check 
+  const hasSetActiveRef = useRef(false);
+  const hasFetched = useRef(false);
 
+  useEffect(() => {
+    if (!isLoaded || hasFetched.current) return;
+
+    dispatch(fetchWorkspaces());
+    hasFetched.current = true;
+  }, [isLoaded]);
+
+
+  const { workspaces, currentWorkspaceId } = useSelector(
+    (state: RootState) => state.workspace
+  );
+
+  useEffect(() => {
+    if (!currentWorkspaceId && workspaces.length > 0) {
+      dispatch(setCurrentWorkspace(workspaces[0].id));
+    }
+  }, [workspaces, currentWorkspaceId]);
   /* --------------------------------------------------
       Main App Layout (Dashboard Pages)
   --------------------------------------------------- */

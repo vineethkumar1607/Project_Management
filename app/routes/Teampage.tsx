@@ -117,19 +117,15 @@ export default function TeamPage() {
     try {
       if (!organization) return;
 
-      console.log("🚀 Sending invite...");
+      console.log(" Sending invite...");
 
       await organization.inviteMember({
         emailAddress: email,
         role: role,
       });
 
-      console.log("✅ Invite sent");
+      console.log(" Invite sent");
 
-      // 🛑 IMPORTANT: DO NOTHING AFTER THIS
-      // ❌ No dispatch
-      // ❌ No navigation
-      // ❌ No refetch
     } catch (err) {
       console.error("Invite failed", err);
     }

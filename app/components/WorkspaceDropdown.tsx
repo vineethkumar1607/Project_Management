@@ -34,11 +34,8 @@ import { useMemo } from "react"
 export function WorkspaceDropdown() {
   const navigate = useNavigate()
 
-  // Clerk org control
-  const { setActive, isLoaded } = useOrganizationList()
-
   // Clerk modal trigger
-  const { openCreateOrganization } = useClerk()
+  const { openCreateOrganization, setActive } = useClerk()
 
   // Redux workspace state
   const { workspaces, currentWorkspaceId } = useSelector(
@@ -52,7 +49,7 @@ export function WorkspaceDropdown() {
 
   // Switch workspace: Clerk + Redux + route
   const handleWorkspaceSelect = async (workspaceId: string) => {
-    if (!isLoaded) return
+    
 
     await setActive({ organization: workspaceId })
     // dispatch(setCurrentWorkspace(workspaceId))

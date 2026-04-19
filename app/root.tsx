@@ -145,16 +145,11 @@ export default function App() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // need to check 
-  const hasSetActiveRef = useRef(false);
-  const hasFetched = useRef(false);
-
   useEffect(() => {
-    if (!isLoaded || hasFetched.current) return;
+    if (!isLoaded || !user) return;
 
     dispatch(fetchWorkspaces());
-    hasFetched.current = true;
-  }, [isLoaded]);
+  }, [isLoaded, user?.id]);
 
 
   const { workspaces, currentWorkspaceId } = useSelector(
@@ -162,13 +157,26 @@ export default function App() {
   );
 
   useEffect(() => {
-    if (!currentWorkspaceId && workspaces.length > 0) {
-      dispatch(setCurrentWorkspace(workspaces[0].id));
+    if (!isLoaded || !user) return;
+
+    const orgId = user.organizationMemberships?.[0]?.organization?.id;
+
+    if (!orgId) return;
+
+    // If Redux not set yet → sync it
+    if (!currentWorkspaceId) {
+      dispatch(setCurrentWorkspace(orgId));
     }
-  }, [workspaces, currentWorkspaceId]);
+
+  }, [isLoaded, user, currentWorkspaceId]);
   /* --------------------------------------------------
       Main App Layout (Dashboard Pages)
   --------------------------------------------------- */
+
+  if (!isLoaded) return null;
+  const hasOrganizations =
+    user?.organizationMemberships &&
+    user.organizationMemberships.length > 0;
   return (
     <>
       <SignedOut>
@@ -182,7 +190,7 @@ export default function App() {
       <SignedIn>
         {shouldHideLayout ? (
           <Outlet />
-        ) : workspaces.length === 0 ? (
+        ) : !hasOrganizations ? (
           <div className="flex items-center justify-center min-h-screen">
             <CreateOrganization afterCreateOrganizationUrl="/" />
           </div>

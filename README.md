@@ -826,6 +826,45 @@ Redux handles:
 
 This separation ensures scalability and maintainability in a multi-tenant SaaS architecture.
 
+
+### Invitation & Membership Sync (Clerk + Webhooks + Inngest)
+
+The application uses Clerk's organization invitation system combined with webhooks and background processing to ensure database consistency.
+
+#### Flow:
+
+1. Admin invites user via Clerk Organization
+2. User accepts invitation
+3. Clerk triggers `organizationMembership.created` webhook
+4. Backend receives webhook and forwards event to Inngest
+5. Inngest processes the event and:
+   - Creates or updates `WorkspaceMember` in database
+6. User logs in and gets immediate access to workspace and projects
+
+#### Why this approach?
+
+- Avoids frontend-based sync issues
+- Ensures reliable and retry-safe processing
+- Works even if user logs in later
+- Prevents race conditions between auth and DB
+
+#### Architecture:
+
+Clerk (Auth + Org)
+→ Webhook (Event trigger)
+→ Inngest (Background processing)
+→ Database (WorkspaceMember sync)
+
+#### Important Note:
+
+The application relies on the `organizationMembership.created` webhook event.
+
+Ensure this event is enabled in the Clerk dashboard under Webhooks.
+
+Without this, invited users will not be synced into the database, resulting in:
+- Empty workspace state
+- 403 errors on protected APIs
+
 ## Real-Time UX Enhancements
 
 - Projects update instantly after creation (no reload)

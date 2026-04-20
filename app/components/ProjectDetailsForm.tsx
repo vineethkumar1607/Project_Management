@@ -2,20 +2,66 @@ import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { projectSettingsSchema } from "../lib/projectSettings.schema"
+import { useEffect } from "react"
+import toast from "react-hot-toast";
+import type { Project } from "~/types/workspace";
+import { Input } from "./ui/input"
+import { Textarea } from "./ui/textarea"
 
-import { Input } from "~/components/ui/input"
-import { Button } from "~/components/ui/button"
-import { Textarea } from "~/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "~/components/ui/select"
+import {
+    Select,
+    SelectTrigger,
+    SelectContent,
+    SelectItem,
+    SelectValue,
+} from "~/components/ui/select";
+import { Button } from "./ui/button"
+import { Calendar } from "lucide-react"
 
 type ProjectSettingsFormValues = z.infer<typeof projectSettingsSchema>
 
-function ProjectDetailsForm() {
+/**
+ * Zod schema for validation
+ */
+
+const getProgress = (start?: string, end?: string) => {
+    if (!start || !end) return 0;
+
+    const s = new Date(start).getTime();
+    const e = new Date(end).getTime();
+
+    if (e <= s) return 0;
+
+    const now = Date.now();
+
+    const total = e - s;
+    const current = now - s;
+
+    return Math.min(Math.max((current / total) * 100, 0), 100);
+};
+
+const statusColor = {
+    PLANNING: "text-yellow-500",
+    ACTIVE: "text-blue-500",
+    ON_HOLD: "text-orange-500",
+    COMPLETED: "text-green-500",
+    CANCELLED: "text-red-500",
+};
+const priorityColor = {
+    LOW: "text-green-500",
+    MEDIUM: "text-yellow-500",
+    HIGH: "text-red-500",
+};
+
+const ProjectDetailsForm = ({ project }: { project: Project }) => {
     const {
         register,
         handleSubmit,
+        reset,
+        watch,
+        setValue,
         control,
-        formState: { errors, isSubmitting },
+        formState: { errors, isSubmitting, isDirty },
     } = useForm<ProjectSettingsFormValues>({
         resolver: zodResolver(projectSettingsSchema),
         defaultValues: {
@@ -26,8 +72,36 @@ function ProjectDetailsForm() {
             status: "PLANNING",
             priority: "MEDIUM",
         },
-        mode: "onChange",
-    })
+    });
+
+
+    const formatDate = (date?: string) => {
+        if (!date) return "";
+
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return "";
+
+        return d.toISOString().split("T")[0];
+    };
+    /**
+   * Prefill form when project loads
+   */
+    // watch("priority");
+    register("priority");
+    useEffect(() => {
+        if (project) {
+            reset({
+                name: project.name || "",
+                description: project.description || "",
+                startDate: formatDate(project.start_date),
+                endDate: formatDate(project.end_date),
+                status: project?.status || "PLANNING",
+               priority: project.priority || "MEDIUM",
+            });
+
+  
+        }
+    }, [project, reset]);
 
     const onSubmit = async (data: ProjectSettingsFormValues) => {
         try {
@@ -35,120 +109,164 @@ function ProjectDetailsForm() {
 
             // TODO: dispatch(updateProject(data))
             // await dispatch(updateProject(data)).unwrap()
-
+            toast.success("Project updated successfully");
         } catch (error) {
             console.error("Update failed:", error)
+            toast.error("Failed to update project");
         }
     }
+    console.log("PROJECT PRIORITY:", project.priority)
+    console.log("FORM PRIORITY:", watch("priority"));
+    console.log("RAW PRIORITY:", `"${project.priority}"`)
+    const startDate = watch("startDate");
+    const endDate = watch("endDate");
+    const progress = getProgress(startDate, endDate);
 
+    {
+        isDirty && (
+            <p className="text-xs text-blue-500">
+                You have unsaved changes
+            </p>
+        )
+    }
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6 mt-6"
-            aria-label="Project General Settings Form"
+            className="space-y-6"
+            noValidate
         >
-            {/* Project Name */}
-            <div className="space-y-1">
-                <label htmlFor="name" className="text-sm font-medium">
+            {/* -------- Project Name -------- */}
+            <div className="space-y-3">
+                <label htmlFor="name" className="font-medium flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
                     Project Name
                 </label>
+
                 <Input
                     id="name"
+                    type="text"
                     {...register("name")}
+                    className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     aria-invalid={!!errors.name}
+                    aria-describedby="name-error"
                 />
+
                 {errors.name && (
-                    <p className="text-sm text-red-500">{errors.name.message}</p>
+                    <p id="name-error" className="text-sm text-red-500">
+                        {errors.name.message}
+                    </p>
                 )}
             </div>
 
-            {/* Description */}
-            <div className="space-y-1">
-                <label htmlFor="description" className="text-sm font-medium">
+            {/* -------- Description -------- */}
+            <div className="space-y-3">
+                <label htmlFor="description" className="font-medium flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
                     Description
                 </label>
+
                 <Textarea
                     id="description"
                     rows={4}
                     {...register("description")}
+                    className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
             </div>
 
-            {/* Dates */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                    <label htmlFor="startDate" className="text-sm font-medium">
+            {/* -------- Dates -------- */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/30">
+                <div className="space-y-3">
+                    <label htmlFor="startDate" className="font-medium flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+                        <Calendar size={14} />
                         Start Date
                     </label>
+
                     <Input
                         id="startDate"
                         type="date"
                         {...register("startDate")}
+                        className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                 </div>
 
-                <div className="space-y-1">
-                    <label htmlFor="endDate" className="text-sm font-medium">
+                <div className="space-y-3">
+                    <label htmlFor="endDate" className="text-sm font-medium flex items-center gap-2 uppercase tracking-wide text-muted-foreground">
+                        <Calendar size={14} />
                         End Date
                     </label>
+
                     <Input
                         id="endDate"
                         type="date"
                         {...register("endDate")}
+                        className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                        aria-invalid={!!errors.endDate}
+                        aria-describedby="endDate-error"
                     />
+
+                    {errors.endDate && (
+                        <p id="endDate-error" className="text-sm text-red-500">
+                            {errors.endDate.message}
+                        </p>
+                    )}
                 </div>
             </div>
 
-            {/* Status & Priority */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* -------- Status + Priority -------- */}
 
-                {/* Status */}
-                <div className="space-y-1">
-                    <label className="text-sm font-medium">Status</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/30">
+                <div className="space-y-3 w-full">
+                    <label className=" font-medium flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+
+                        Status
+
+                        <span
+                            className={`ml-1 text-xs font-semibold ${statusColor[watch("status") || "PLANNING"]
+                                }`}>
+                            {watch("status")}
+                        </span>
+                    </label>
+
                     <Controller
-                        name="status"
                         control={control}
+                        name="status"
                         render={({ field }) => (
-                            <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                            >
-                                <SelectTrigger aria-label="Project Status">
-                                    <SelectValue placeholder="Select Status" />
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
+
                                 <SelectContent>
                                     <SelectItem value="PLANNING">Planning</SelectItem>
-                                    <SelectItem value="IN_PROGRESS">
-                                        In Progress
-                                    </SelectItem>
-                                    <SelectItem value="COMPLETED">
-                                        Completed
-                                    </SelectItem>
+                                    <SelectItem value="ACTIVE">Active</SelectItem>
+                                    <SelectItem value="ON_HOLD">On Hold</SelectItem>
+                                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
                                 </SelectContent>
                             </Select>
                         )}
                     />
-                    {errors.status && (
-                        <p className="text-sm text-red-500">
-                            {errors.status.message}
-                        </p>
-                    )}
                 </div>
 
-                {/* Priority */}
-                <div className="space-y-1">
-                    <label className="text-sm font-medium">Priority</label>
+                <div className="space-y-3 w-full">
+                    <label className="font-medium flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+                        Priority
+                        <span
+                            className={`ml-1 text-xs font-semibold ${priorityColor[watch("priority") || "MEDIUM"]
+                                }`}
+                        >
+                            {watch("priority")}
+                        </span>
+                    </label>
+
                     <Controller
-                        name="priority"
                         control={control}
+                        name="priority"
                         render={({ field }) => (
-                            <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                            >
-                                <SelectTrigger aria-label="Project Priority">
-                                    <SelectValue placeholder="Select Priority" />
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select priority" />
+                                    
                                 </SelectTrigger>
+
                                 <SelectContent>
                                     <SelectItem value="LOW">Low</SelectItem>
                                     <SelectItem value="MEDIUM">Medium</SelectItem>
@@ -157,22 +275,39 @@ function ProjectDetailsForm() {
                             </Select>
                         )}
                     />
-                    {errors.priority && (
-                        <p className="text-sm text-red-500">
-                            {errors.priority.message}
-                        </p>
-                    )}
                 </div>
             </div>
 
-            {/* Submit */}
-            <div className="flex justify-end">
+            {/* -------- Progress Bar -------- */}
+            <div className="space-y-3">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                    <span className="font-medium flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">Project Progress</span>
+                    <span>{Math.round(progress)}%</span>
+                </div>
+
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div
+                        className={`h-full rounded-full transition-all duration-500
+        ${progress < 30 ? "bg-red-500" :
+                                progress < 70 ? "bg-yellow-500" :
+                                    "bg-green-500"}
+      `}
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
+            </div>
+
+            {/* -------- Submit Button -------- */}
+            <div className="flex justify-between items-center">
+                <p className="text-xs text-muted-foreground">
+                    Last updated just now
+                </p>
                 <Button
                     type="submit"
-                    disabled={isSubmitting}
-                    className="w-full sm:w-auto"
+                    disabled={!isDirty || isSubmitting}
+                    className="bg-black text-white px-4 py-2 rounded-md disabled:opacity-50"
                 >
-                    {isSubmitting ? "Saving..." : "Save Changes"}
+                    {isSubmitting ? "Saving..." : isDirty ? "Save Changes" : "Saved"}
                 </Button>
             </div>
         </form>

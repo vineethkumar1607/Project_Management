@@ -15,6 +15,7 @@ export interface Project {
   priority: "LOW" | "MEDIUM" | "HIGH";
 
   progress?: number;
+  start_date?: string;
 
   end_date?: string;
 

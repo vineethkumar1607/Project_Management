@@ -6,6 +6,7 @@ import {
   Calendar,
   Settings,
 } from "lucide-react";
+import { useAppSelector } from "~/store/hooks";
 
 const ProjectLayout = () => {
   const { projectId } = useParams();
@@ -21,12 +22,19 @@ const ProjectLayout = () => {
       ? "tasks"
       : lastSegment;
 
+  const { projects } = useAppSelector((state) => state.project);
+
+  const project = projects.find(
+    (p) => String(p.id) === String(projectId)
+  );
+
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex flex-col">
       {/* ---------------- Project Header ---------------- */}
       <header className="border-b border-border pb-4">
         <h1 className="text-2xl font-semibold">
-          Project {projectId}
+          {project?.name || "Loading..."}
         </h1>
 
         <p className="text-sm text-muted-foreground mt-1">
@@ -98,7 +106,7 @@ data-[state=active]:shadow-sm
 
 
       {/* ---------------- Nested Route Content ---------------- */}
-      <section className="pt-4">
+      <section className="pt-4 flex-1">
         <Outlet />
       </section>
     </div>

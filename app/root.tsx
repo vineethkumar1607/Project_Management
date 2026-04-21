@@ -24,8 +24,8 @@ if (!PUBLISHABLE_KEY) {
 
 
 /* --------------------------------------------------
-   <Links /> – Used to inject <link> tags into <head>
-   This replaces index.html in Vite
+  <Links /> – Used to inject <link> tags into <head>
+  This replaces index.html in Vite
 --------------------------------------------------- */
 export const links = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -41,8 +41,8 @@ export const links = () => [
 ];
 
 /* --------------------------------------------------
-   Layout Component
-   This defines the FINAL HTML DOCUMENT
+  Layout Component
+  This defines the FINAL HTML DOCUMENT
 --------------------------------------------------- */
 export function Layout({ children }: { children: React.ReactNode }) {
 
@@ -54,32 +54,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-      /*
-        This script runs immediately when the HTML loads,
-        before React hydration.
+          /*
+            This script runs immediately when the HTML loads,
+            before React hydration.
 
-        Purpose:
-        Prevent flash of incorrect theme (FOUC).
+            Purpose:
+            Prevent flash of incorrect theme (FOUC).
 
-        We read the theme from localStorage and
-        apply the correct class to the <html> element
-        before React mounts.
-      */
-      (function () {
-        const savedTheme = localStorage.getItem("theme");
-        const root = document.documentElement;
+            We read the theme from localStorage and
+            apply the correct class to the <html> element
+            before React mounts.
+          */
+          (function () {
+            const savedTheme = localStorage.getItem("theme");
+            const root = document.documentElement;
 
-        // If user previously selected dark theme
-        if (savedTheme === "dark") {
-          root.classList.add("dark");
-        }
+            // If user previously selected dark theme
+            if (savedTheme === "dark") {
+              root.classList.add("dark");
+            }
 
-        // If user selected light theme or no theme stored
-        else {
-          root.classList.remove("dark");
-        }
-      })();
-    `,
+            // If user selected light theme or no theme stored
+            else {
+              root.classList.remove("dark");
+            }
+          })();
+        `,
           }}
         />
 
@@ -115,7 +115,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 /* --------------------------------------------------
-   App Component ("APP.TSX")
+  App Component ("APP.TSX")
 --------------------------------------------------- */
 
 
@@ -201,7 +201,7 @@ export default function App() {
               setIsSidebarOpen={setIsSidebarOpen}
             />
 
-            <div className="flex-1 flex flex-col h-screen">
+            <div className="flex-1 flex flex-col min-h-screen">
               <Navbar
                 isSidebarOpen={isSidebarOpen}
                 setIsSidebarOpen={setIsSidebarOpen}
@@ -220,7 +220,7 @@ export default function App() {
 }
 
 /* --------------------------------------------------
-   Global Error Boundary
+  Global Error Boundary
 --------------------------------------------------- */
 export function ErrorBoundary({ error }: any) {
   let message = "Oops!";

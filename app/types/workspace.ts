@@ -15,10 +15,12 @@ export interface Project {
   priority: "LOW" | "MEDIUM" | "HIGH";
 
   progress?: number;
+  start_date?: string;
 
   end_date?: string;
+  workspaceId: string;
 
-  members?: { id: string }[];
+  members?: ProjectMember[];
 }
 
 export interface Workspace {
@@ -48,3 +50,13 @@ export type CreateProjectPayload = {
 
 
 export type Role = "org:admin" | "org:member";
+
+export interface ProjectMember {
+  id: string;
+  role?: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}

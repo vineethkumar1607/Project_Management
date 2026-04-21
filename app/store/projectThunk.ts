@@ -44,3 +44,36 @@ export const createProject = createAsyncThunk(
   }
 );
 
+export const updateProject = createAsyncThunk(
+  "project/updateProject",
+  async (
+    { projectId, payload }: { projectId: string; payload: any },
+    thunkAPI
+  ) => {
+    try {
+      const data = await projectApi.update(projectId, payload);
+      return data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
+
+
+export const addProjectMember = createAsyncThunk(
+  "project/addProjectMember",
+  async (
+    { projectId, email }: { projectId: string; email: string },
+    thunkAPI
+  ) => {
+    try {
+      const data = await projectApi.addMember(projectId, email);
+      return {
+        projectId,
+        newMember: data.newMember,
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Failed");
+    }
+  }
+);

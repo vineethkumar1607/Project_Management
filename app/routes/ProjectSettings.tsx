@@ -5,6 +5,7 @@ import ProjectDetailsForm from "~/components/ProjectDetailsForm";
 import ProjectMembers from "~/components/ProjectMembers";
 import { useAppDispatch, useAppSelector } from "~/store/hooks";
 import { fetchProjects } from "~/store/projectThunk";
+import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
 
 const ProjectSettings = () => {
   const { projectId } = useParams();
@@ -28,6 +29,16 @@ const ProjectSettings = () => {
       dispatch(fetchProjects(workspaceId));
     }
   }, [projects.length, workspaceId, dispatch]);
+
+  useEffect(() => {
+  if (workspaceId) {
+    dispatch(fetchWorkspaceMembers(workspaceId));
+  }
+}, [workspaceId, dispatch]);
+
+const workspaceMembers = useAppSelector(
+  (state) => state.workspace.members
+);
 
   if (loading && !project) {
     return <p>Loading project...</p>;
@@ -75,7 +86,8 @@ const ProjectSettings = () => {
             </p>
           </div>
 
-          <ProjectMembers />
+         <ProjectMembers project={project} workspaceMembers={workspaceMembers}
+/>
         </div>
 
       </div>

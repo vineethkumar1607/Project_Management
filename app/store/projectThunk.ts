@@ -58,3 +58,22 @@ export const updateProject = createAsyncThunk(
     }
   }
 );
+
+
+export const addProjectMember = createAsyncThunk(
+  "project/addProjectMember",
+  async (
+    { projectId, email }: { projectId: string; email: string },
+    thunkAPI
+  ) => {
+    try {
+      const data = await projectApi.addMember(projectId, email);
+      return {
+        projectId,
+        newMember: data.newMember,
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Failed");
+    }
+  }
+);

@@ -8,15 +8,12 @@ import type { Project } from "~/types/workspace";
 import { Input } from "./ui/input"
 import { Textarea } from "./ui/textarea"
 
-import {
-    Select,
-    SelectTrigger,
-    SelectContent,
-    SelectItem,
-    SelectValue,
-} from "~/components/ui/select";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue, } from "~/components/ui/select";
 import { Button } from "./ui/button"
 import { Calendar } from "lucide-react"
+
+import { useAppDispatch } from "~/store/hooks";
+import { updateProject } from "~/store/projectThunk";
 
 type ProjectSettingsFormValues = z.infer<typeof projectSettingsSchema>
 
@@ -54,15 +51,8 @@ const priorityColor = {
 };
 
 const ProjectDetailsForm = ({ project }: { project: Project }) => {
-    const {
-        register,
-        handleSubmit,
-        reset,
-        watch,
-        setValue,
-        control,
-        formState: { errors, isSubmitting, isDirty },
-    } = useForm<ProjectSettingsFormValues>({
+
+    const { register, handleSubmit, reset, watch, control, formState: { errors, isSubmitting, isDirty }, } = useForm<ProjectSettingsFormValues>({
         resolver: zodResolver(projectSettingsSchema),
         defaultValues: {
             name: "",
@@ -74,6 +64,7 @@ const ProjectDetailsForm = ({ project }: { project: Project }) => {
         },
     });
 
+    const dispatch = useAppDispatch();
 
     const formatDate = (date?: string) => {
         if (!date) return "";
@@ -96,28 +87,37 @@ const ProjectDetailsForm = ({ project }: { project: Project }) => {
                 startDate: formatDate(project.start_date),
                 endDate: formatDate(project.end_date),
                 status: project?.status || "PLANNING",
-               priority: project.priority || "MEDIUM",
+                priority: project.priority || "MEDIUM",
             });
-
-  
         }
     }, [project, reset]);
 
     const onSubmit = async (data: ProjectSettingsFormValues) => {
         try {
-            console.log("Submitting:", data)
+            const payload = {
+                name: data.name,
+                description: data.description,
+                status: data.status,
+                priority: data.priority,
+                start_date: data.startDate,
+                end_date: data.endDate,
+                progress,
+            };
 
-            // TODO: dispatch(updateProject(data))
-            // await dispatch(updateProject(data)).unwrap()
+            
+            await dispatch(
+                updateProject({
+                    projectId: project.id,
+                    payload,
+                })
+            ).unwrap();
             toast.success("Project updated successfully");
         } catch (error) {
             console.error("Update failed:", error)
             toast.error("Failed to update project");
         }
     }
-    console.log("PROJECT PRIORITY:", project.priority)
-    console.log("FORM PRIORITY:", watch("priority"));
-    console.log("RAW PRIORITY:", `"${project.priority}"`)
+
     const startDate = watch("startDate");
     const endDate = watch("endDate");
     const progress = getProgress(startDate, endDate);
@@ -264,7 +264,7 @@ const ProjectDetailsForm = ({ project }: { project: Project }) => {
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select priority" />
-                                    
+
                                 </SelectTrigger>
 
                                 <SelectContent>

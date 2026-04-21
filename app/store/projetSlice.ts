@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchProjects, createProject } from "./projectThunk";
+import { fetchProjects, createProject, updateProject } from "./projectThunk";
 import type { Project } from "~/types/workspace";
 
 interface ProjectState {
@@ -43,9 +43,18 @@ const projectSlice = createSlice({
             })
 
             .addCase(createProject.fulfilled, (state, action) => {
-                 console.log("REDUX ADD:", action.payload);
+                console.log("REDUX ADD:", action.payload);
                 state.projects.push(action.payload);
             })
+            .addCase(updateProject.fulfilled, (state, action) => {
+                const index = state.projects.findIndex(
+                    (p) => p.id === action.payload.id
+                );
+
+                if (index !== -1) {
+                    state.projects[index] = action.payload;
+                }
+            });
     },
 });
 

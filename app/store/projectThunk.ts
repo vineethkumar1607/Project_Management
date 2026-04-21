@@ -44,3 +44,17 @@ export const createProject = createAsyncThunk(
   }
 );
 
+export const updateProject = createAsyncThunk(
+  "project/updateProject",
+  async (
+    { projectId, payload }: { projectId: string; payload: any },
+    thunkAPI
+  ) => {
+    try {
+      const data = await projectApi.update(projectId, payload);
+      return data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);

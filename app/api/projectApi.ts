@@ -16,9 +16,16 @@ export const projectApi = {
         );
         return res.data.data;
     },
+    update: async (projectId: string, payload: any): Promise<Project> => {
+        const res = await apiClient.put(
+            `/api/workspace/${projectId}`, 
+            payload
+        );
+        return res.data.data;
+    },
 
     // delete project
     delete: async (projectId: string): Promise<void> => {
-        await apiClient.delete(`/api/projects/${projectId}`);
+        await apiClient.delete(`/api/workspace/${projectId}`);
     },
 };

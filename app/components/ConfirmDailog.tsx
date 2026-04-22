@@ -12,6 +12,7 @@ import type { ConfirmDialogProps } from "~/types/workspace";
 
 
 
+
 const ConfirmDialog: FC<ConfirmDialogProps> = ({
     open,
     onOpenChange,
@@ -25,9 +26,9 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({
     const handleConfirm = async () => {
         try {
             await onConfirm();
-            onOpenChange(false);
+            onOpenChange(false); // close ONLY on success
         } catch (err) {
-            // keep dialog open
+            // keep dialog open if error
         }
     };
 
@@ -55,6 +56,7 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({
                         variant="destructive"
                         onClick={handleConfirm}
                         disabled={loading}
+                        autoFocus
                     >
                         {loading ? "Processing..." : confirmText}
                     </Button>

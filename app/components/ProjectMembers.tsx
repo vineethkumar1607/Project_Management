@@ -7,10 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "~/components/ui/select";
 import { useAppDispatch } from "~/store/hooks";
 import { addProjectMember, removeProjectMember } from "~/store/projectThunk";
+import ConfirmDialog from "./ConfirmDailog";
+import type { Project, WorkspaceMember } from "~/types/workspace";
 
 type Props = {
-  project: any;
-  workspaceMembers: any[];
+  project: Project;
+  workspaceMembers: WorkspaceMember[];
 };
 
 const ProjectMembers = ({ project, workspaceMembers }: Props) => {
@@ -20,6 +22,8 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
   const [isAdding, setIsAdding] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const dispatch = useAppDispatch();
 
   /**
@@ -28,7 +32,7 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
    * Prevents unnecessary recalculations
    */
   const projectMemberIds = useMemo(() => {
-    return project?.members?.map((m: any) => m.user?.id) || [];
+    return project?.members?.filter(m => m?.user)?.map((member) => member.user.id) || [];
   }, [project]);
 
   /**
@@ -36,9 +40,9 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
    * Remove already added users
    */
   const availableMembers = useMemo(() => {
-    return workspaceMembers.filter(
-      (wm) => !projectMemberIds.includes(wm.id)
-    );
+    return workspaceMembers.filter((wm) => {
+      return !projectMemberIds.includes(wm.id);
+    });
   }, [workspaceMembers, projectMemberIds]);
 
   /**
@@ -64,11 +68,11 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
       await dispatch(
         addProjectMember({
           projectId: project.id,
-          email: member.email,
+          email: member.email
         })
       ).unwrap();
 
-      toast.success("Member added successfully 🔥");
+      toast.success("Member added successfully");
 
       setSelectedMember("");
       setIsOpen(false);
@@ -81,25 +85,30 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
   };
 
 
-  const handleRemoveMember = async (memberId: string) => {
+  const handleConfirmRemove = async () => {
+    if (!selectedMemberId) return;
+
     try {
-      setRemovingId(memberId);
+      setRemovingId(selectedMemberId);
+
       await dispatch(
         removeProjectMember({
           projectId: project.id,
-          memberId,
+          memberId: selectedMemberId,
         })
       ).unwrap();
 
-      toast.success("Member removed successfully 🧹");
-    } catch (error: any) {
-      toast.error(error || "Failed to remove member");
+      toast.success("Member removed successfully");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to remove member");
+      throw err; // IMPORTANT → keeps dialog open
     } finally {
       setRemovingId(null);
     }
   };
 
-
+  console.log("workspaceMembers:", workspaceMembers);
+  console.log("projectMembers:", project?.members);
 
   return (
     <section className="space-y-6">
@@ -142,7 +151,8 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
                 <SelectContent>
                   {availableMembers.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
-                      {member.name} ({member.email})
+                      {member.name || "Unknown"} ({member.email || "No email"})
+                      
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -178,7 +188,7 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
             No members added yet
           </p>
         )}
-        {project?.members?.map((member: any) => (
+        {project?.members?.map((member) => (
           <li
             key={member.id}
             className="border rounded-lg p-4"
@@ -197,19 +207,32 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => handleRemoveMember(member.user?.id)}
+                onClick={() => {
+                  setSelectedMemberId(member.user?.id);
+                  setConfirmOpen(true);
+                }}
                 disabled={
                   member.user?.id === project.team_lead ||
                   removingId === member.user?.id
                 }
               >
-                {removingId === member.user?.id ? "Removing..." : "Remove"}
+                Remove
               </Button>
 
             </div>
           </li>
         ))}
       </ul>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Remove Member"
+        description="Are you sure you want to remove this member from the project? This action cannot be undone."
+        confirmText="Remove"
+        cancelText="Cancel"
+        onConfirm={handleConfirmRemove}
+        loading={!!removingId}
+      />
     </section>
   );
 };

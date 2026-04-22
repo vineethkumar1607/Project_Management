@@ -180,7 +180,7 @@ export default function App() {
     user.organizationMemberships.length > 0;
   return (
     <>
-      <Toaster     position="top-right" />
+      <Toaster     position="top-center" />
       <SignedOut>
         {location.pathname === "/login" ? (
           <Outlet />

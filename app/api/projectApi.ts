@@ -36,4 +36,11 @@ export const projectApi = {
         );
         return res.data.data;
     },
+
+    removeMember: async (projectId: string, memberId: string) => {
+        const res = await apiClient.delete(
+            `/api/workspace/${projectId}/member/${memberId}`
+        );
+        return res.data.data;
+    },
 };

@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchProjects, createProject, updateProject, addProjectMember } from "./projectThunk";
+import { fetchProjects, createProject, updateProject, addProjectMember, removeProjectMember } from "./projectThunk";
 import type { Project } from "~/types/workspace";
 
 interface ProjectState {
@@ -66,6 +66,18 @@ const projectSlice = createSlice({
                     project.members = project.members || [];
 
                     project.members.push(newMember);
+                }
+            })
+
+            .addCase(removeProjectMember.fulfilled, (state, action) => {
+                const { projectId, memberId } = action.payload;
+
+                const project = state.projects.find(p => p.id === projectId);
+
+                if (project && project.members) {
+                    project.members = project.members.filter(
+                        (m: any) => m.user?.id !== memberId
+                    );
                 }
             });
     },

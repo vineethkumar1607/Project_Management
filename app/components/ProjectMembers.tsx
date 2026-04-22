@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "~/components/ui/select";
 import { useAppDispatch } from "~/store/hooks";
-import { addProjectMember } from "~/store/projectThunk";
+import { addProjectMember, removeProjectMember } from "~/store/projectThunk";
 
 type Props = {
   project: any;
@@ -16,6 +16,9 @@ type Props = {
 const ProjectMembers = ({ project, workspaceMembers }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState("");
+
+  const [isAdding, setIsAdding] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
 
@@ -43,30 +46,60 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
    * Later → dispatch API
    */
   const handleAddMember = async () => {
-  if (!selectedMember) return;
+    if (!selectedMember) return;
+    // PREVENT DUPLICATE (IMPORTANT)
+    if (projectMemberIds.includes(selectedMember)) {
+      toast.error("User already in project");
+      return;
+    }
 
-  const member = workspaceMembers.find(
-    (m) => m.id === selectedMember
-  );
+    const member = workspaceMembers.find(
+      (m) => m.id === selectedMember
+    );
 
-  if (!member) return;
+    if (!member) return;
 
-  try {
-    await dispatch(
-      addProjectMember({
-        projectId: project.id,
-        email: member.email,
-      })
-    ).unwrap();
+    try {
+      setIsAdding(true);
+      await dispatch(
+        addProjectMember({
+          projectId: project.id,
+          email: member.email,
+        })
+      ).unwrap();
 
-    toast.success("Member added successfully 🔥");
+      toast.success("Member added successfully 🔥");
 
-    setSelectedMember("");
-    setIsOpen(false);
-  } catch (error: any) {
-    toast.error(error || "Failed to add member");
-  }
-};
+      setSelectedMember("");
+      setIsOpen(false);
+    } catch (error: any) {
+      toast.error(error || "Failed to add member");
+    }
+    finally {
+      setIsAdding(false);
+    }
+  };
+
+
+  const handleRemoveMember = async (memberId: string) => {
+    try {
+      setRemovingId(memberId);
+      await dispatch(
+        removeProjectMember({
+          projectId: project.id,
+          memberId,
+        })
+      ).unwrap();
+
+      toast.success("Member removed successfully 🧹");
+    } catch (error: any) {
+      toast.error(error || "Failed to remove member");
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+
 
   return (
     <section className="space-y-6">
@@ -125,9 +158,13 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
 
             <Button
               onClick={handleAddMember}
-              disabled={!selectedMember || availableMembers.length === 0}
+              disabled={
+                !selectedMember ||
+                availableMembers.length === 0 ||
+                isAdding
+              }
             >
-              Add Member
+              {isAdding ? "Adding..." : "Add Member"}
             </Button>
           </DialogFooter>
 
@@ -136,6 +173,11 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
 
       {/* -------- Project Members List -------- */}
       <ul className="space-y-4">
+        {!project?.members?.length && (
+          <p className="text-sm text-muted-foreground">
+            No members added yet
+          </p>
+        )}
         {project?.members?.map((member: any) => (
           <li
             key={member.id}
@@ -152,8 +194,16 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
                 </p>
               </div>
 
-              <Button variant="destructive" size="sm">
-                Remove
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleRemoveMember(member.user?.id)}
+                disabled={
+                  member.user?.id === project.team_lead ||
+                  removingId === member.user?.id
+                }
+              >
+                {removingId === member.user?.id ? "Removing..." : "Remove"}
               </Button>
 
             </div>

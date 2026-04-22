@@ -57,9 +57,7 @@ const workspaceMembers = useAppSelector(
         <p className="text-sm text-muted-foreground">
           Manage project configuration and team members
         </p>
-        <h1 className="text-2xl font-semibold">
-          {project.name}
-        </h1>
+        
       </header>
 
       {/* -------- Main Layout -------- */}

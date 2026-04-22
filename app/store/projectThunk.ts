@@ -77,3 +77,26 @@ export const addProjectMember = createAsyncThunk(
     }
   }
 );
+
+
+export const removeProjectMember = createAsyncThunk(
+  "project/removeProjectMember",
+  async (
+    { projectId, memberId }: { projectId: string; memberId: string },
+    thunkAPI
+  ) => {
+    try {
+      await projectApi.removeMember(projectId, memberId);
+
+      return {
+        projectId,
+        memberId,
+      };
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to remove member"
+      );
+    }
+  }
+);
+

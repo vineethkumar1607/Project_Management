@@ -6,17 +6,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "~/components/ui/select";
 import { useAppDispatch } from "~/store/hooks";
-import { addProjectMember } from "~/store/projectThunk";
+import { addProjectMember, removeProjectMember } from "~/store/projectThunk";
+import ConfirmDialog from "./ConfirmDailog";
+import type { Project, WorkspaceMember } from "~/types/workspace";
 
 type Props = {
-  project: any;
-  workspaceMembers: any[];
+  project: Project;
+  workspaceMembers: WorkspaceMember[];
 };
 
 const ProjectMembers = ({ project, workspaceMembers }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState("");
 
+  const [isAdding, setIsAdding] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const dispatch = useAppDispatch();
 
   /**
@@ -25,7 +32,7 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
    * Prevents unnecessary recalculations
    */
   const projectMemberIds = useMemo(() => {
-    return project?.members?.map((m: any) => m.user?.id) || [];
+    return project?.members?.filter(m => m?.user)?.map((member) => member.user.id) || [];
   }, [project]);
 
   /**
@@ -33,17 +40,22 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
    * Remove already added users
    */
   const availableMembers = useMemo(() => {
-    return workspaceMembers.filter(
-      (wm) => !projectMemberIds.includes(wm.id)
-    );
+    return workspaceMembers.filter((wm) => {
+      return !projectMemberIds.includes(wm.id);
+    });
   }, [workspaceMembers, projectMemberIds]);
 
   /**
    * HANDLER
    * Later → dispatch API
    */
-  const handleAddMember = async () => {
+const handleAddMember = async () => {
   if (!selectedMember) return;
+
+  if (projectMemberIds.includes(selectedMember)) {
+    toast.error("User already in project");
+    return;
+  }
 
   const member = workspaceMembers.find(
     (m) => m.id === selectedMember
@@ -51,117 +63,197 @@ const ProjectMembers = ({ project, workspaceMembers }: Props) => {
 
   if (!member) return;
 
+  const tempMember = {
+    id: "temp-" + Date.now(),
+    user: {
+      id: member.id,
+      name: member.name,
+      email: member.email,
+    }
+  };
+
   try {
+    setIsAdding(true);
+
     await dispatch(
       addProjectMember({
         projectId: project.id,
         email: member.email,
+        tempMember
       })
     ).unwrap();
 
-    toast.success("Member added successfully 🔥");
+    toast.success("Member added successfully");
 
-    setSelectedMember("");
+    //  CLOSE AFTER SUCCESS
     setIsOpen(false);
+    setSelectedMember("");
+
   } catch (error: any) {
     toast.error(error || "Failed to add member");
+  } finally {
+    setIsAdding(false);
   }
 };
+    
 
-  return (
-    <section className="space-y-6">
+      const handleConfirmRemove = async () => {
+        if (!selectedMemberId) return;
 
-      {/* -------- Header -------- */}
-      <header className="flex justify-between items-center">
-        <h2 className="text-lg font-medium">Project Members</h2>
+        try {
+          setRemovingId(selectedMemberId);
 
-        <Button onClick={() => setIsOpen(true)}>
-          Add Member
-        </Button>
-      </header>
 
-      {/* -------- Dialog -------- */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md">
+          const memberToRemove = project.members?.find(
+            (m) => m.user.id === selectedMemberId
+          );
 
-          <DialogHeader>
-            <DialogTitle>Add Member</DialogTitle>
-            <DialogDescription>
-              Select a workspace member to add to this project
-            </DialogDescription>
-          </DialogHeader>
+          await dispatch(
+            removeProjectMember({
+              projectId: project.id,
+              memberId: selectedMemberId,
+              backupMember: memberToRemove
+            })
+          ).unwrap();
 
-          <div className="space-y-4">
+          toast.success("Member removed successfully");
+        } catch (err: any) {
+          toast.error(err?.message || "Failed to remove member");
+          throw err; // IMPORTANT → keeps dialog open
+        } finally {
+          setRemovingId(null);
+        }
+      };
 
-            {availableMembers.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                All workspace members already added
-              </p>
-            ) : (
-              <Select
-                value={selectedMember}
-                onValueChange={setSelectedMember}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select member" />
-                </SelectTrigger>
+      console.log("workspaceMembers:", workspaceMembers);
+      console.log("projectMembers:", project?.members);
 
-                <SelectContent>
-                  {availableMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.name} ({member.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+      return (
+        <section className="space-y-6">
 
-          </div>
+          {/* -------- Header -------- */}
+          <header className="flex justify-between items-center">
+            <h2 className="text-lg font-medium">Project Members</h2>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-
-            <Button
-              onClick={handleAddMember}
-              disabled={!selectedMember || availableMembers.length === 0}
-            >
+            <Button onClick={() => setIsOpen(true)}>
               Add Member
             </Button>
-          </DialogFooter>
+          </header>
 
-        </DialogContent>
-      </Dialog>
+          {/* -------- Dialog -------- */}
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogContent className="sm:max-w-md">
 
-      {/* -------- Project Members List -------- */}
-      <ul className="space-y-4">
-        {project?.members?.map((member: any) => (
-          <li
-            key={member.id}
-            className="border rounded-lg p-4"
-          >
-            <div className="flex justify-between items-start">
+              <DialogHeader>
+                <DialogTitle>Add Member</DialogTitle>
+                <DialogDescription>
+                  Select a workspace member to add to this project
+                </DialogDescription>
+              </DialogHeader>
 
-              <div>
-                <p className="font-medium">
-                  {member.user?.name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {member.user?.email}
-                </p>
+              <div className="space-y-4">
+
+                {availableMembers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    All workspace members already added
+                  </p>
+                ) : (
+                  <Select
+                    value={selectedMember}
+                    onValueChange={setSelectedMember}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select member" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {availableMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name || "Unknown"} ({member.email || "No email"})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
               </div>
 
-              <Button variant="destructive" size="sm">
-                Remove
-              </Button>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsOpen(false)}>
+                  Cancel
+                </Button>
 
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-};
+                <Button
+                  onClick={handleAddMember}
+                  disabled={
+                    !selectedMember ||
+                    availableMembers.length === 0 ||
+                    isAdding
+                  }
+                >
+                  {isAdding ? "Adding..." : "Add Member"}
+                </Button>
+              </DialogFooter>
 
-export default ProjectMembers;
+            </DialogContent>
+          </Dialog>
+
+          {/* -------- Project Members List -------- */}
+          {/* -------- Project Members List -------- */}
+          {!project?.members?.length ? (
+            <p className="text-sm text-muted-foreground">
+              No members added yet
+            </p>
+          ) : (
+            <ul className="space-y-4">
+              {project.members?.map((member) => (
+                <li
+                  key={member.id}
+                  className="border rounded-lg p-4"
+                >
+                  <div className="flex justify-between items-start">
+
+                    <div>
+                      <p className="font-medium">
+                        {member.user?.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {member.user?.email}
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedMemberId(member.user?.id);
+                        setConfirmOpen(true);
+                      }}
+                      disabled={
+                        member.user?.id === project.team_lead ||
+                        removingId === member.user?.id
+                      }
+                    >
+                      Remove
+                    </Button>
+
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <ConfirmDialog
+            open={confirmOpen}
+            onOpenChange={setConfirmOpen}
+            title="Remove Member"
+            description="Are you sure you want to remove this member from the project? This action cannot be undone."
+            confirmText="Remove"
+            cancelText="Cancel"
+            onConfirm={handleConfirmRemove}
+            loading={!!removingId}
+          />
+        </section>
+      );
+    };
+
+    export default ProjectMembers;

@@ -16,6 +16,7 @@ import ThemeInitializer from "./components/ThemeInitializer";
 import { fetchWorkspaces } from "./store/workspaceThunk";
 import { useClerk, } from "@clerk/clerk-react";
 import { setCurrentWorkspace } from "./store/workspaceSlice";
+import { Toaster } from "react-hot-toast";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
@@ -179,6 +180,7 @@ export default function App() {
     user.organizationMemberships.length > 0;
   return (
     <>
+      <Toaster     position="top-center" />
       <SignedOut>
         {location.pathname === "/login" ? (
           <Outlet />

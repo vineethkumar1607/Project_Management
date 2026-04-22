@@ -19,6 +19,7 @@ export interface Project {
 
   end_date?: string;
   workspaceId: string;
+  team_lead: string;
 
   members?: ProjectMember[];
 }
@@ -34,6 +35,12 @@ export interface Workspace {
   projects: Project[];
 }
 
+// -------- Workspace Member --------
+export interface WorkspaceMember {
+  id: string;
+  name: string;
+  email: string;
+}
 
 
 export type CreateProjectPayload = {
@@ -60,3 +67,18 @@ export interface ProjectMember {
     email: string;
   };
 }
+
+export type ConfirmDialogProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+
+  title?: string;
+  description?: string;
+
+  confirmText?: string;
+  cancelText?: string;
+
+  onConfirm: () => Promise<void> | void;
+
+  loading?: boolean;
+};

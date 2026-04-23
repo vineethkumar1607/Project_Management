@@ -1,34 +1,17 @@
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { Users, FolderOpen, ListChecks, UserPlus } from "lucide-react";
 import StatsGrid from "~/components/dashboard/StatsGrid";
-import SearchInput from "~/components/SearchInput";
+
 import TeamTable from "~/components/TeamTable";
 import InviteMemberDialog from "../components/InviteMemberDialog";
 import { Button } from "~/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "~/components/ui/select";
 import { Badge } from "~/components/ui/badge";
 import { useOrganization } from "@clerk/clerk-react";
 import type { Role } from "~/types/workspace";
 import PrimaryButton from "~/components/Common/PrimaryButton";
+import { useDebounce } from "~/hooks/useDebounce";
+import FiltersBar from "~/components/Common/FiltersBar";
 
-type InvitePayload = {
-  email: string;
-  role: Role;
-};
-
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-  // role: Role;
-  role: "org:admin" | "org:member";
-}
 
 export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,6 +20,12 @@ export default function TeamPage() {
   const { organization, isLoaded } = useOrganization();
 
   const [memberships, setMemberships] = useState<any[]>([]);
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 500);
+
+  useEffect(() => {
+    setSearchQuery(debouncedQuery);
+  }, [debouncedQuery]);
 
   useEffect(() => {
     if (!organization) return;
@@ -179,56 +168,53 @@ export default function TeamPage() {
       </section>
 
       {/* Search + Filter Section */}
-      <section
-        aria-label="Filters"
-        className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between"
-      >
-        <div className="w-full md:max-w-sm">
-          <SearchInput
-            placeholder="Search team members..."
-            onSearch={setSearchQuery}
-          />
-        </div>
-
-        <Select
-          value={roleFilter}
-          onValueChange={(value: Role | "ALL") =>
-            setRoleFilter(value)
-          }
-        >
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Filter Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All</SelectItem>
-            <SelectItem value="ADMIN">Admin</SelectItem>
-            <SelectItem value="MEMBER">Member</SelectItem>
-          </SelectContent>
-        </Select>
-      </section>
+      <FiltersBar<Role | "ALL">
+        search={{
+          value: query,
+          onChange: setQuery,
+          placeholder: "Search team members...",
+        }}
+        filters={[
+          {
+            value: roleFilter,
+            onChange: setRoleFilter,
+            placeholder: "Filter Role",
+            options: [
+              { label: "All", value: "ALL" },
+              { label: "Admin", value: "org:admin" },
+              { label: "Member", value: "org:member" },
+            ],
+          },
+        ]}
+      />
       {/* Table or Empty State */}
       <section aria-label="Team members" className="min-h-[60vh]">
         {filteredMembers.length > 0 ? (
           <TeamTable members={filteredMembers} />
         ) : (
-          <div className="border rounded-xl p-12 text-center bg-card shadow-sm">
-            <Users
-              className="mx-auto mb-4 text-blue-500"
-              size={40}
-            />
-            <p className="text-xl font-semibold">
-              No team members found
-            </p>
-            <p className="text-muted-foreground text-sm mt-2">
-              Adjust your filters or invite a new member.
-            </p>
+          <div className="w-full mt-2">
+            <div className="w-full text-center border rounded-xl p-6 sm:p-8 bg-card shadow-sm">
 
-            <PrimaryButton
-              onClick={() => setIsInviteOpen(true)}
-              icon={<UserPlus className="size-4" />}
-            >
-              Invite Member
-            </PrimaryButton>
+              <Users className="mx-auto mb-4 text-blue-500 size-10 sm:size-12" />
+
+              <p className="text-lg sm:text-xl font-semibold">
+                No team members found
+              </p>
+
+              <p className="text-muted-foreground text-sm mt-2">
+                Adjust your filters or invite a new member.
+              </p>
+
+              <div className="mt-6 flex justify-center">
+                <PrimaryButton
+                  onClick={() => setIsInviteOpen(true)}
+                  icon={<UserPlus className="size-4" />}
+                >
+                  Invite Member
+                </PrimaryButton>
+              </div>
+
+            </div>
           </div>
         )}
       </section>

@@ -82,3 +82,28 @@ export type ConfirmDialogProps = {
 
   loading?: boolean;
 };
+
+
+
+
+export type FilterOption = {
+  label: string;
+  value: string;
+};
+
+export type FilterConfig = {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  options: FilterOption[];
+};
+
+export interface FiltersBarProps {
+  search: {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+  };
+  filters?: FilterConfig[];
+}
+

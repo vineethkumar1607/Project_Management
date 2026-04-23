@@ -29,7 +29,7 @@ const columns = [
     columnHelper.accessor("name", {
         header: ({ column }) => (
             <button
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 w-[200px]"
                 onClick={() =>
                     column.toggleSorting(column.getIsSorted() === "asc")
                 }
@@ -47,29 +47,35 @@ const columns = [
                 .toUpperCase();
 
             return (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-[200px]">
                     <Avatar className="h-8 w-8">
                         <AvatarFallback className="bg-primary/10 text-primary font-medium">
                             {initials}
                         </AvatarFallback>
                     </Avatar>
-                    <span className="font-medium">{member.name}</span>
+                    <span className="font-medium truncate">
+                        {member.name}
+                    </span>
                 </div>
             );
         },
     }),
 
     columnHelper.accessor("email", {
-        header: "Email",
+        header: () => (
+            <span className="block w-[250px]">Email</span>
+        ),
         cell: ({ row }) => (
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground block w-[250px] break-all">
                 {row.original.email}
             </span>
         ),
     }),
 
     columnHelper.accessor("role", {
-        header: "Role",
+        header: () => (
+            <span className="block w-[120px]">Role</span>
+        ),
         cell: ({ row }) => {
             const role = row.original.role;
 
@@ -81,13 +87,15 @@ const columns = [
             };
 
             return (
-                <Badge className={`font-medium ${roleColorMap[role]}`}>
-                    {role}
-                </Badge>
+                <div className="w-[120px]">
+                    <Badge className={`font-medium ${roleColorMap[role]}`}>
+                        {role}
+                    </Badge>
+                </div>
             );
         },
     }),
-];
+]
 
 /* ---------------- Main Component ---------------- */
 
@@ -106,32 +114,33 @@ export default function TeamTable({ members }: TeamTableProps) {
     return (
         <section className="space-y-4">
             <div className="rounded-md border overflow-hidden">
-                <Table className="table-fixed w-full">
-                    {/* Header */}
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
+                <div className="w-full overflow-x-auto">
+
+                    <Table className="w-full min-w-[600px]">
+
+                        <TableHeader>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id} scope="col" className="text-left align-middle px-4 py-3">
+                                            {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext()
                                             )}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
+                                        </TableHead>
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </TableHeader>
 
-                    {/* Body */}
-                    <TableBody>
-                        {table.getRowModel().rows.length ? (
-                            table.getRowModel().rows.map((row) => (
+                        <TableBody>
+                            {table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id}>
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
+                                        <TableCell
+                                            key={cell.id}
+                                            className="px-4 py-3 align-middle"
+                                        >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext()
@@ -139,19 +148,12 @@ export default function TeamTable({ members }: TeamTableProps) {
                                         </TableCell>
                                     ))}
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="text-center py-6 text-muted-foreground"
-                                >
-                                    No team members found.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
+                            ))}
+                        </TableBody>
+
+                    </Table>
+
+                </div>
             </div>
         </section>
     );

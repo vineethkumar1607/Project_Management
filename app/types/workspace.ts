@@ -56,7 +56,7 @@ export type CreateProjectPayload = {
 };
 
 
-export type Role = "org:admin" | "org:member";
+export type Role = "ADMIN" | "MEMBER";
 
 export interface ProjectMember {
   id: string;

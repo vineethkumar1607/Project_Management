@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, Suspense } from "react";
-import { Users, FolderOpen, ListChecks, UserPlus } from "lucide-react";
-import StatsGrid from "~/components/dashboard/StatsGrid";
+import { useState, useMemo, useEffect, } from "react";
+import { Users,  UserPlus } from "lucide-react";
+
 
 import TeamTable from "~/components/TeamTable";
 import InviteMemberDialog from "../components/InviteMemberDialog";
@@ -11,6 +11,11 @@ import type { Role } from "~/types/workspace";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
 import FiltersBar from "~/components/Common/FiltersBar";
+import { motion } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "~/store/store";
+import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
+import StatsCard from "~/components/StatsCard";
 
 
 export default function TeamPage() {
@@ -19,24 +24,38 @@ export default function TeamPage() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const { organization, isLoaded } = useOrganization();
 
-  const [memberships, setMemberships] = useState<any[]>([]);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 500);
+
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { members, loading } = useSelector(
+    (state: RootState) => state.workspace
+  );
+
+  const workspaceId = useSelector(
+    (state: RootState) => state.workspace.currentWorkspaceId
+  );
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  useEffect(() => {
+    if (!workspaceId) return;
+
+    dispatch(fetchWorkspaceMembers(workspaceId));
+  }, [workspaceId, dispatch]);
 
   useEffect(() => {
     setSearchQuery(debouncedQuery);
   }, [debouncedQuery]);
-
-  useEffect(() => {
-    if (!organization) return;
-
-    const loadMembers = async () => {
-      const res = await organization.getMemberships();
-      setMemberships(res.data);
-    };
-
-    loadMembers();
-  }, [organization]);
 
 
 
@@ -45,28 +64,35 @@ export default function TeamPage() {
   }, [organization]);
 
 
-  const members = memberships.map((m: any) => ({
-    id: m.publicUserData?.userId || "",
-    name: m.publicUserData?.firstName || "User",
-    email: m.publicUserData?.identifier || "",
-    role: m.role,
-  }));
+  const normalizedMembers = useMemo(() => {
+    return members.map((m: any) => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      role: m.role,
+    }));
+  }, [members]);
 
   // Memoized role summary
   const roleSummary = useMemo(() => {
-    const admins = members.filter((m) => m.role === "org:admin").length;
-    const teamMembers = members.filter((m) => m.role === "org:member").length;
+    const admins = normalizedMembers.filter(
+      (m) => m.role === "ADMIN"
+    ).length;
+
+    const teamMembers = normalizedMembers.filter(
+      (m) => m.role === "MEMBER"
+    ).length;
 
     return {
       admins,
       teamMembers,
-      total: members.length,
+      total: normalizedMembers.length,
     };
-  }, [members]);
+  }, [normalizedMembers]);
 
   // Combined filtering
   const filteredMembers = useMemo(() => {
-    return members.filter((member) => {
+    return normalizedMembers.filter((member) => {
       const matchesSearch = member.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -76,32 +102,41 @@ export default function TeamPage() {
 
       return matchesSearch && matchesRole;
     });
-  }, [members, searchQuery, roleFilter]);
+  }, [normalizedMembers, searchQuery, roleFilter]);
 
-  const stats = [
+  const stats = useMemo(() => [
     {
       title: "Total Members",
       value: roleSummary.total,
+      description: "members in workspace",
       icon: Users,
       iconBgColor: "bg-blue-500/20",
       iconColor: "text-blue-600",
     },
     {
-      title: "Active Projects",
-      value: 2,
-      icon: FolderOpen,
-      iconBgColor: "bg-emerald-500/20",
-      iconColor: "text-emerald-600",
-    },
-    {
-      title: "Total Tasks",
-      value: 6,
-      icon: ListChecks,
+      title: "Admins",
+      value: roleSummary.admins,
+      description: `of ${roleSummary.total} total`,
+      icon: Users,
       iconBgColor: "bg-purple-500/20",
       iconColor: "text-purple-600",
     },
-  ];
+    {
+      title: "Members",
+      value: roleSummary.teamMembers,
+      description: "non-admin users",
+      icon: Users,
+      iconBgColor: "bg-emerald-500/20",
+      iconColor: "text-emerald-600",
+    },
+  ], [roleSummary]);
 
+  if (loading) {
+    return <div className="p-6">Loading members...</div>;
+  }
+
+
+  console.log("MEMBERS:", members);
 
   const handleInvite = async ({ email, role }: { email: string; role: Role }) => {
     try {
@@ -146,11 +181,16 @@ export default function TeamPage() {
       </header>
 
       {/* Stats */}
-      <section aria-label="Team statistics">
-        <Suspense fallback={<div className="h-24" />}>
-          <StatsGrid stats={stats} />
-        </Suspense>
-      </section>
+      <motion.section
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        {stats.map((stat) => (
+          <StatsCard key={stat.title} {...stat} />
+        ))}
+      </motion.section>
 
       {/* Role Summary */}
       <section className="flex flex-wrap gap-2">
@@ -181,8 +221,8 @@ export default function TeamPage() {
             placeholder: "Filter Role",
             options: [
               { label: "All", value: "ALL" },
-              { label: "Admin", value: "org:admin" },
-              { label: "Member", value: "org:member" },
+              { label: "Admin", value: "ADMIN" },
+              { label: "Member", value: "MEMBER" },
             ],
           },
         ]}

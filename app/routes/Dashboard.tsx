@@ -23,38 +23,17 @@ const Dashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Redux state
-  const currentWorkspaceId = useSelector(
-    (state: RootState) => state.workspace.currentWorkspaceId
-  );
-
-  const workspaces = useSelector(
-    (state: RootState) => state.workspace.workspaces
-  );
 
   // Clerk organization
   const { organization } = useOrganization();
   const workspaceId = organization?.id;
 
 
-
-  // 🔥 Fetch workspaces once per org
-  // const hasFetched = useRef(false);
-
-  // useEffect(() => {
-  //   if (!workspaceId || hasFetched.current) return;
-
-  //   console.log("✅ Fetching workspaces once");
-
-  //   // dispatch(fetchWorkspaces());
-  //   hasFetched.current = true;
-  // }, [workspaceId]);
-
-  // 🔥 Fetch projects when workspace changes
+  //  Fetch projects when workspace changes
   useEffect(() => {
     if (!workspaceId) return;
 
-    console.log("📦 Fetching projects for:", workspaceId);
+    console.log("Fetching projects for:", workspaceId);
 
     dispatch(fetchProjects(workspaceId));
   }, [workspaceId]);
@@ -62,16 +41,7 @@ const Dashboard = () => {
   /**
    * Loading state
    */
-  if (!isLoaded) {
-    return (
-      <main className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <div className="h-5 w-40 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse mb-2" />
-          <div className="h-3 w-64 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-        </div>
-      </main>
-    );
-  }
+  if (!isLoaded) return null;
 
   return (
     <main className="max-w-6xl mx-auto">

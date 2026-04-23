@@ -1,33 +1,22 @@
-import { useState, useMemo, useEffect } from "react";
-import { Users, FolderOpen, ListChecks, UserPlus } from "lucide-react";
-import StatsGrid from "~/components/dashboard/StatsGrid";
-import SearchInput from "~/components/SearchInput";
+import { useState, useMemo, useEffect, } from "react";
+import { Users,  UserPlus } from "lucide-react";
+
+
 import TeamTable from "~/components/TeamTable";
 import InviteMemberDialog from "../components/InviteMemberDialog";
 import { Button } from "~/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "~/components/ui/select";
 import { Badge } from "~/components/ui/badge";
 import { useOrganization } from "@clerk/clerk-react";
 import type { Role } from "~/types/workspace";
+import PrimaryButton from "~/components/Common/PrimaryButton";
+import { useDebounce } from "~/hooks/useDebounce";
+import FiltersBar from "~/components/Common/FiltersBar";
+import { motion } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "~/store/store";
+import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
+import StatsCard from "~/components/StatsCard";
 
-type InvitePayload = {
-  email: string;
-  role: Role;
-};
-
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-  // role: Role;
-  role: "org:admin" | "org:member";
-}
 
 export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,18 +24,38 @@ export default function TeamPage() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const { organization, isLoaded } = useOrganization();
 
-  const [memberships, setMemberships] = useState<any[]>([]);
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 500);
+
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { members, loading } = useSelector(
+    (state: RootState) => state.workspace
+  );
+
+  const workspaceId = useSelector(
+    (state: RootState) => state.workspace.currentWorkspaceId
+  );
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
 
   useEffect(() => {
-    if (!organization) return;
+    if (!workspaceId) return;
 
-    const loadMembers = async () => {
-      const res = await organization.getMemberships();
-      setMemberships(res.data);
-    };
+    dispatch(fetchWorkspaceMembers(workspaceId));
+  }, [workspaceId, dispatch]);
 
-    loadMembers();
-  }, [organization]);
+  useEffect(() => {
+    setSearchQuery(debouncedQuery);
+  }, [debouncedQuery]);
 
 
 
@@ -55,28 +64,35 @@ export default function TeamPage() {
   }, [organization]);
 
 
-  const members = memberships.map((m: any) => ({
-    id: m.publicUserData?.userId || "",
-    name: m.publicUserData?.firstName || "User",
-    email: m.publicUserData?.identifier || "",
-    role: m.role,
-  }));
+  const normalizedMembers = useMemo(() => {
+    return members.map((m: any) => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      role: m.role,
+    }));
+  }, [members]);
 
   // Memoized role summary
   const roleSummary = useMemo(() => {
-    const admins = members.filter((m) => m.role === "org:admin").length;
-    const teamMembers = members.filter((m) => m.role === "org:member").length;
+    const admins = normalizedMembers.filter(
+      (m) => m.role === "ADMIN"
+    ).length;
+
+    const teamMembers = normalizedMembers.filter(
+      (m) => m.role === "MEMBER"
+    ).length;
 
     return {
       admins,
       teamMembers,
-      total: members.length,
+      total: normalizedMembers.length,
     };
-  }, [members]);
+  }, [normalizedMembers]);
 
   // Combined filtering
   const filteredMembers = useMemo(() => {
-    return members.filter((member) => {
+    return normalizedMembers.filter((member) => {
       const matchesSearch = member.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -86,32 +102,41 @@ export default function TeamPage() {
 
       return matchesSearch && matchesRole;
     });
-  }, [members, searchQuery, roleFilter]);
+  }, [normalizedMembers, searchQuery, roleFilter]);
 
-  const stats = [
+  const stats = useMemo(() => [
     {
       title: "Total Members",
       value: roleSummary.total,
+      description: "members in workspace",
       icon: Users,
       iconBgColor: "bg-blue-500/20",
       iconColor: "text-blue-600",
     },
     {
-      title: "Active Projects",
-      value: 2,
-      icon: FolderOpen,
-      iconBgColor: "bg-emerald-500/20",
-      iconColor: "text-emerald-600",
-    },
-    {
-      title: "Total Tasks",
-      value: 6,
-      icon: ListChecks,
+      title: "Admins",
+      value: roleSummary.admins,
+      description: `of ${roleSummary.total} total`,
+      icon: Users,
       iconBgColor: "bg-purple-500/20",
       iconColor: "text-purple-600",
     },
-  ];
+    {
+      title: "Members",
+      value: roleSummary.teamMembers,
+      description: "non-admin users",
+      icon: Users,
+      iconBgColor: "bg-emerald-500/20",
+      iconColor: "text-emerald-600",
+    },
+  ], [roleSummary]);
 
+  if (loading) {
+    return <div className="p-6">Loading members...</div>;
+  }
+
+
+  console.log("MEMBERS:", members);
 
   const handleInvite = async ({ email, role }: { email: string; role: Role }) => {
     try {
@@ -132,12 +157,12 @@ export default function TeamPage() {
   };
 
   return (
-    <main className="max-w-7xl mx-auto space-y-10 p-6">
+    <div className="space-y-8">
 
       {/* Header */}
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             Team Management
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -156,12 +181,19 @@ export default function TeamPage() {
       </header>
 
       {/* Stats */}
-      <section aria-label="Team statistics">
-        <StatsGrid stats={stats} />
-      </section>
+      <motion.section
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
+        {stats.map((stat) => (
+          <StatsCard key={stat.title} {...stat} />
+        ))}
+      </motion.section>
 
       {/* Role Summary */}
-      <section className="flex flex-wrap gap-3">
+      <section className="flex flex-wrap gap-2">
         <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
           Total: {roleSummary.total}
         </Badge>
@@ -176,57 +208,53 @@ export default function TeamPage() {
       </section>
 
       {/* Search + Filter Section */}
-      <section className="bg-muted/40 shadow rounded-xl p-6 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
-
-        <div className="w-full lg:w-2/3">
-          <SearchInput
-            placeholder="Search team members..."
-            onSearch={setSearchQuery}
-          />
-        </div>
-
-        <Select
-          value={roleFilter}
-          onValueChange={(value: Role | "ALL") =>
-            setRoleFilter(value)
-          }
-        >
-          <SelectTrigger className="w-full lg:w-48">
-            <SelectValue placeholder="Filter Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All</SelectItem>
-            <SelectItem value="ADMIN">Admin</SelectItem>
-            <SelectItem value="MEMBER">Member</SelectItem>
-          </SelectContent>
-        </Select>
-      </section>
-
+      <FiltersBar<Role | "ALL">
+        search={{
+          value: query,
+          onChange: setQuery,
+          placeholder: "Search team members...",
+        }}
+        filters={[
+          {
+            value: roleFilter,
+            onChange: setRoleFilter,
+            placeholder: "Filter Role",
+            options: [
+              { label: "All", value: "ALL" },
+              { label: "Admin", value: "ADMIN" },
+              { label: "Member", value: "MEMBER" },
+            ],
+          },
+        ]}
+      />
       {/* Table or Empty State */}
-      <section className=" min-h-[450px]  ">
+      <section aria-label="Team members" className="min-h-[60vh]">
         {filteredMembers.length > 0 ? (
           <TeamTable members={filteredMembers} />
         ) : (
-          <div className="border rounded-xl p-12 text-center bg-card shadow-sm">
-            <Users
-              className="mx-auto mb-4 text-blue-500"
-              size={40}
-            />
-            <p className="text-xl font-semibold">
-              No team members found
-            </p>
-            <p className="text-muted-foreground text-sm mt-2">
-              Adjust your filters or invite a new member.
-            </p>
+          <div className="w-full mt-2">
+            <div className="w-full text-center border rounded-xl p-6 sm:p-8 bg-card shadow-sm">
 
-            <Button
-              onClick={() => setIsInviteOpen(true)}
-              variant="gradient"
-              className="mt-6 inline-flex items-center gap-2"
-            >
-              <UserPlus size={16} />
-              Invite Member
-            </Button>
+              <Users className="mx-auto mb-4 text-blue-500 size-10 sm:size-12" />
+
+              <p className="text-lg sm:text-xl font-semibold">
+                No team members found
+              </p>
+
+              <p className="text-muted-foreground text-sm mt-2">
+                Adjust your filters or invite a new member.
+              </p>
+
+              <div className="mt-6 flex justify-center">
+                <PrimaryButton
+                  onClick={() => setIsInviteOpen(true)}
+                  icon={<UserPlus className="size-4" />}
+                >
+                  Invite Member
+                </PrimaryButton>
+              </div>
+
+            </div>
           </div>
         )}
       </section>
@@ -237,6 +265,6 @@ export default function TeamPage() {
         setIsOpen={setIsInviteOpen}
         onInvite={handleInvite}
       />
-    </main>
+    </div>
   );
 }

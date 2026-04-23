@@ -1,16 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Search } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "~/components/ui/select";
-
 import ProjectCard from "~/components/ProjectCard";
 import type { Project } from "~/types/workspace";
 import { filterProjects } from "~/lib/filterProjects";
@@ -19,6 +10,9 @@ import { useSelector } from "react-redux";
 import type { RootState } from "~/store/store";
 import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
 import CreateProjectDialogBox from "~/components/CreateProjectDialogBox";
+import PrimaryButton from "~/components/Common/PrimaryButton";
+import { useDebounce } from "~/hooks/useDebounce";
+import FiltersBar from "~/components/Common/FiltersBar";
 
 const Projects = () => {
   /* =======================
@@ -35,6 +29,13 @@ const Projects = () => {
   const [status, setStatus] = useState("ALL");
   const [priority, setPriority] = useState("ALL");
   const [open, setOpen] = useState(false);
+
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 500);
+
+  useEffect(() => {
+    setSearchTerm(debouncedQuery);
+  }, [debouncedQuery]);
 
   /* =======================
      Filtering
@@ -78,62 +79,60 @@ const Projects = () => {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Projects</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
           <p className="text-sm text-muted-foreground">
             Manage and track your workspace projects
           </p>
         </div>
 
-        <Button variant="gradient" onClick={() => setOpen(true)}>
-          <Plus className="size-4 mr-2" />
+        <PrimaryButton
+          onClick={() => setOpen(true)}
+          icon={<Plus className="size-4" />}
+        >
           New Project
-        </Button>
+        </PrimaryButton>
 
         {open && <CreateProjectDialogBox setIsDialogOpen={setOpen} />}
       </header>
 
       {/* Filters */}
-      <section className="flex flex-col md:flex-row gap-4">
-        <div className="relative w-full md:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search projects..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All Status</SelectItem>
-            <SelectItem value="ACTIVE">Active</SelectItem>
-            <SelectItem value="PLANNING">Planning</SelectItem>
-            <SelectItem value="ON_HOLD">On Hold</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-            <SelectItem value="CANCELLED">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={priority} onValueChange={setPriority}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Priority" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All Priority</SelectItem>
-            <SelectItem value="HIGH">High</SelectItem>
-            <SelectItem value="MEDIUM">Medium</SelectItem>
-            <SelectItem value="LOW">Low</SelectItem>
-          </SelectContent>
-        </Select>
-      </section>
+      <FiltersBar
+        search={{
+          value: query,
+          onChange: setQuery,
+          placeholder: "Search projects...",
+        }}
+        filters={[
+          {
+            value: status,
+            onChange: setStatus,
+            placeholder: "Status",
+            options: [
+              { label: "All Status", value: "ALL" },
+              { label: "Active", value: "ACTIVE" },
+              { label: "Planning", value: "PLANNING" },
+              { label: "On Hold", value: "ON_HOLD" },
+              { label: "Completed", value: "COMPLETED" },
+              { label: "Cancelled", value: "CANCELLED" },
+            ],
+          },
+          {
+            value: priority,
+            onChange: setPriority,
+            placeholder: "Priority",
+            options: [
+              { label: "All Priority", value: "ALL" },
+              { label: "High", value: "HIGH" },
+              { label: "Medium", value: "MEDIUM" },
+              { label: "Low", value: "LOW" },
+            ],
+          },
+        ]}
+      />
 
       {/* Empty State */}
       {filteredProjects.length === 0 ? (
@@ -150,7 +149,7 @@ const Projects = () => {
           ))}
         </section>
       )}
-    </main>
+    </div>
   );
 };
 

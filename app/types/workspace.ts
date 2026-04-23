@@ -56,7 +56,7 @@ export type CreateProjectPayload = {
 };
 
 
-export type Role = "org:admin" | "org:member";
+export type Role = "ADMIN" | "MEMBER";
 
 export interface ProjectMember {
   id: string;
@@ -82,3 +82,28 @@ export type ConfirmDialogProps = {
 
   loading?: boolean;
 };
+
+
+
+
+export type FilterOption = {
+  label: string;
+  value: string;
+};
+
+export type FilterConfig = {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  options: FilterOption[];
+};
+
+export interface FiltersBarProps {
+  search: {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+  };
+  filters?: FilterConfig[];
+}
+

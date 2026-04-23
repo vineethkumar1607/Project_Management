@@ -10,6 +10,8 @@ import { fetchWorkspaces } from "~/store/workspaceThunk";
 import type { AppDispatch, RootState } from "~/store/store";
 import { fetchProjects } from "~/store/projectThunk";
 import { setCurrentWorkspace } from "~/store/workspaceSlice";
+import { Button } from "~/components/ui/button";
+import PrimaryButton from "~/components/Common/PrimaryButton";
 
 // Lazy components
 const StatsGrid = lazy(() => import("../components/dashboard/StatsGrid"));
@@ -44,40 +46,36 @@ const Dashboard = () => {
   if (!isLoaded) return null;
 
   return (
-    <main className="max-w-6xl mx-auto">
-      {/* Header */}
-      <header className="flex flex-col lg:flex-row justify-between gap-6 mb-8">
+    <div className="space-y-8">
+
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl font-semibold">
+          <h1 className="text-2xl font-semibold tracking-tight">
             Welcome, {user?.fullName || user?.firstName || "User"}
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground mt-1">
             Here’s what’s happening with your projects today.
           </p>
         </div>
 
-        <button
+        <PrimaryButton
           onClick={() => setIsDialogOpen(true)}
-          className="flex items-center gap-2 px-5 py-2 text-sm rounded bg-blue-600 text-white"
+          icon={<Plus className="size-4" />}
         >
-          <Plus size={16} />
           New Project
-        </button>
-
-        {isDialogOpen && (
-          <Suspense fallback={<div />}>
-            <CreateProjectDialogBox setIsDialogOpen={setIsDialogOpen} />
-          </Suspense>
-        )}
+        </PrimaryButton>
       </header>
 
-      {/* Stats */}
-      <Suspense fallback={<StatsGridSkeleton />}>
-        <StatsGrid />
-      </Suspense>
+      <section>
+        <Suspense fallback={<StatsGridSkeleton />}>
+          <StatsGrid />
+        </Suspense>
+      </section>
 
-      {/* Content */}
-      <section className="grid lg:grid-cols-3 gap-8 mt-6">
+      <section
+        aria-label="Dashboard content"
+        className="grid lg:grid-cols-3 gap-6"
+      >
         <div className="lg:col-span-2 space-y-8">
           <Suspense fallback={<ProjectOverviewSkeleton />}>
             <ProjectOverview />
@@ -94,7 +92,8 @@ const Dashboard = () => {
           </Suspense>
         </aside>
       </section>
-    </main>
+
+    </div>
   );
 };
 

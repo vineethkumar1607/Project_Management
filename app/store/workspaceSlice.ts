@@ -141,9 +141,17 @@ const workspaceSlice = createSlice({
                 state.error = action.payload as string;
             })
 
+            .addCase(fetchWorkspaceMembers.pending, (state) => {
+                state.loading = true;
+            })
             .addCase(fetchWorkspaceMembers.fulfilled, (state, action) => {
+                state.loading = false;
                 state.members = action.payload;
             })
+            .addCase(fetchWorkspaceMembers.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
 
 
     },

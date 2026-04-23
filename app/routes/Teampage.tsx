@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { Users, FolderOpen, ListChecks, UserPlus } from "lucide-react";
 import StatsGrid from "~/components/dashboard/StatsGrid";
 import SearchInput from "~/components/SearchInput";
@@ -15,6 +15,7 @@ import {
 import { Badge } from "~/components/ui/badge";
 import { useOrganization } from "@clerk/clerk-react";
 import type { Role } from "~/types/workspace";
+import PrimaryButton from "~/components/Common/PrimaryButton";
 
 type InvitePayload = {
   email: string;
@@ -132,12 +133,12 @@ export default function TeamPage() {
   };
 
   return (
-    <main className="max-w-7xl mx-auto space-y-10 p-6">
+    <div className="space-y-8">
 
       {/* Header */}
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             Team Management
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -157,11 +158,13 @@ export default function TeamPage() {
 
       {/* Stats */}
       <section aria-label="Team statistics">
-        <StatsGrid stats={stats} />
+        <Suspense fallback={<div className="h-24" />}>
+          <StatsGrid stats={stats} />
+        </Suspense>
       </section>
 
       {/* Role Summary */}
-      <section className="flex flex-wrap gap-3">
+      <section className="flex flex-wrap gap-2">
         <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
           Total: {roleSummary.total}
         </Badge>
@@ -176,9 +179,11 @@ export default function TeamPage() {
       </section>
 
       {/* Search + Filter Section */}
-      <section className="bg-muted/40 shadow rounded-xl p-6 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
-
-        <div className="w-full lg:w-2/3">
+      <section
+        aria-label="Filters"
+        className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between"
+      >
+        <div className="w-full md:max-w-sm">
           <SearchInput
             placeholder="Search team members..."
             onSearch={setSearchQuery}
@@ -191,7 +196,7 @@ export default function TeamPage() {
             setRoleFilter(value)
           }
         >
-          <SelectTrigger className="w-full lg:w-48">
+          <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Filter Role" />
           </SelectTrigger>
           <SelectContent>
@@ -201,9 +206,8 @@ export default function TeamPage() {
           </SelectContent>
         </Select>
       </section>
-
       {/* Table or Empty State */}
-      <section className=" min-h-[450px]  ">
+      <section aria-label="Team members" className="min-h-[60vh]">
         {filteredMembers.length > 0 ? (
           <TeamTable members={filteredMembers} />
         ) : (
@@ -219,14 +223,12 @@ export default function TeamPage() {
               Adjust your filters or invite a new member.
             </p>
 
-            <Button
+            <PrimaryButton
               onClick={() => setIsInviteOpen(true)}
-              variant="gradient"
-              className="mt-6 inline-flex items-center gap-2"
+              icon={<UserPlus className="size-4" />}
             >
-              <UserPlus size={16} />
               Invite Member
-            </Button>
+            </PrimaryButton>
           </div>
         )}
       </section>
@@ -237,6 +239,6 @@ export default function TeamPage() {
         setIsOpen={setIsInviteOpen}
         onInvite={handleInvite}
       />
-    </main>
+    </div>
   );
 }

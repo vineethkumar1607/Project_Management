@@ -19,6 +19,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "~/store/store";
 import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
 import CreateProjectDialogBox from "~/components/CreateProjectDialogBox";
+import PrimaryButton from "~/components/Common/PrimaryButton";
 
 const Projects = () => {
   /* =======================
@@ -78,20 +79,22 @@ const Projects = () => {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Projects</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
           <p className="text-sm text-muted-foreground">
             Manage and track your workspace projects
           </p>
         </div>
 
-        <Button variant="gradient" onClick={() => setOpen(true)}>
-          <Plus className="size-4 mr-2" />
+        <PrimaryButton
+          onClick={() => setOpen(true)}
+          icon={<Plus className="size-4" />}
+        >
           New Project
-        </Button>
+        </PrimaryButton>
 
         {open && <CreateProjectDialogBox setIsDialogOpen={setOpen} />}
       </header>
@@ -150,7 +153,7 @@ const Projects = () => {
           ))}
         </section>
       )}
-    </main>
+    </div>
   );
 };
 

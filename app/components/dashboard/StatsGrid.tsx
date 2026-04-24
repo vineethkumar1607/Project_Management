@@ -5,6 +5,7 @@ import type { RootState } from "~/store/store";
 import type { LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import StatsCard from "~/components/StatsCard";
+import StatsGridSkeleton from "./StatsGridSkeleton";
 
 interface StatItem {
   title: string;
@@ -34,44 +35,44 @@ const cardVariants = {
 
 function StatsGrid() {
 
-  
-  const projects = useSelector(
-    (state: RootState) => state.project.projects
+
+  const workspaceId = useSelector(
+    (state: RootState) => state.workspace.currentWorkspaceId
   );
 
-  const stats = useMemo(() => {
-    if (!projects || projects.length === 0) {
-      return {
-        totalProjects: 0,
-        completedProjects: 0,
-        myTasks: 0,
-        overdueIssues: 0,
-      };
-    }
+  const projectData = useSelector((state: RootState) =>
+    workspaceId
+      ? state.project.projectsByWorkspace[workspaceId]
+      : null
+  );
 
+  const projects = projectData?.data || [];
+  const stats = useMemo(() => {
     const totalProjects = projects.length;
 
     const completedProjects = projects.filter(
       (p) => p.status === "COMPLETED"
     ).length;
 
-    const myTasks = projects.reduce(
-      (acc, project) =>
+    const myTasks = projects.reduce((acc, project) => {
+      const tasks = (project as any).tasks ?? [];
+      return (
         acc +
-        (project.tasks?.filter(
-          (t) => t.assignee?.email === "user@email.com" // replace later
-        ).length || 0),
-      0
-    );
+        tasks.filter(
+          (t: any) => t.assignee?.email === "user@email.com"
+        ).length
+      );
+    }, 0);
 
-    const overdueIssues = projects.reduce(
-      (acc, project) =>
+    const overdueIssues = projects.reduce((acc, project) => {
+      const tasks = (project as any).tasks ?? [];
+      return (
         acc +
-        (project.tasks?.filter(
-          (t) => new Date(t.due_date) < new Date()
-        ).length || 0),
-      0
-    );
+        tasks.filter(
+          (t: any) => new Date(t.due_date) < new Date()
+        ).length
+      );
+    }, 0);
 
     return {
       totalProjects,
@@ -115,6 +116,11 @@ function StatsGrid() {
       iconColor: "text-amber-500",
     },
   ];
+
+  const isInitialLoading = !projectData;
+  if (isInitialLoading) {
+    return <StatsGridSkeleton />;
+  }
 
   return (
     <motion.section

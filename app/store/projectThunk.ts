@@ -63,14 +63,13 @@ export const updateProject = createAsyncThunk(
 export const addProjectMember = createAsyncThunk(
   "project/addProjectMember",
   async (
-    { projectId, email, tempMember }:
-      { projectId: string; email: string; tempMember: any },
-    thunkAPI
-  ) => {
+    { workspaceId, projectId, email, tempMember }: { workspaceId: string; projectId: string; email: string; tempMember: any; },
+    thunkAPI) => {
     try {
       const data = await projectApi.addMember(projectId, email);
 
       return {
+        workspaceId, //  REQUIRED
         projectId,
         newMember: data.newMember,
         tempId: tempMember.id,
@@ -85,13 +84,14 @@ export const addProjectMember = createAsyncThunk(
 export const removeProjectMember = createAsyncThunk(
   "project/removeProjectMember",
   async (
-    { projectId, memberId }: { projectId: string; memberId: string,backupMember?: any; },
+    { workspaceId, projectId, memberId, backupMember }: { workspaceId: string; projectId: string; memberId: string; backupMember?: any; },
     thunkAPI
   ) => {
     try {
       await projectApi.removeMember(projectId, memberId);
 
       return {
+        workspaceId,
         projectId,
         memberId,
       };

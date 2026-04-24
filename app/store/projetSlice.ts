@@ -3,14 +3,18 @@ import { fetchProjects, createProject, updateProject, addProjectMember, removePr
 import type { Project } from "~/types/workspace";
 
 interface ProjectState {
-    projects: Project[];
-    loading: boolean;
+    projectsByWorkspace: {
+        [key: string]: {
+            data: Project[];
+            status: "idle" | "loading" | "succeeded" | "failed";
+            lastFetched?: number;
+        };
+    };
     error: string | null;
 }
 
 const initialState: ProjectState = {
-    projects: [],
-    loading: false,
+    projectsByWorkspace: {},
     error: null,
 };
 
@@ -24,54 +28,82 @@ const projectSlice = createSlice({
     extraReducers: (builder) => {
         builder
             // API started
-            .addCase(fetchProjects.pending, (state) => {
-                state.loading = true;
-                state.error = null;
+            .addCase(fetchProjects.pending, (state, action) => {
+                const workspaceId = action.meta.arg;
+                const existing = state.projectsByWorkspace[workspaceId];
+
+                state.projectsByWorkspace[workspaceId] = {
+                    data: existing?.data || [],
+                    status: "loading",
+                    lastFetched: existing?.lastFetched,
+                };
             })
 
-            // API success
             .addCase(fetchProjects.fulfilled, (state, action) => {
-                state.loading = false;
-                state.projects = action.payload;
+                const workspaceId = action.meta.arg;
 
+                state.projectsByWorkspace[workspaceId] = {
+                    data: action.payload,
+                    status: "succeeded",
+                    lastFetched: Date.now(),
+                };
             })
 
-            // API failed
             .addCase(fetchProjects.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
+                const workspaceId = action.meta.arg;
+                const existing = state.projectsByWorkspace[workspaceId];
+
+                state.projectsByWorkspace[workspaceId] = {
+                    data: existing?.data || [],
+                    status: "failed",
+                    lastFetched: existing?.lastFetched,
+                };
             })
 
             .addCase(createProject.fulfilled, (state, action) => {
-                console.log("REDUX ADD:", action.payload);
-                state.projects.push(action.payload);
+                const { workspaceId } = action.meta.arg;
+
+                const workspace = state.projectsByWorkspace[workspaceId];
+
+                if (workspace) {
+                    workspace.data.unshift(action.payload); // add on top
+                }
             })
 
             .addCase(updateProject.fulfilled, (state, action) => {
-                const index = state.projects.findIndex(
-                    (p) => p.id === action.payload.id
-                );
+                const updated = action.payload;
 
-                if (index !== -1) {
-                    state.projects[index] = action.payload;
-                }
+                Object.values(state.projectsByWorkspace).forEach((workspace) => {
+                    const index = workspace.data.findIndex(
+                        (p) => p.id === updated.id
+                    );
+
+                    if (index !== -1) {
+                        workspace.data[index] = updated;
+                    }
+                });
             })
 
             .addCase(addProjectMember.pending, (state, action) => {
                 const { projectId, tempMember } = action.meta.arg;
 
-                const project = state.projects.find(p => p.id === projectId);
+                Object.values(state.projectsByWorkspace).forEach((workspace) => {
+                    const project = workspace.data.find(p => p.id === projectId);
 
-                if (project) {
-                    project.members = project.members || [];
-                    project.members.push(tempMember); // instant UI
-                }
+                    if (project) {
+                        project.members = project.members || [];
+                        project.members.push(tempMember);
+                    }
+                });
             })
 
             .addCase(addProjectMember.fulfilled, (state, action) => {
-                const { projectId, newMember, tempId } = action.payload;
+                const { workspaceId, projectId, newMember, tempId } = action.payload;
 
-                const project = state.projects.find(p => p.id === projectId);
+                const workspace = state.projectsByWorkspace[workspaceId];
+                if (!workspace) return;
+
+                const project = workspace.data.find(p => p.id === projectId);
 
                 if (project && project.members) {
                     project.members = project.members.map(m =>
@@ -81,9 +113,12 @@ const projectSlice = createSlice({
             })
 
             .addCase(addProjectMember.rejected, (state, action) => {
-                const { projectId, tempMember } = action.meta.arg;
+                const { workspaceId, projectId, tempMember } = action.meta.arg;
 
-                const project = state.projects.find(p => p.id === projectId);
+                const workspace = state.projectsByWorkspace[workspaceId];
+                if (!workspace) return;
+
+                const project = workspace.data.find(p => p.id === projectId);
 
                 if (project && project.members) {
                     project.members = project.members.filter(
@@ -94,9 +129,12 @@ const projectSlice = createSlice({
 
 
             .addCase(removeProjectMember.pending, (state, action) => {
-                const { projectId, memberId } = action.meta.arg;
+                const { workspaceId, projectId, memberId } = action.meta.arg;
 
-                const project = state.projects.find(p => p.id === projectId);
+                const workspace = state.projectsByWorkspace[workspaceId];
+                if (!workspace) return;
+
+                const project = workspace.data.find(p => p.id === projectId);
 
                 if (project && project.members) {
                     project.members = project.members.filter(
@@ -107,9 +145,12 @@ const projectSlice = createSlice({
 
 
             .addCase(removeProjectMember.fulfilled, (state, action) => {
-                const { projectId, memberId } = action.payload;
+                const { workspaceId, projectId, memberId } = action.payload;
 
-                const project = state.projects.find(p => p.id === projectId);
+                const workspace = state.projectsByWorkspace[workspaceId];
+                if (!workspace) return;
+
+                const project = workspace.data.find(p => p.id === projectId);
 
                 if (project && project.members) {
                     project.members = project.members.filter(
@@ -119,15 +160,16 @@ const projectSlice = createSlice({
             })
 
             .addCase(removeProjectMember.rejected, (state, action) => {
-                const { projectId, memberId } = action.meta.arg;
+                const { workspaceId, projectId, backupMember } = action.meta.arg;
 
-                const project = state.projects.find(p => p.id === projectId);
+                const workspace = state.projectsByWorkspace[workspaceId];
+                if (!workspace) return;
+
+                const project = workspace.data.find(p => p.id === projectId);
 
                 if (project) {
                     project.members = project.members || [];
-
-                    // rollback → re-add member
-                    project.members.push(action.meta.arg.backupMember);
+                    project.members.push(backupMember);
                 }
             })
 

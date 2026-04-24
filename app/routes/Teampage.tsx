@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "~/store/store";
 import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
 import StatsCard from "~/components/StatsCard";
+import EmptyState from "~/components/Common/EmptyState";
 
 
 export default function TeamPage() {
@@ -256,28 +257,19 @@ export default function TeamPage() {
           <TeamTable members={filteredMembers} />
         ) : (
           <div className="w-full mt-2">
-            <div className="w-full text-center border rounded-xl p-6 sm:p-8 bg-card shadow-sm">
-
-              <Users className="mx-auto mb-4 text-blue-500 size-10 sm:size-12" />
-
-              <p className="text-lg sm:text-xl font-semibold">
-                No team members found
-              </p>
-
-              <p className="text-muted-foreground text-sm mt-2">
-                Adjust your filters or invite a new member.
-              </p>
-
-              <div className="mt-6 flex justify-center">
+            <EmptyState
+              icon={<Users className="text-blue-500 size-10 sm:size-12" />}
+              title="No team members found"
+              description="Adjust your filters or invite a new member."
+              action={
                 <PrimaryButton
                   onClick={() => setIsInviteOpen(true)}
                   icon={<UserPlus className="size-4" />}
                 >
                   Invite Member
                 </PrimaryButton>
-              </div>
-
-            </div>
+              }
+            />
           </div>
         )}
       </section>

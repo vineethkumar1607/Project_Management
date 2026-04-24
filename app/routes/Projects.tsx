@@ -18,9 +18,19 @@ const Projects = () => {
   /* =======================
      Redux Data
   ======================= */
-  const { projects, loading, error } = useSelector(
-    (state: RootState) => state.project
+  const workspaceId = useSelector(
+    (state: RootState) => state.workspace.currentWorkspaceId
   );
+
+  const projectData = useSelector((state: RootState) =>
+    workspaceId
+      ? state.project.projectsByWorkspace[workspaceId]
+      : null
+  );
+
+  const projects = projectData?.data || [];
+  const loading = !projectData || projectData.status === "loading";
+  const error = projectData?.status === "failed";
 
   /* =======================
      UI State

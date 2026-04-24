@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, } from "react";
-import { Users,  UserPlus } from "lucide-react";
+import { Users, UserPlus } from "lucide-react";
 
 
 import TeamTable from "~/components/TeamTable";
@@ -16,26 +16,33 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "~/store/store";
 import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
 import StatsCard from "~/components/StatsCard";
+import EmptyState from "~/components/Common/EmptyState";
 
 
 export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<Role | "ALL">("ALL");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const { organization, isLoaded } = useOrganization();
+  const { organization, } = useOrganization();
 
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 500);
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const { members, loading } = useSelector(
-    (state: RootState) => state.workspace
-  );
-
   const workspaceId = useSelector(
     (state: RootState) => state.workspace.currentWorkspaceId
   );
+
+  const workspaceData = useSelector((state: RootState) =>
+    workspaceId
+      ? state.workspace.membersByWorkspace[workspaceId]
+      : null
+  );
+
+  const members = workspaceData?.data || [];
+  const isInitialLoading = !workspaceData;
+  const isBackgroundLoading = workspaceData?.status === "loading";
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -50,8 +57,20 @@ export default function TeamPage() {
   useEffect(() => {
     if (!workspaceId) return;
 
-    dispatch(fetchWorkspaceMembers(workspaceId));
-  }, [workspaceId, dispatch]);
+    const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+
+    const isStale =
+      workspaceData?.lastFetched &&
+      Date.now() - workspaceData.lastFetched > STALE_TIME;
+
+    if (
+      !workspaceData || // if no data
+      workspaceData.status === "failed" || // retries if  failed
+      isStale // if data outdated
+    ) {
+      dispatch(fetchWorkspaceMembers(workspaceId));
+    }
+  }, [workspaceId, workspaceData, dispatch]);
 
   useEffect(() => {
     setSearchQuery(debouncedQuery);
@@ -131,12 +150,17 @@ export default function TeamPage() {
     },
   ], [roleSummary]);
 
-  if (loading) {
+  if (isInitialLoading) {
     return <div className="p-6">Loading members...</div>;
   }
 
-
-  console.log("MEMBERS:", members);
+  {
+    isBackgroundLoading && (
+      <p className="text-xs text-muted-foreground">
+        Refreshing...
+      </p>
+    )
+  }
 
   const handleInvite = async ({ email, role }: { email: string; role: Role }) => {
     try {
@@ -233,28 +257,19 @@ export default function TeamPage() {
           <TeamTable members={filteredMembers} />
         ) : (
           <div className="w-full mt-2">
-            <div className="w-full text-center border rounded-xl p-6 sm:p-8 bg-card shadow-sm">
-
-              <Users className="mx-auto mb-4 text-blue-500 size-10 sm:size-12" />
-
-              <p className="text-lg sm:text-xl font-semibold">
-                No team members found
-              </p>
-
-              <p className="text-muted-foreground text-sm mt-2">
-                Adjust your filters or invite a new member.
-              </p>
-
-              <div className="mt-6 flex justify-center">
+            <EmptyState
+              icon={<Users className="text-blue-500 size-10 sm:size-12" />}
+              title="No team members found"
+              description="Adjust your filters or invite a new member."
+              action={
                 <PrimaryButton
                   onClick={() => setIsInviteOpen(true)}
                   icon={<UserPlus className="size-4" />}
                 >
                   Invite Member
                 </PrimaryButton>
-              </div>
-
-            </div>
+              }
+            />
           </div>
         )}
       </section>

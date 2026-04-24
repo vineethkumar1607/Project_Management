@@ -28,17 +28,31 @@ const Dashboard = () => {
 
   // Clerk organization
   const { organization } = useOrganization();
-  const workspaceId = organization?.id;
+  const workspaceId = useSelector(
+    (state: RootState) => state.workspace.currentWorkspaceId
+  );
+
+  const projectsData = useSelector((state: RootState) =>
+    workspaceId
+      ? state.project.projectsByWorkspace[workspaceId]
+      : null
+  );
 
 
   //  Fetch projects when workspace changes
   useEffect(() => {
     if (!workspaceId) return;
 
-    console.log("Fetching projects for:", workspaceId);
+    const STALE_TIME = 5 * 60 * 1000;
 
-    dispatch(fetchProjects(workspaceId));
-  }, [workspaceId]);
+    const isStale =
+      projectsData?.lastFetched &&
+      Date.now() - projectsData.lastFetched > STALE_TIME;
+
+    if (!projectsData || projectsData.status === "failed" || isStale) {
+      dispatch(fetchProjects(workspaceId));
+    }
+  }, [workspaceId, projectsData, dispatch]);
 
   /**
    * Loading state

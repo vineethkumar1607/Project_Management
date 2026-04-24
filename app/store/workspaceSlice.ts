@@ -6,9 +6,16 @@ import type { Workspace } from "~/types/workspace";
 /**
  * Defines Redux state structure for workspace
  */
+
 interface WorkspaceState {
     workspaces: Workspace[];
-    members: any[];
+    membersByWorkspace: {
+        [key: string]: {
+            data: any[];
+            status: "idle" | "loading" | "succeeded" | "failed";
+            lastFetched?: number;
+        };
+    };
     currentWorkspaceId: string | null;
     loading: boolean;
     error: string | null;
@@ -27,7 +34,7 @@ interface WorkspaceState {
  */
 const initialState: WorkspaceState = {
     workspaces: [],
-    members: [],
+    membersByWorkspace: {},
     currentWorkspaceId: null,
     loading: false,
     error: null,
@@ -141,18 +148,36 @@ const workspaceSlice = createSlice({
                 state.error = action.payload as string;
             })
 
-            .addCase(fetchWorkspaceMembers.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(fetchWorkspaceMembers.fulfilled, (state, action) => {
-                state.loading = false;
-                state.members = action.payload;
-            })
-            .addCase(fetchWorkspaceMembers.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            });
+            .addCase(fetchWorkspaceMembers.pending, (state, action) => {
+                const workspaceId = action.meta.arg;
+                const existing = state.membersByWorkspace[workspaceId];
 
+                state.membersByWorkspace[workspaceId] = {
+                    data: existing?.data || [],
+                    status: "loading",
+                    lastFetched: existing?.lastFetched, // preserve
+                };
+            })
+
+            .addCase(fetchWorkspaceMembers.fulfilled, (state, action) => {
+                const workspaceId = action.meta.arg;
+
+                state.membersByWorkspace[workspaceId] = {
+                    data: action.payload,
+                    status: "succeeded",
+                    lastFetched: Date.now(),
+                };
+            })
+
+            .addCase(fetchWorkspaceMembers.rejected, (state, action) => {
+                const workspaceId = action.meta.arg;
+                const existing = state.membersByWorkspace[workspaceId];
+                state.membersByWorkspace[workspaceId] = {
+                    data: existing?.data || [], //  keep old data
+                    status: "failed",
+                    lastFetched: existing?.lastFetched,
+                };
+            });
 
     },
 

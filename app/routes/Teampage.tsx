@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, } from "react";
-import { Users,  UserPlus } from "lucide-react";
+import { Users, UserPlus } from "lucide-react";
 
 
 import TeamTable from "~/components/TeamTable";
@@ -22,20 +22,26 @@ export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<Role | "ALL">("ALL");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const { organization, isLoaded } = useOrganization();
+  const { organization, } = useOrganization();
 
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 500);
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const { members, loading } = useSelector(
-    (state: RootState) => state.workspace
-  );
-
   const workspaceId = useSelector(
     (state: RootState) => state.workspace.currentWorkspaceId
   );
+
+  const workspaceData = useSelector((state: RootState) =>
+    workspaceId
+      ? state.workspace.membersByWorkspace[workspaceId]
+      : null
+  );
+
+  const members = workspaceData?.data || [];
+  const isInitialLoading = !workspaceData;
+  const isBackgroundLoading = workspaceData?.status === "loading";
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -50,8 +56,20 @@ export default function TeamPage() {
   useEffect(() => {
     if (!workspaceId) return;
 
-    dispatch(fetchWorkspaceMembers(workspaceId));
-  }, [workspaceId, dispatch]);
+    const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+
+    const isStale =
+      workspaceData?.lastFetched &&
+      Date.now() - workspaceData.lastFetched > STALE_TIME;
+
+    if (
+      !workspaceData || // if no data
+      workspaceData.status === "failed" || // retries if  failed
+      isStale // if data outdated
+    ) {
+      dispatch(fetchWorkspaceMembers(workspaceId));
+    }
+  }, [workspaceId, workspaceData, dispatch]);
 
   useEffect(() => {
     setSearchQuery(debouncedQuery);
@@ -131,12 +149,17 @@ export default function TeamPage() {
     },
   ], [roleSummary]);
 
-  if (loading) {
+  if (isInitialLoading) {
     return <div className="p-6">Loading members...</div>;
   }
 
-
-  console.log("MEMBERS:", members);
+  {
+    isBackgroundLoading && (
+      <p className="text-xs text-muted-foreground">
+        Refreshing...
+      </p>
+    )
+  }
 
   const handleInvite = async ({ email, role }: { email: string; role: Role }) => {
     try {

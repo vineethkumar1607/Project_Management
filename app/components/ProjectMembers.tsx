@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "~/components/ui/select";
 import { useAppDispatch } from "~/store/hooks";
 import { addProjectMember, removeProjectMember } from "~/store/projectThunk";
-import ConfirmDialog from "./ConfirmDailog";
+import ConfirmDialog from "./Common/ConfirmDailog";
 import type { Project, WorkspaceMember } from "~/types/workspace";
 
 type Props = {

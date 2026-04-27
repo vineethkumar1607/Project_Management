@@ -4,12 +4,65 @@ import { ListTodo, BarChart2, Calendar, Settings, } from "lucide-react";
 import { useAppSelector } from "~/store/hooks";
 import type { RootState } from "~/store/store";
 import type { Project } from "~/types/workspace";
+import { useGetTasksQuery } from "~/store/api/tasksApi";
+import { useEffect, useState } from "react";
+import PrimaryButton from "~/components/Common/PrimaryButton";
+import StatsCard from "~/components/StatsCard";
+import CreateTaskDialog from "~/components/CreateTaskDialog";
+import { useDispatch, } from "react-redux";
+import type { AppDispatch } from "~/store/store";
+
+import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
+
+import { useProject } from "~/hooks/useProject";
+import { TextSkeleton } from "~/components/Common/TextSkeleton";
+
+
 
 const ProjectLayout = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
+  // Fetch project details using custom hook
+  const { project, isLoading: isProjectLoading } = useProject();
+
+  const { data: tasks = [], isLoading, isError } = useGetTasksQuery(projectId!);
+
+
+  const safeTasks = isError ? [] : tasks;
+
+  const total = safeTasks.length;
+  const completed = safeTasks.filter(t => t.status === "DONE").length;
+  const inProgress = safeTasks.filter(t => t.status === "IN_PROGRESS").length;
+  const overdue = safeTasks.filter(t => {
+    return new Date(t.due_date) < new Date() && t.status !== "DONE";
+  }).length;
+
+
+  const taskStats = [
+    {
+      title: "Total Tasks",
+      value: total,
+      icon: ListTodo,
+    },
+    {
+      title: "Completed",
+      value: completed,
+      icon: BarChart2,
+    },
+    {
+      title: "In Progress",
+      value: inProgress,
+      icon: Calendar,
+    },
+    {
+      title: "Overdue",
+      value: overdue,
+      icon: Settings,
+    },
+  ];
   // Determine active tab
   const pathSegments = location.pathname.split("/");
   const lastSegment = pathSegments[pathSegments.length - 1];
@@ -18,45 +71,65 @@ const ProjectLayout = () => {
     lastSegment === projectId || lastSegment === "projects"
       ? "tasks"
       : lastSegment;
+  const dispatch = useDispatch<AppDispatch>();
 
-  // CORRECT STATE ACCESS
   const workspaceId = useAppSelector(
     (state: RootState) => state.workspace.currentWorkspaceId
   );
 
-  const projectData = useAppSelector((state: RootState) =>
+  const membersList = useAppSelector((state: RootState) =>
     workspaceId
-      ? state.project.projectsByWorkspace[workspaceId]
-      : null
+      ? state.workspace.membersByWorkspace[workspaceId]?.data ?? []
+      : []
   );
 
-  const projects = projectData?.data || [];
-
-  // TYPE SAFE
-  const project = projects.find(
-    (p: Project) => String(p.id) === String(projectId)
-  );
-
+  useEffect(() => {
+    if (workspaceId && membersList.length === 0) {
+      dispatch(fetchWorkspaceMembers(workspaceId));
+    }
+  }, [workspaceId, membersList.length, dispatch]);
   return (
     <div className="space-y-6 flex flex-col">
       {/* Header */}
-      <header className="border-b border-border pb-4">
-        {!project ? (
-          <div className="text-sm text-muted-foreground">
-            Loading project...
-          </div>
-        ) : (
-          <>
-            <h1 className="text-2xl font-semibold">
-              {project.name}
-            </h1>
+      <header className="border-b border-border pb-4 flex items-center justify-between">
+        <>
+          <div>
+            {isProjectLoading ? (
+              <>
+                <TextSkeleton className="h-6 w-48 mb-2" />
+                <TextSkeleton className="h-4 w-64" />
+              </>
+            ) : (
+              <>
+                <h1 className="text-2xl font-semibold">
+                  {project?.name}
+                </h1>
 
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage tasks, analytics, calendar and settings
-            </p>
-          </>
-        )}
+                <p className="text-sm text-muted-foreground mt-1">
+                  Manage tasks, analytics, calendar and settings
+                </p>
+              </>
+            )}
+          </div>
+
+          {isProjectLoading ? (
+            <TextSkeleton className="h-9 w-28 rounded-md" />
+          ) : (
+            <PrimaryButton onClick={() => setIsTaskModalOpen(true)}>
+              + Add Task
+            </PrimaryButton>
+          )}
+        </>
       </header>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {taskStats.map((stat) => (
+          <StatsCard
+            key={stat.title}
+            {...stat}
+            isLoading={isLoading}
+          />
+        ))}
+      </div>
 
       {/* Tabs */}
       <Tabs
@@ -96,6 +169,9 @@ const ProjectLayout = () => {
       <section className="pt-4 flex-1">
         <Outlet />
       </section>
+      {isTaskModalOpen && (
+        <CreateTaskDialog setIsDialogOpen={setIsTaskModalOpen} />
+      )}
     </div>
   );
 };

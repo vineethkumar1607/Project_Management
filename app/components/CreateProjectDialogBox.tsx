@@ -36,13 +36,17 @@ interface CreateProjectDialogProps {
 
 type FormData = {
   name: string;
-  description?: string; 
+  description?: string;
   status: string;
   priority: string;
   startDate?: string;
   endDate?: string;
   lead?: string;
   members: string[];
+};
+
+type Member = {
+  email: string;
 };
 
 /* ======================= */
@@ -56,9 +60,15 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
     (state: RootState) => state.workspace.currentWorkspaceId
   );
 
-  const membersList = useSelector(
-    (state: RootState) => state.workspace.members
-  );
+  const membersList = useSelector((state: RootState) => {
+    const id = state.workspace.currentWorkspaceId;
+
+    if (!id) return [];
+
+    return state.workspace.membersByWorkspace[id]?.data ?? [];
+  });
+
+
   console.log("membersList", membersList)
   const {
     register,
@@ -79,7 +89,7 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
     },
   });
 
-  const members = watch("members");
+ const members = watch("members") || [];
 
 
   /* ======================= */
@@ -102,7 +112,7 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
     const transformedPayload = {
       workspaceId,
       name: data.name,
-     description: data.description || "",
+      description: data.description || "",
       status: data.status,
       priority: data.priority,
       progress: 0,
@@ -257,7 +267,7 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
                     <SelectValue placeholder="Select lead" />
                   </SelectTrigger>
                   <SelectContent>
-                    {membersList.map((m) => (
+                    {membersList.map((m: Member) => (
                       <SelectItem key={m.email} value={m.email}>
                         {m.email}
                       </SelectItem>
@@ -277,7 +287,7 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
                 <SelectValue placeholder="Add team members" />
               </SelectTrigger>
               <SelectContent>
-                {membersList.map((m) => (
+                {membersList.map((m: Member) => (
                   <SelectItem key={m.email} value={m.email}>
                     {members.includes(m.email) ? `✓ ${m.email}` : m.email}
                   </SelectItem>

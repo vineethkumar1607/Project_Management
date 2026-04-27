@@ -1,9 +1,4 @@
-export interface Task {
-  due_date: string;
-  assignee?: {
-    email: string;
-  };
-}
+
 
 export interface Project {
   id: string;
@@ -107,3 +102,27 @@ export interface FiltersBarProps {
   filters?: FilterConfig[];
 }
 
+// task related types
+// create task payload
+export type TaskFormData = {
+  title: string;
+  description?: string;
+  status: "TODO" | "IN_PROGRESS" | "DONE";
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  type: "TASK" | "BUG" | "FEATURE" | "IMPROVEMENT" | "OTHER";
+  assigneeId: string;
+  due_date: string;
+};
+
+export interface Task {
+  id: string;
+  title: string;
+  status: "TODO" | "IN_PROGRESS" | "DONE";
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  type: "BUG" | "FEATURE" | "TASK";
+  assignee: {
+    name: string;
+    avatar: string;
+  };
+  due_date: string;
+}

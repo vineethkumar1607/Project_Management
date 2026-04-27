@@ -16,6 +16,8 @@ export const projectApi = {
         );
         return res.data.data;
     },
+
+    // update project
     update: async (projectId: string, payload: any): Promise<Project> => {
         const res = await apiClient.put(
             `/api/workspace/${projectId}`,
@@ -28,7 +30,7 @@ export const projectApi = {
     delete: async (projectId: string): Promise<void> => {
         await apiClient.delete(`/api/workspace/${projectId}`);
     },
-
+    // add member to project
     addMember: async (projectId: string, email: string) => {
         const res = await apiClient.post(
             `/api/workspace/${projectId}/add-member`,
@@ -36,11 +38,16 @@ export const projectApi = {
         );
         return res.data.data;
     },
-
+    // remove member
     removeMember: async (projectId: string, memberId: string) => {
         const res = await apiClient.delete(
             `/api/workspace/${projectId}/member/${memberId}`
         );
         return res.data.data;
     },
+    // get project members
+    getProjectMembers: async (projectId: string) => {
+        const res = await apiClient.get(`/api/projects/${projectId}/members`);
+        return res.data.data;
+    }
 };

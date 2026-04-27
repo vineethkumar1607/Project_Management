@@ -23,11 +23,9 @@ export const useProject = () => {
 
     const projects = projectData?.data || [];
 
-    const project = projects.find(
-        (p) => String(p.id) === String(projectId)
-    );
+    const project = projects?.find((p) => p.id === projectId);
 
-    // 🔥 Fetch only when needed
+    // Fetch only when needed
     useEffect(() => {
         if (workspaceId && (!projectData || projectData.data.length === 0)) {
             dispatch(fetchProjects(workspaceId));

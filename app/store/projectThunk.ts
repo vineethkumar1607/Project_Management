@@ -4,7 +4,9 @@ import type { Project } from "~/types/workspace";
 import type { CreateProjectPayload } from "~/types/workspace";
 
 
+// Thunks for project-related actions: fetching projects, creating a project, updating a project, adding/removing members, and fetching project members.
 
+// Fetch projects by workspace ID - This is used to load the list of projects when viewing a workspace.
 export const fetchProjects = createAsyncThunk<
   Project[],
   string,
@@ -24,7 +26,7 @@ export const fetchProjects = createAsyncThunk<
   }
 );
 
-
+// Create a new project in a workspace - payload includes project details and team members - This is used when creating a new project from the UI.
 export const createProject = createAsyncThunk(
   "project/createProject",
   async (
@@ -44,6 +46,8 @@ export const createProject = createAsyncThunk(
   }
 );
 
+
+// Update project details - This is used when editing a project's information from the UI. The payload can include any updatable fields of the project.
 export const updateProject = createAsyncThunk(
   "project/updateProject",
   async (
@@ -59,7 +63,7 @@ export const updateProject = createAsyncThunk(
   }
 );
 
-
+// Add a member to a project - This is used when adding a new member to a project from the UI. It takes the project ID, member's email, and a temporary member object for optimistic updates.
 export const addProjectMember = createAsyncThunk(
   "project/addProjectMember",
   async (
@@ -80,7 +84,7 @@ export const addProjectMember = createAsyncThunk(
   }
 );
 
-
+// Remove a member from a project - This is used when removing a member from a project in the UI. It takes the project ID, member ID, and an optional backup member object for optimistic updates.
 export const removeProjectMember = createAsyncThunk(
   "project/removeProjectMember",
   async (
@@ -103,3 +107,17 @@ export const removeProjectMember = createAsyncThunk(
   }
 );
 
+
+// FETCH PROJECT MEMBERS - This is used to fetch the members of a project, especially after adding or removing members to ensure the state is up-to-date.
+export const fetchProjectMembers = createAsyncThunk(
+  "project/fetchProjectMembers",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const data = await projectApi.getProjectMembers(projectId);
+
+      return { projectId, data };
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);

@@ -111,16 +111,7 @@ export const dummyProjects: Project[] = [
     },
 ]
 
-export interface Task {
-    id: string
-    title: string
-    projectId: string
-    type: "FEATURE" | "BUG" | "TASK"
-    status: "TODO" | "IN_PROGRESS" | "DONE"
-    priority: "LOW" | "MEDIUM" | "HIGH"
-    assigneeId: string
-    dueDate: string
-}
+
 
 export const dummyTasks: Task[] = [
     {

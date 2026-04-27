@@ -1,4 +1,4 @@
-
+import type { Task } from "~/types/workspace";
 type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 type TaskType = "BUG" | "FEATURE" | "TASK";
 type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
@@ -8,19 +8,6 @@ interface TaskFilters {
     type?: TaskType;
     priority?: TaskPriority;
     assignee?: string;
-}
-
- interface Task {
-  id: string;
-  title: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  type: TaskType;
-  assignee: {
-    name: string;
-    avatar: string;
-  };
-  dueDate: string;
 }
 
 /**

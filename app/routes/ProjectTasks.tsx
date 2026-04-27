@@ -7,82 +7,32 @@ import type { SortingState, } from "@tanstack/react-table";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, } from "~/components/ui/table";
 import { useMemo } from "react";
 import TaskFilterBar from "~/components/TaskFilterBar";
-
 import { filterTasks } from "~/lib/filtertasks";
-
-import { ArrowUpDown } from "lucide-react";
 import StatusSelect from "~/components/StatusSelect";
 import { useTaskFilters } from "~/hooks/useTaskFilters";
+import { useParams } from "react-router";
+import { useGetTasksQuery } from "~/store/api/tasksApi";
+import type { Task } from "~/types/workspace";
 
 /* -------------------------------------------------- */
 /* Task Type Definition                          */
 /* -------------------------------------------------- */
 
-interface Task {
-  id: string;
-  title: string;
-  status: "TODO" | "IN_PROGRESS" | "DONE";
-  priority: "LOW" | "MEDIUM" | "HIGH";
-  type: "BUG" | "FEATURE" | "TASK";
-  assignee: {
-    name: string;
-    avatar: string;
-  };
-  dueDate: string;
-}
 
-const formatIndianDate = (dateString: string) => {
+
+const formatIndianDate = (dateString?: string) => {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) return "-"; //  prevent crash
+
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  }).format(new Date(dateString));
+  }).format(date);
 };
-
-
-/* -------------------------------------------------- */
-/* Mock Data           */
-/* -------------------------------------------------- */
-
-const tasks: Task[] = [
-  {
-    id: "1",
-    title: "Design login page",
-    status: "IN_PROGRESS",
-    priority: "HIGH",
-    type: "FEATURE",
-    assignee: {
-      name: "Vineeth",
-      avatar: "https://i.pravatar.cc/40?img=1",
-    },
-    dueDate: "2026-02-20",
-  },
-  {
-    id: "2",
-    title: "Fix auth bug",
-    status: "TODO",
-    priority: "MEDIUM",
-    type: "BUG",
-    assignee: {
-      name: "Shruthi",
-      avatar: "https://i.pravatar.cc/40?img=2",
-    },
-    dueDate: "2026-02-25",
-  },
-  {
-    id: "3",
-    title: "Database migration",
-    status: "DONE",
-    priority: "HIGH",
-    type: "TASK",
-    assignee: {
-      name: "Rahul",
-      avatar: "https://i.pravatar.cc/40?img=3",
-    },
-    dueDate: "2026-02-15",
-  },
-];
-
 
 /* -------------------------------------------------- */
 /* Column Helper (Official v8 Pattern)           */
@@ -92,14 +42,11 @@ const columnHelper = createColumnHelper<Task>();
 
 const columns = [
   columnHelper.accessor("title", {
-    header: ({ column }) => (
-      <button
-        className="flex items-center gap-2"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Task
-        <ArrowUpDown size={14} />
-      </button>
+    header: "Task",
+    cell: info => (
+      <div className="min-w-[200px] truncate">
+        {info.getValue()}
+      </div>
     ),
   }),
 
@@ -116,7 +63,7 @@ const columns = [
             : "bg-purple-100 text-purple-700";
 
       return (
-        <span className={`px-2 py-1 rounded text-xs font-medium ${color}`}>
+        <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${color}`}>
           {type}
         </span>
       );
@@ -126,43 +73,39 @@ const columns = [
   columnHelper.accessor("status", {
     header: "Status",
     cell: ({ row }) => (
-      <StatusSelect defaultValue={row.original.status} />
+      <div className="min-w-[140px]">
+        <StatusSelect defaultValue={row.original.status} />
+      </div>
     ),
   }),
 
-
   columnHelper.accessor("priority", {
     header: "Priority",
+    cell: info => (
+      <span className="whitespace-nowrap">{info.getValue()}</span>
+    ),
   }),
+
   columnHelper.accessor("assignee", {
     header: "Assignee",
     cell: ({ row }) => {
       const assignee = row.original.assignee;
-
       return (
-        <div className="flex items-center gap-2">
-          <img
-            src={assignee.avatar}
-            alt={assignee.name}
-            className="w-6 h-6 rounded-full"
-          />
-          <span className="text-sm">{assignee.name}</span>
+        <div className="flex items-center gap-2 min-w-40">
+          {assignee.name}
         </div>
       );
     },
   }),
 
-  columnHelper.accessor("dueDate", {
+  columnHelper.accessor("due_date", {
     header: "Due Date",
-    cell: ({ row }) => {
-      return (
-        <span className="text-sm">
-          {formatIndianDate(row.original.dueDate)}
-        </span>
-      );
-    },
+    cell: ({ row }) => (
+      <span className="whitespace-nowrap text-sm">
+        {formatIndianDate(row.original.due_date)}
+      </span>
+    ),
   }),
-
 ];
 
 
@@ -175,6 +118,9 @@ const columns = [
 const ProjectTasks = () => {
   const { filters } = useTaskFilters();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const { projectId } = useParams();
+
+  const { data: tasks = [], isLoading, error } = useGetTasksQuery(projectId!);
 
   // Apply filtering
   const filteredTasks = useMemo(
@@ -192,79 +138,84 @@ const ProjectTasks = () => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  // Get unique assignees
+  // Gets unique assignees
   const assignees = useMemo<string[]>(() => {
     return Array.from(
       new Set(
         tasks
           .map((t: Task) => t.assignee?.name)
-          .filter((name): name is string => Boolean(name))
+          .filter((name: string): name is string => Boolean(name))
       )
     );
   }, [tasks]);
 
 
-
+  if (isLoading) return <div>Loading tasks...</div>;
+  if (error) return <div>Failed to load tasks</div>;
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-5">
       {/* ---------------- Header ---------------- */}
       <header>
-        <h2 className="text-lg font-semibold">Tasks</h2>
+
         <p className="text-sm text-muted-foreground">
           Manage and track project tasks
         </p>
       </header>
       <TaskFilterBar assignees={assignees} />
 
+
       {/* ---------------- Table ---------------- */}
       <div className="rounded-md border overflow-hidden">
-        <Table className="table-fixed w-full">
-          {/* Header */}
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-
-          {/* Body */}
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+        <div className="w-full overflow-x-auto">
+          <Table className="min-w-[900px] w-full">
+            {/* Header */}
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow role="row" key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead scope="col" key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="text-center py-6 text-muted-foreground"
-                >
-                  No tasks found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+
+            {/* Body */}
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow role="row" key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell role="cell" key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    role="cell"
+                    colSpan={columns.length}
+                    className="text-center py-6 text-muted-foreground"
+                  >
+                    No tasks found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </section>
   );

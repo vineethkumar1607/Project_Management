@@ -5,6 +5,9 @@ export const setGetToken = (fn: () => Promise<string | null>) => {
 };
 
 export const getToken = async () => {
-  if (!getTokenFn) return null;
+  if (!getTokenFn) {
+    console.warn("Token function not initialized");
+    return null;
+  }
   return await getTokenFn();
 };

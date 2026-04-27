@@ -16,6 +16,7 @@ import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
 
 import { useProject } from "~/hooks/useProject";
 import { TextSkeleton } from "~/components/Common/TextSkeleton";
+import { useProjectMembers } from "~/hooks/useProjectMembers";
 
 
 
@@ -30,9 +31,10 @@ const ProjectLayout = () => {
 
   const { data: tasks = [], isLoading, isError } = useGetTasksQuery(projectId!);
 
+  const { members } = useProjectMembers(projectId);
 
   const safeTasks = isError ? [] : tasks;
-
+// Calculate task statistics
   const total = safeTasks.length;
   const completed = safeTasks.filter(t => t.status === "DONE").length;
   const inProgress = safeTasks.filter(t => t.status === "IN_PROGRESS").length;
@@ -63,7 +65,7 @@ const ProjectLayout = () => {
       icon: Settings,
     },
   ];
-  // Determine active tab
+  // Determines active tab
   const pathSegments = location.pathname.split("/");
   const lastSegment = pathSegments[pathSegments.length - 1];
 
@@ -71,23 +73,7 @@ const ProjectLayout = () => {
     lastSegment === projectId || lastSegment === "projects"
       ? "tasks"
       : lastSegment;
-  const dispatch = useDispatch<AppDispatch>();
 
-  const workspaceId = useAppSelector(
-    (state: RootState) => state.workspace.currentWorkspaceId
-  );
-
-  const membersList = useAppSelector((state: RootState) =>
-    workspaceId
-      ? state.workspace.membersByWorkspace[workspaceId]?.data ?? []
-      : []
-  );
-
-  useEffect(() => {
-    if (workspaceId && membersList.length === 0) {
-      dispatch(fetchWorkspaceMembers(workspaceId));
-    }
-  }, [workspaceId, membersList.length, dispatch]);
   return (
     <div className="space-y-6 flex flex-col">
       {/* Header */}

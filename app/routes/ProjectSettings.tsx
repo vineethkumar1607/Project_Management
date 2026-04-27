@@ -1,46 +1,15 @@
 // ProjectSettings.tsx
-import { useEffect } from "react";
-import { useParams } from "react-router";
+
 import ProjectDetailsForm from "~/components/ProjectDetailsForm";
 import ProjectMembers from "~/components/ProjectMembers";
-import { useAppDispatch, useAppSelector } from "~/store/hooks";
-import { fetchProjects } from "~/store/projectThunk";
-import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
+import { useProject } from "~/hooks/useProject";
+import { useWorkspaceMembers } from "~/hooks/useWorkspaceMembers";
 
 const ProjectSettings = () => {
-  const { projectId } = useParams();
-  const dispatch = useAppDispatch();
+  const { project, isLoading } = useProject();
+  const { members: workspaceMembers } = useWorkspaceMembers();
 
-  const { projects, loading } = useAppSelector((state) => state.project);
-
-  const workspaceId = useAppSelector(
-    (state) => state.workspace.currentWorkspaceId
-  );
-
-  // Find project from Redux store
-  const project = projects.find((p) => p.id === projectId);
-
-  /**
-   * Fallback: If project not found (refresh / deep link)
-   * fetch projects again
-   */
-  useEffect(() => {
-    if (!projects.length && workspaceId) {
-      dispatch(fetchProjects(workspaceId));
-    }
-  }, [projects.length, workspaceId, dispatch]);
-
-  useEffect(() => {
-  if (workspaceId) {
-    dispatch(fetchWorkspaceMembers(workspaceId));
-  }
-}, [workspaceId, dispatch]);
-
-const workspaceMembers = useAppSelector(
-  (state) => state.workspace.members
-);
-
-  if (loading && !project) {
+  if (isLoading) {
     return <p>Loading project...</p>;
   }
 
@@ -57,7 +26,7 @@ const workspaceMembers = useAppSelector(
         <p className="text-sm text-muted-foreground">
           Manage project configuration and team members
         </p>
-        
+
       </header>
 
       {/* -------- Main Layout -------- */}
@@ -84,8 +53,8 @@ const workspaceMembers = useAppSelector(
             </p>
           </div>
 
-         <ProjectMembers project={project} workspaceMembers={workspaceMembers}
-/>
+          <ProjectMembers project={project} workspaceMembers={workspaceMembers}
+          />
         </div>
 
       </div>

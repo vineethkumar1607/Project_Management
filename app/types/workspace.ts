@@ -1,23 +1,6 @@
+// ================== CORE DOMAIN ==================
 
-
-export interface Project {
-  id: string;
-  name: string;
-
-  description?: string | null;
-
-  status: "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
-  priority: "LOW" | "MEDIUM" | "HIGH";
-
-  progress?: number;
-  start_date?: string;
-
-  end_date?: string;
-  workspaceId: string;
-  team_lead: string;
-
-  members?: ProjectMember[];
-}
+export type Role = "ADMIN" | "MEMBER";
 
 export interface Workspace {
   id: string;
@@ -30,28 +13,23 @@ export interface Workspace {
   projects: Project[];
 }
 
-// -------- Workspace Member --------
-export interface WorkspaceMember {
+export interface Project {
   id: string;
   name: string;
-  email: string;
-}
+  description?: string | null;
 
+  status: "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
+  priority: "LOW" | "MEDIUM" | "HIGH";
 
-export type CreateProjectPayload = {
-  name: string;
-  description?: string;
-  status: string;
-  priority: string;
   progress?: number;
   start_date?: string;
   end_date?: string;
-  team_lead?: string;
-  team_members: string[];
-};
 
+  workspaceId: string;
+  team_lead: string;
 
-export type Role = "ADMIN" | "MEMBER";
+  members?: ProjectMember[];
+}
 
 export interface ProjectMember {
   id: string;
@@ -62,6 +40,66 @@ export interface ProjectMember {
     email: string;
   };
 }
+
+export interface WorkspaceMember {
+  id: string;
+  name: string;
+  email: string;
+}
+
+
+// ================== TASK ==================
+
+export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
+export type TaskType = "TASK" | "BUG" | "FEATURE" | "IMPROVEMENT" | "OTHER";
+
+export interface Task {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  type: TaskType;
+
+  assignee: {
+    name: string;
+    avatar?: string; // ✅ FIX: backend not always sending
+  };
+
+  due_date: string;
+}
+
+
+
+
+
+// ================== API PAYLOADS ==================
+
+export type CreateProjectPayload = {
+  name: string;
+  description?: string;
+  status: Project["status"];      // ✅ FIX (no string)
+  priority: Project["priority"];  // ✅ FIX
+  progress?: number;
+  start_date?: string;
+  end_date?: string;
+  team_lead?: string;
+  team_members: string[];
+};
+
+export type TaskFormData = {
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  type: TaskType;
+  assigneeId: string;
+  due_date: string;
+};
+
+
+
+// ================== UI TYPES ==================
 
 export type ConfirmDialogProps = {
   open: boolean;
@@ -77,9 +115,6 @@ export type ConfirmDialogProps = {
 
   loading?: boolean;
 };
-
-
-
 
 export type FilterOption = {
   label: string;
@@ -102,27 +137,32 @@ export interface FiltersBarProps {
   filters?: FilterConfig[];
 }
 
-// task related types
-// create task payload
-export type TaskFormData = {
-  title: string;
-  description?: string;
-  status: "TODO" | "IN_PROGRESS" | "DONE";
-  priority: "LOW" | "MEDIUM" | "HIGH";
-  type: "TASK" | "BUG" | "FEATURE" | "IMPROVEMENT" | "OTHER";
-  assigneeId: string;
-  due_date: string;
+
+
+// ================== ASYNC STATE ==================
+
+export type AsyncStatus = "idle" | "loading" | "succeeded" | "failed";
+
+export interface AsyncState<T> {
+  data: T;
+  status: AsyncStatus;
+  lastFetched?: number;
+}
+
+
+
+// ================== REDUX STATE ==================
+
+export type ProjectsByWorkspace = {
+  [workspaceId: string]: AsyncState<Project[]>;
 };
 
-export interface Task {
-  id: string;
-  title: string;
-  status: "TODO" | "IN_PROGRESS" | "DONE";
-  priority: "LOW" | "MEDIUM" | "HIGH";
-  type: "BUG" | "FEATURE" | "TASK";
-  assignee: {
-    name: string;
-    avatar: string;
-  };
-  due_date: string;
+export type ProjectMembersByProject = {
+  [projectId: string]: AsyncState<ProjectMember[]>;
+};
+
+export interface ProjectState {
+  projectsByWorkspace: ProjectsByWorkspace;
+  projectMembersByProject: ProjectMembersByProject;
+  error: string | null;
 }

@@ -32,7 +32,6 @@ export default [
     ],
   },
 
-  // ✅ ADD THIS
   {
     path: "/tasks/:taskId",
     file: "routes/TaskDetails.tsx",

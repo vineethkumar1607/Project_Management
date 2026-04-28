@@ -14,6 +14,8 @@ import { useParams } from "react-router";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
 import type { Task } from "~/types/workspace";
 
+import { useNavigate } from "react-router";
+
 /* -------------------------------------------------- */
 /* Task Type Definition                          */
 /* -------------------------------------------------- */
@@ -116,6 +118,8 @@ const columns = [
 /* -------------------------------------------------- */
 
 const ProjectTasks = () => {
+
+  const navigate = useNavigate();
   const { filters } = useTaskFilters();
   const [sorting, setSorting] = useState<SortingState>([]);
   const { projectId } = useParams();
@@ -191,7 +195,12 @@ const ProjectTasks = () => {
             <TableBody>
               {table.getRowModel().rows.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow role="row" key={row.id}>
+                  <TableRow
+                    role="row"
+                    key={row.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/tasks/${row.original.id}`)}
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell role="cell" key={cell.id}>
                         {flexRender(

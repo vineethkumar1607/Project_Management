@@ -63,11 +63,32 @@ export interface Task {
 
   assignee: {
     name: string;
-    avatar?: string; // ✅ FIX: backend not always sending
+    avatar?: string;
   };
 
   due_date: string;
 }
+
+export type TaskDetails = {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  type: string;
+  priority: string;
+  due_date: string;
+  assignee: {
+    id: string;
+    name: string;
+    image?: string;
+  };
+  project: {
+    id: string;
+    name: string;
+    status: string;
+    priority: string;
+  };
+};
 
 
 

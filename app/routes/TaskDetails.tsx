@@ -1,7 +1,7 @@
 import { format } from "date-fns";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { Calendar, MessageCircle, Pencil } from "lucide-react";
+import { Calendar, MessageCircle, Pencil, Send } from "lucide-react";
 
 import { useGetTaskByIdQuery, useGetTaskCommentsQuery, useAddCommentMutation } from "~/store/api/tasksApi";
 import { useUser } from "@clerk/clerk-react";
@@ -20,6 +20,7 @@ type TaskComment = {
 
 export default function TaskDetails() {
   const { taskId } = useParams();
+  const listRef = useRef<HTMLUListElement>(null);
 
   if (!taskId) {
     return <p>Invalid task</p>;
@@ -29,42 +30,65 @@ export default function TaskDetails() {
 
   const [cursor, setCursor] = useState<string | undefined>();
 
+  useEffect(() => {
+    setCursor(undefined);
+  }, [taskId]);
+
+
+// Optimistic update for adding a comment
   const { data: task, isLoading } = useGetTaskByIdQuery(taskId!, {
     skip: !taskId,
   });
-
+// Fetch comments with pagination using cursor. The skip option prevents the query from running until we have a valid taskId. The comments are stored in the local state and updated whenever new data is fetched.
   const { data, isFetching } = useGetTaskCommentsQuery(
     { taskId, cursor },
     { skip: !taskId }
   );
   const comments: TaskComment[] = data?.items ?? [];
 
+  // Scroll to bottom when comments change
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [comments]);
+
+
+
   const [addComment, { isLoading: isAdding }] =
     useAddCommentMutation();
 
   const [newComment, setNewComment] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
 
+// Function to handle comment submission with optimistic update 
+  const submitComment = async () => {
     if (!newComment.trim() || !taskId) return;
+
+    const message = newComment;
+    setNewComment("");
 
     try {
       await addComment({
         taskId,
-        message: newComment,
+        message,
+        user: {
+          id: user?.id!,
+          name: user?.fullName ?? "You",
+          image: user?.imageUrl,
+        },
       }).unwrap();
-
-      setNewComment("");
     } catch (err) {
       console.error(err);
+      setNewComment(message);
     }
   };
 
+  // Infinite scroll handler for comments
   const handleScroll = (e: React.UIEvent<HTMLUListElement>) => {
     const bottom =
-      e.currentTarget.scrollHeight - e.currentTarget.scrollTop ===
-      e.currentTarget.clientHeight;
+      e.currentTarget.scrollHeight - e.currentTarget.scrollTop <=
+      e.currentTarget.clientHeight + 10;
 
     if (bottom && data?.nextCursor && !isFetching) {
       setCursor(data.nextCursor);
@@ -73,6 +97,8 @@ export default function TaskDetails() {
 
   if (isLoading) return <p>Loading...</p>;
   if (!task) return <p>Task not found</p>;
+
+
 
   return (
     <section className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-220px)]">
@@ -93,18 +119,22 @@ export default function TaskDetails() {
 
         {/* Scrollable Comments */}
         <ul
+          ref={listRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto px-5 py-4 space-y-4"
+          className="flex-1 overflow-y-auto px-5 py-4 space-y-4 hide-scrollbar"
         >
           {comments.length > 0 ? (
             comments.map((comment) => {
               const isMe = comment.user.id === user?.id;
 
               return (
-                <li key={comment.id}>
+                <li
+                  key={comment.id}
+                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                >
                   <article
-                    className={`max-w-[80%] p-3 rounded-lg text-sm border
-                  ${isMe
+                    className={`inline-block max-w-[70%] w-fit p-3 rounded-lg text-sm border break-words
+${isMe
                         ? "ml-auto bg-blue-50 border-blue-200"
                         : "mr-auto bg-muted border-gray-200 dark:border-zinc-700"
                       }`}
@@ -136,23 +166,38 @@ export default function TaskDetails() {
 
         {/* Sticky Input */}
         <form
-          onSubmit={handleSubmit}
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitComment();
+          }}
           className="border-t p-4 flex gap-3 items-end bg-background"
         >
           <textarea
             value={newComment}
+          
             onChange={(e) => setNewComment(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) { // prevents new line on Enter and submits instead
+                e.preventDefault(); // prevents new line
+                submitComment();
+              }
+            }}
             placeholder="Write a comment..."
-            className="flex-1 border rounded-md p-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 border rounded-md p-2 text-sm resize-none max-h-40 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={2}
           />
+         
 
           <button
             type="submit"
             disabled={isAdding || !newComment.trim()}
-            className="h-10 px-4 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium transition"
+            className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition"
           >
-            {isAdding ? "Posting..." : "Post"}
+            {isAdding ? (
+              <span className="text-xs">...</span>
+            ) : (
+              <Send size={18} />
+            )}
           </button>
         </form>
 

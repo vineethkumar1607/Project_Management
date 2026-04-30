@@ -193,3 +193,13 @@
 .dark .fc-button:hover {
   background-color: #52525b;
 }
+
+
+/* Hide scrollbar but allow scrolling for the comments list in TaskDetails*/
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

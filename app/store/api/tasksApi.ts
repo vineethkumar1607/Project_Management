@@ -1,16 +1,16 @@
 import type { Task } from "~/types/workspace";
 import { baseApi } from "./baseApi";
-import type { TaskDetails,  } from "~/types/workspace";
+import type { TaskDetails, } from "~/types/workspace";
 
 type TaskComment = {
-  id: string;
-  content: string;
-  createdAt: string;
-  user: {
     id: string;
-    name: string;
-    image?: string;
-  };
+    content: string;
+    createdAt: string;
+    user: {
+        id: string;
+        name: string;
+        image?: string;
+    };
 };
 
 export const tasksApi = baseApi.injectEndpoints({
@@ -58,44 +58,82 @@ export const tasksApi = baseApi.injectEndpoints({
             { taskId: string; cursor?: string }
         >({
             query: ({ taskId, cursor }) => ({
-               url: `/tasks/${taskId}/comments`,  
+                url: `/tasks/${taskId}/comments`,
                 params: { cursor },
             }),
 
-            serializeQueryArgs: ({ endpointName }) => endpointName,
+            transformResponse: (response: {
+                success: boolean;
+                data: { items: TaskComment[]; nextCursor: string | null };
+            }) => response.data,
+
+            serializeQueryArgs: ({ endpointName, queryArgs }) => {
+                return `${endpointName}-${queryArgs.taskId}`;
+            },
 
             merge: (currentCache, newItems) => {
-                currentCache.items.push(...newItems.items);
+                if (!currentCache.items) {
+                    currentCache.items = [];
+                }
+
+                const existingIds = new Set(currentCache.items.map(c => c.id));
+
+                const filteredNew = newItems.items.filter(c => !existingIds.has(c.id));
+
+                currentCache.items.push(...filteredNew);
                 currentCache.nextCursor = newItems.nextCursor;
             },
 
             forceRefetch({ currentArg, previousArg }) {
-                return currentArg?.taskId !== previousArg?.taskId;
+                return (
+                    currentArg?.taskId !== previousArg?.taskId ||
+                    currentArg?.cursor !== previousArg?.cursor
+                );
             },
+
+            providesTags: (result, error, { taskId }) => [
+                { type: "Comments", id: taskId },
+            ],
         }),
 
         //  Mutation to add a comment with optimistic update to the comments list in the UI without waiting for the server response. If the server call fails, the optimistic update will be rolled back.
-        addComment: builder.mutation({
+        addComment: builder.mutation<
+            any,
+            {
+                taskId: string;
+                message: string;
+                user: {
+                    id: string;
+                    name: string;
+                    image?: string;
+                };
+            }
+        >({
             query: ({ taskId, message }) => ({
-              url: `/tasks/${taskId}/comments`,  
+                url: `/tasks/${taskId}/comments`,
                 method: "POST",
                 body: { message },
             }),
 
-            // Optimistic update to add the new comment to the UI immediately 
-            async onQueryStarted({ taskId, message }, { dispatch, queryFulfilled }) {
+          async onQueryStarted({ taskId, message, user }, { dispatch, queryFulfilled }) {
+
+                const tempId = `temp-${Date.now()}`;
+
                 const patchResult = dispatch(
                     tasksApi.util.updateQueryData(
                         "getTaskComments",
-                        { taskId },
+                        { taskId, cursor: undefined },
                         (draft) => {
-                            draft.items.unshift({
-                                id: Date.now().toString(),
+                            if (!draft?.items) return;
+
+                            draft.items.push({
+                                id: tempId,
                                 content: message,
                                 createdAt: new Date().toISOString(),
                                 user: {
-                                    id: "temp",
-                                    name: "You",
+                                    id: user.id,
+                                    name: user.name,
+                                    image: user.image,
                                 },
                             });
                         }
@@ -103,14 +141,31 @@ export const tasksApi = baseApi.injectEndpoints({
                 );
 
                 try {
-                    await queryFulfilled;
+                    const { data: newComment } = await queryFulfilled;
+
+                    dispatch(
+                        tasksApi.util.updateQueryData(
+                            "getTaskComments",
+                            { taskId, cursor: undefined },
+                            (draft) => {
+                                if (!draft?.items) return;
+
+                                // remove temp
+                                draft.items = draft.items.filter(c => c.id !== tempId);
+
+                                // add real
+                                draft.items.push(newComment.data);
+                            }
+                        )
+                    );
                 } catch {
                     patchResult.undo();
                 }
             },
-        }),
+        })
 
     }),
+    overrideExisting: true, // allows us to redefine endpoints without TypeScript errors, which is useful during development when we might be iterating on the API design. In production, you might want to set this to false to catch accidental endpoint redefinitions.
 });
 
 export const {

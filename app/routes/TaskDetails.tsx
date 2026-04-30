@@ -1,301 +1,222 @@
-import { format } from "date-fns"
-import { useMemo, useState } from "react"
-import { useParams } from "react-router"
-import { Calendar, MessageCircle, Pencil } from "lucide-react"
+import { format } from "date-fns";
+import { useState } from "react";
+import { useParams } from "react-router";
+import { Calendar, MessageCircle, Pencil } from "lucide-react";
 
+import { useGetTaskByIdQuery, useGetTaskCommentsQuery, useAddCommentMutation } from "~/store/api/tasksApi";
+import { useUser } from "@clerk/clerk-react";
 
-
-/* ================= Mock Data ================= */
-
-const mockProjects = [
-  {
-    id: "1",
-    name: "Website Redesign",
-    start_date: new Date(),
-    status: "ACTIVE",
-    priority: "HIGH",
-    progress: 60,
-    tasks: [
-      {
-        id: "1",
-        title: "Design landing page",
-        description: "Create landing UI",
-        status: "IN_PROGRESS",
-        type: "FEATURE",
-        priority: "HIGH",
-        due_date: new Date(),
-        assignee: { id: "1", name: "Vineeth", image: "https://i.pravatar.cc/40" },
-      },
-      {
-        id: "3",
-        title: "Fix navbar bug",
-        description: "Fix active link highlighting",
-        status: "DONE",
-        type: "BUG",
-        priority: "MEDIUM",
-        due_date: new Date(),
-        assignee: { id: "2", name: "Shruthi", image: "https://i.pravatar.cc/41" },
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Mobile App MVP",
-    start_date: new Date(),
-    status: "ACTIVE",
-    priority: "MEDIUM",
-    progress: 30,
-    tasks: [
-      {
-        id: "2",
-        title: "Setup authentication",
-        description: "Implement login flow",
-        status: "TODO",
-        type: "FEATURE",
-        priority: "HIGH",
-        due_date: new Date(),
-        assignee: { id: "3", name: "Rahul", image: "https://i.pravatar.cc/42" },
-      },
-    ],
-  },
-]
-
-
+//  Local type for comments (based on your backend)
+type TaskComment = {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    image?: string;
+  };
+};
 
 export default function TaskDetails() {
-  const { taskId } = useParams()
-  const user = { id: "1" }
+  const { taskId } = useParams();
 
-  const [comments, setComments] = useState<any[]>([])
-  const [newComment, setNewComment] = useState("")
-
-  const { task, project } = useMemo(() => {
-    for (const proj of mockProjects) {
-      const foundTask = proj.tasks.find(t => t.id === taskId)
-      if (foundTask) {
-        return { task: foundTask, project: proj }
-      }
-    }
-    return { task: null, project: null }
-  }, [taskId])
-
-  if (!task) {
-    return (
-      <main className="max-w-6xl mx-auto p-6">
-        <p role="alert" className="text-red-500">
-          Task not found.
-        </p>
-      </main>
-    )
+  if (!taskId) {
+    return <p>Invalid task</p>;
   }
 
+  const { user } = useUser();
+
+  const [cursor, setCursor] = useState<string | undefined>();
+
+  const { data: task, isLoading } = useGetTaskByIdQuery(taskId!, {
+    skip: !taskId,
+  });
+
+  const { data, isFetching } = useGetTaskCommentsQuery(
+    { taskId, cursor },
+    { skip: !taskId }
+  );
+  const comments: TaskComment[] = data?.items ?? [];
+
+  const [addComment, { isLoading: isAdding }] =
+    useAddCommentMutation();
+
+  const [newComment, setNewComment] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newComment.trim() || !taskId) return;
+
+    try {
+      await addComment({
+        taskId,
+        message: newComment,
+      }).unwrap();
+
+      setNewComment("");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLUListElement>) => {
+    const bottom =
+      e.currentTarget.scrollHeight - e.currentTarget.scrollTop ===
+      e.currentTarget.clientHeight;
+
+    if (bottom && data?.nextCursor && !isFetching) {
+      setCursor(data.nextCursor);
+    }
+  };
+
+  if (isLoading) return <p>Loading...</p>;
+  if (!task) return <p>Task not found</p>;
+
   return (
-    <main
-      className="max-w-6xl mx-auto p-4 lg:p-6"
-      aria-labelledby="task-title"
-    >
-      <div className="flex flex-col lg:flex-row gap-6">
+    <section className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-220px)]">
 
-        {/* ================= Discussion Section ================= */}
+      {/* ================= COMMENTS ================= */}
+      <section className="w-full lg:w-2/3 flex flex-col border rounded-xl bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden">
 
-        <section
-          className="w-full lg:w-2/3"
-          aria-labelledby="discussion-heading"
+        {/* Header */}
+        <header className="px-5 py-4 border-b flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <MessageCircle size={18} />
+            Discussion
+          </h2>
+          <span className="text-sm text-muted-foreground">
+            {comments.length} comments
+          </span>
+        </header>
+
+        {/* Scrollable Comments */}
+        <ul
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto px-5 py-4 space-y-4"
         >
-          <div className="border rounded-md border-gray-300 dark:border-zinc-800 p-5 flex flex-col min-h-[60vh] lg:min-h-[75vh]">
+          {comments.length > 0 ? (
+            comments.map((comment) => {
+              const isMe = comment.user.id === user?.id;
 
-            <header>
-              <h2
-                id="discussion-heading"
-                className="text-base font-semibold flex items-center gap-2 mb-4"
-              >
-                <MessageCircle size={18} aria-hidden="true" />
-                Task Discussion
-                <span className="text-sm text-muted-foreground">
-                  ({comments.length})
-                </span>
-              </h2>
-            </header>
+              return (
+                <li key={comment.id}>
+                  <article
+                    className={`max-w-[80%] p-3 rounded-lg text-sm border
+                  ${isMe
+                        ? "ml-auto bg-blue-50 border-blue-200"
+                        : "mr-auto bg-muted border-gray-200 dark:border-zinc-700"
+                      }`}
+                  >
+                    <div className="flex items-center gap-2 text-xs mb-1 text-muted-foreground">
+                      <img
+                        src={comment.user.image || "https://i.pravatar.cc/40"}
+                        className="size-6 rounded-full"
+                      />
+                      <span className="font-medium text-foreground">
+                        {comment.user.name}
+                      </span>
+                      <span>
+                        • {format(new Date(comment.createdAt), "dd MMM HH:mm")}
+                      </span>
+                    </div>
 
-            {/* Comments List */}
-            <ul
-              className="flex-1 overflow-y-auto space-y-4 pr-2"
-              role="list"
-              aria-live="polite"
-            >
-              {comments.length > 0 ? (
-                comments.map(comment => (
-                  <li key={comment.id}>
-                    <article
-                      className={`max-w-[85%] p-3 rounded-md border text-sm
-                        ${
-                          comment.user.id === user.id
-                            ? "ml-auto bg-blue-50 dark:bg-zinc-800 border-blue-200"
-                            : "mr-auto bg-gray-50 dark:bg-zinc-900 border-gray-200 dark:border-zinc-700"
-                        }`}
-                    >
-                      <header className="flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-400 mb-1">
-                        <img
-                          src={comment.user.image}
-                          alt={`${comment.user.name} avatar`}
-                          className="size-5 rounded-full"
-                        />
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {comment.user.name}
-                        </span>
-                        <time dateTime={comment.createdAt.toISOString()}>
-                          • {format(new Date(comment.createdAt), "dd MMM yyyy, HH:mm")}
-                        </time>
-                      </header>
+                    <p>{comment.content}</p>
+                  </article>
+                </li>
+              );
+            })
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No comments yet.
+            </p>
+          )}
+        </ul>
 
-                      <p>{comment.content}</p>
-                    </article>
-                  </li>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">
-                  No comments yet. Be the first!
-                </p>
-              )}
-            </ul>
-
-            {/* Comment Form */}
-            <footer className="mt-4">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  if (!newComment.trim()) return
-
-                  setComments(prev => [
-                    ...prev,
-                    {
-                      id: Date.now(),
-                      user: {
-                        id: user.id,
-                        name: "You",
-                        image: "https://i.pravatar.cc/43",
-                      },
-                      content: newComment,
-                      createdAt: new Date(),
-                    },
-                  ])
-                  setNewComment("")
-                }}
-                className="flex flex-col sm:flex-row gap-3"
-              >
-                <label htmlFor="new-comment" className="sr-only">
-                  Add a comment
-                </label>
-
-                <textarea
-                  id="new-comment"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Write a comment..."
-                  className="w-full border rounded-md p-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                />
-
-                <button
-                  type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded text-sm transition-colors"
-                >
-                  Post
-                </button>
-              </form>
-            </footer>
-
-          </div>
-        </section>
-
-        {/* ================= Task + Project Info ================= */}
-
-        <aside
-          className="w-full lg:w-1/3 space-y-6"
-          aria-labelledby="task-info"
+        {/* Sticky Input */}
+        <form
+          onSubmit={handleSubmit}
+          className="border-t p-4 flex gap-3 items-end bg-background"
         >
-          {/* Task Info */}
-          <article
-            className="border rounded-md border-gray-300 dark:border-zinc-800 p-5 bg-white dark:bg-zinc-900"
+          <textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Write a comment..."
+            className="flex-1 border rounded-md p-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows={2}
+          />
+
+          <button
+            type="submit"
+            disabled={isAdding || !newComment.trim()}
+            className="h-10 px-4 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium transition"
           >
-            <header>
-              <h1
-                id="task-title"
-                className="text-lg font-semibold mb-3"
-              >
-                {task.title}
-              </h1>
-            </header>
+            {isAdding ? "Posting..." : "Post"}
+          </button>
+        </form>
 
-            <div className="flex flex-wrap gap-2 mb-3 text-xs">
-              <span className="px-2 py-1 rounded bg-zinc-200 dark:bg-zinc-700">
-                {task.status}
-              </span>
-              <span className="px-2 py-1 rounded bg-blue-200 dark:bg-blue-900">
-                {task.type}
-              </span>
-              <span className="px-2 py-1 rounded bg-green-200 dark:bg-emerald-900">
-                {task.priority}
-              </span>
+      </section>
+
+      {/* ================= TASK INFO ================= */}
+      <aside className="w-full lg:w-1/3 flex flex-col gap-4">
+
+        {/* Task */}
+        <div className="border rounded-xl p-5 bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm">
+          <h1 className="text-xl font-semibold mb-3">
+            {task.title}
+          </h1>
+
+          <div className="flex flex-wrap gap-2 mb-4 text-xs">
+            <span className="px-2 py-1 rounded bg-zinc-200 dark:bg-zinc-700">
+              {task.status}
+            </span>
+            <span className="px-2 py-1 rounded bg-blue-200 dark:bg-blue-900">
+              {task.type}
+            </span>
+            <span className="px-2 py-1 rounded bg-green-200 dark:bg-emerald-900">
+              {task.priority}
+            </span>
+          </div>
+
+          {task.description && (
+            <p className="text-sm text-muted-foreground mb-4">
+              {task.description}
+            </p>
+          )}
+
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center gap-2">
+              <img
+                src={task.assignee.image || "https://i.pravatar.cc/41"}
+                className="size-6 rounded-full"
+              />
+              <span>{task.assignee.name}</span>
             </div>
 
-            {task.description && (
-              <p className="text-sm text-gray-600 dark:text-zinc-400 mb-4">
-                {task.description}
-              </p>
-            )}
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Calendar size={14} />
+              <span>
+                {format(new Date(task.due_date), "dd MMM yyyy")}
+              </span>
+            </div>
+          </div>
+        </div>
 
-            <hr className="my-3 border-zinc-200 dark:border-zinc-700" />
+        {/* Project */}
+        <div className="border rounded-xl p-4 bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm">
+          <h2 className="text-sm font-semibold flex items-center gap-2">
+            <Pencil size={14} />
+            {task.project.name}
+          </h2>
 
-            <dl className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <img
-                  src={task.assignee.image}
-                  alt={`${task.assignee.name} avatar`}
-                  className="size-5 rounded-full"
-                />
-                <dd>{task.assignee.name}</dd>
-              </div>
+          <div className="text-xs mt-2 text-muted-foreground">
+            <p>Status: {task.project.status}</p>
+            <p>Priority: {task.project.priority}</p>
+          </div>
+        </div>
 
-              <div className="flex items-center gap-2">
-                <Calendar size={14} aria-hidden="true" />
-                <dd>
-                  <time dateTime={task.due_date.toISOString()}>
-                    Due: {format(task.due_date, "dd MMM yyyy")}
-                  </time>
-                </dd>
-              </div>
-            </dl>
-          </article>
-
-          {/* Project Info */}
-          {project && (
-            <article
-              className="border rounded-md border-gray-300 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900"
-            >
-              <header>
-                <h2 className="text-base font-semibold flex items-center gap-2">
-                  <Pencil size={16} aria-hidden="true" />
-                  {project.name}
-                </h2>
-              </header>
-
-              <p className="text-xs mt-3">
-                <time dateTime={project.start_date.toISOString()}>
-                  Project Start: {format(project.start_date, "dd MMM yyyy")}
-                </time>
-              </p>
-
-              <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-3">
-                <span>Status: {project.status}</span>
-                <span>Priority: {project.priority}</span>
-                <span>Progress: {project.progress}%</span>
-              </div>
-            </article>
-          )}
-        </aside>
-
-      </div>
-    </main>
-  )
+      </aside>
+    </section>
+  );
 }

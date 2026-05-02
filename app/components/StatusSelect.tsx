@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, } from "~/components/ui/select";
 
 
@@ -8,8 +8,10 @@ type StatusType = (typeof STATUS_OPTIONS)[number];
 
 interface Props {
     defaultValue: StatusType;
+    taskId: string;
+    disabled?: boolean;
 }
-const StatusSelect = ({ defaultValue }: Props) => {
+const StatusSelect = ({ defaultValue, disabled, taskId }: Props) => {
     const [status, setStatus] = useState<StatusType>(defaultValue);
 
     const getStatusColor = (value: StatusType) => {
@@ -22,12 +24,17 @@ const StatusSelect = ({ defaultValue }: Props) => {
                 return "bg-gray-100 text-gray-700 border-gray-200";
         }
     };
+
+    // Sync local state with prop changes (e.g., after an update from the server)
+    useEffect(() => {
+        setStatus(defaultValue);
+    }, [defaultValue]);
+
+
     return (
-        <Select value={status} onValueChange={(value: StatusType) => setStatus(value)}>
+        <Select disabled={disabled} value={status} onValueChange={(value: StatusType) => setStatus(value)}>
             <SelectTrigger
-                className={`h-8 text-xs font-medium rounded-md border px-2 ${getStatusColor(
-                    status
-                )}`}
+                className={`w-[140px] h-8 text-xs font-medium rounded-md border px-2 flex items-center justify-center ${getStatusColor(status)}`}
             >
                 <SelectValue />
             </SelectTrigger>

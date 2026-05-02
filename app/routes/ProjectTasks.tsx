@@ -16,6 +16,8 @@ import type { Task } from "~/types/workspace";
 
 import { useNavigate } from "react-router";
 
+import { useUser } from "@clerk/clerk-react";
+
 /* -------------------------------------------------- */
 /* Task Type Definition                          */
 /* -------------------------------------------------- */
@@ -36,88 +38,14 @@ const formatIndianDate = (dateString?: string) => {
   }).format(date);
 };
 
-/* -------------------------------------------------- */
-/* Column Helper (Official v8 Pattern)           */
-/* -------------------------------------------------- */
-
-const columnHelper = createColumnHelper<Task>();
-
-const columns = [
-  columnHelper.accessor("title", {
-    header: "Task",
-    cell: info => (
-      <div className="min-w-[200px] truncate">
-        {info.getValue()}
-      </div>
-    ),
-  }),
-
-  columnHelper.accessor("type", {
-    header: "Type",
-    cell: ({ row }) => {
-      const type = row.original.type;
-
-      const color =
-        type === "BUG"
-          ? "bg-red-100 text-red-700"
-          : type === "FEATURE"
-            ? "bg-blue-100 text-blue-700"
-            : "bg-purple-100 text-purple-700";
-
-      return (
-        <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${color}`}>
-          {type}
-        </span>
-      );
-    },
-  }),
-
-  columnHelper.accessor("status", {
-    header: "Status",
-    cell: ({ row }) => (
-      <div className="min-w-[140px]">
-        <StatusSelect defaultValue={row.original.status} />
-      </div>
-    ),
-  }),
-
-  columnHelper.accessor("priority", {
-    header: "Priority",
-    cell: info => (
-      <span className="whitespace-nowrap">{info.getValue()}</span>
-    ),
-  }),
-
-  columnHelper.accessor("assignee", {
-    header: "Assignee",
-    cell: ({ row }) => {
-      const assignee = row.original.assignee;
-      return (
-        <div className="flex items-center gap-2 min-w-40">
-          {assignee.name}
-        </div>
-      );
-    },
-  }),
-
-  columnHelper.accessor("due_date", {
-    header: "Due Date",
-    cell: ({ row }) => (
-      <span className="whitespace-nowrap text-sm">
-        {formatIndianDate(row.original.due_date)}
-      </span>
-    ),
-  }),
-];
-
-
-
 
 /* -------------------------------------------------- */
 /* Main Component                                */
 /* -------------------------------------------------- */
 
 const ProjectTasks = () => {
+
+  const { user } = useUser();
 
   const navigate = useNavigate();
   const { filters } = useTaskFilters();
@@ -132,16 +60,6 @@ const ProjectTasks = () => {
     [tasks, filters]
   );
 
-
-  const table = useReactTable({
-    data: filteredTasks,
-    columns,
-    state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-  });
-
   // Gets unique assignees
   const assignees = useMemo<string[]>(() => {
     return Array.from(
@@ -153,6 +71,99 @@ const ProjectTasks = () => {
     );
   }, [tasks]);
 
+  const columnHelper = createColumnHelper<Task>();
+
+  const columns = useMemo(() => [
+    columnHelper.accessor("title", {
+      header: "Task",
+      cell: info => (
+        <div className="min-w-[200px] truncate">
+          {info.getValue()}
+        </div>
+      ),
+    }),
+
+    columnHelper.accessor("type", {
+      header: "Type",
+      cell: ({ row }) => {
+        const type = row.original.type;
+
+        const color =
+          type === "BUG"
+            ? "bg-red-100 text-red-700"
+            : type === "FEATURE"
+              ? "bg-blue-100 text-blue-700"
+              : "bg-purple-100 text-purple-700";
+
+        return (
+          <span className={`inline-flex justify-center items-center w-[110px] px-2 py-1 rounded text-xs font-medium ${color}`}>
+            {type}
+          </span>
+        );
+      },
+    }),
+
+    columnHelper.accessor("status", {
+      header: "Status",
+      cell: ({ row }) => {
+        const task = row.original;
+
+        const isTeamLead = task.project?.team_lead === user?.id;
+        const isAssignee = task.assignee?.id === user?.id;
+
+        const canUpdate = !!user && (isTeamLead || isAssignee);
+
+        return (
+          <div className="min-w-[140px]"
+            onClick={(e) => e.stopPropagation()} // Prevent row click when interacting with status
+          >
+            <StatusSelect
+              defaultValue={task.status}
+              taskId={task.id}
+              disabled={!canUpdate}
+            />
+          </div>
+        );
+      },
+    }),
+
+    columnHelper.accessor("priority", {
+      header: "Priority",
+      cell: info => (
+        <span className="whitespace-nowrap">{info.getValue()}</span>
+      ),
+    }),
+
+    columnHelper.accessor("assignee", {
+      header: "Assignee",
+      cell: ({ row }) => {
+        const assignee = row.original.assignee;
+        return (
+          <div className="flex items-center gap-2 min-w-40">
+            {assignee.name}
+          </div>
+        );
+      },
+    }),
+
+    columnHelper.accessor("due_date", {
+      header: "Due Date",
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap text-sm">
+          {formatIndianDate(row.original.due_date)}
+        </span>
+      ),
+    }),
+  ], [user]);
+
+  const table = useReactTable({
+    data: filteredTasks,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   if (isLoading) return <div>Loading tasks...</div>;
   if (error) return <div>Failed to load tasks</div>;
@@ -172,7 +183,7 @@ const ProjectTasks = () => {
       {/* ---------------- Table ---------------- */}
       <div className="rounded-md border overflow-hidden">
         <div className="w-full overflow-x-auto">
-          <Table className="min-w-[900px] w-full">
+          <Table className="min-w-[900px] w-full ">
             {/* Header */}
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

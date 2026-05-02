@@ -54,20 +54,25 @@ export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
 export type TaskType = "TASK" | "BUG" | "FEATURE" | "IMPROVEMENT" | "OTHER";
 
-export interface Task {
+export type Task = {
   id: string;
   title: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  type: TaskType;
+  status: "TODO" | "IN_PROGRESS" | "DONE";
+  type: "BUG" | "FEATURE" | "IMPROVEMENT";
+  priority: string;
 
   assignee: {
+    id: string;
     name: string;
-    avatar?: string;
+    image?: string;
   };
 
-  due_date: string;
-}
+  project: {
+    team_lead: string;
+  };
+
+  due_date?: string;
+};
 
 export type TaskDetails = {
   id: string;
@@ -99,8 +104,8 @@ export type TaskDetails = {
 export type CreateProjectPayload = {
   name: string;
   description?: string;
-  status: Project["status"];      // ✅ FIX (no string)
-  priority: Project["priority"];  // ✅ FIX
+  status: Project["status"];      
+  priority: Project["priority"];  
   progress?: number;
   start_date?: string;
   end_date?: string;

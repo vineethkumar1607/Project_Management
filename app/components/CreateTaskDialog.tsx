@@ -11,6 +11,7 @@ import { useParams } from "react-router";
 import type { RootState } from "~/store/store";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
+import { useWorkspaceMembers } from "~/hooks/useWorkspaceMembers";
 
 
 
@@ -39,14 +40,7 @@ const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
     const [createTask, { isLoading }] = useCreateTaskMutation();
 
     // Fetch members list for the workspace
-    const membersList = useSelector((state: RootState) => {
-        const workspaceId = state.workspace.currentWorkspaceId;
-
-        if (!workspaceId) return [];
-
-        return state.workspace.membersByWorkspace[workspaceId]?.data ?? [];
-    });
-
+    const { members: membersList, isLoading: membersLoading } = useWorkspaceMembers();
     // Initialize form with react-hook-form
     const { register, handleSubmit, watch, control, formState: { errors, isSubmitting }, reset,
     } = useForm<TaskFormData>({
@@ -205,7 +199,11 @@ const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
                                         <SelectValue placeholder="Select assignee" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {membersList.length === 0 ? (
+                                        {membersLoading ? (
+                                            <div className="p-2 text-sm text-muted-foreground">
+                                                Loading members...
+                                            </div>
+                                        ) : membersList.length === 0 ? (
                                             <div className="p-2 text-sm text-muted-foreground">
                                                 No members found
                                             </div>

@@ -27,10 +27,12 @@ export const useProject = () => {
 
     // Fetch only when needed
     useEffect(() => {
-        if (workspaceId && (!projectData || projectData.data.length === 0)) {
+        if (!workspaceId) return;
+
+        if (!projectData || projectData.status === "idle") {
             dispatch(fetchProjects(workspaceId));
         }
-    }, [workspaceId, projectData]);
+    }, [workspaceId, dispatch]);
 
     return {
         project,

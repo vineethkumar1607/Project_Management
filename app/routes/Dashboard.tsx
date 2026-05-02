@@ -52,7 +52,7 @@ const Dashboard = () => {
     if (!projectsData || projectsData.status === "failed" || isStale) {
       dispatch(fetchProjects(workspaceId));
     }
-  }, [workspaceId, projectsData, dispatch]);
+  }, [workspaceId, dispatch]);
 
   /**
    * Loading state

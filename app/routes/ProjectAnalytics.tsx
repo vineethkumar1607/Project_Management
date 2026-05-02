@@ -1,72 +1,47 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { CheckCircle, Clock, AlertTriangle, Users } from "lucide-react";
 
 import MetricCard from "../components/MetricCard";
 import StatusBarChart from "../components/StatusBarChart";
 import TypePieChart from "../components/TypePieChart";
 import PriorityBreakdown from "../components/PriorityBreakdown";
+import { useGetTasksQuery } from "~/store/api/tasksApi";
+import { useProjectContext } from "~/hooks/useProjectContext";
 
-import type {
-  Task,
-  Project,
-  ChartData,
-  PriorityChartData,
-} from "../lib/analyticsTypes";
 
-interface ProjectAnalyticsProps {
-  project: Project;
-  tasks?: Task[];
-}
+type ChartData = {
+  name: string;
+  value: number;
+};
 
-/* =====================================================
-   🔥 TEMP MOCK DATA (REMOVE WHEN BACKEND IS READY)
-===================================================== */
-const mockTasks: Task[] = [
-  {
-    id: "1",
-    title: "Design Login Page",
-    status: "DONE",
-    type: "FEATURE",
-    priority: "HIGH",
-    due_date: "2025-02-01",
-  },
-  {
-    id: "2",
-    title: "Fix API Bug",
-    status: "IN_PROGRESS",
-    type: "BUG",
-    priority: "MEDIUM",
-    due_date: "2025-02-10",
-  },
-  {
-    id: "3",
-    title: "Improve Dashboard",
-    status: "TODO",
-    type: "IMPROVEMENT",
-    priority: "LOW",
-    due_date: "2025-02-15",
-  },
-  {
-    id: "4",
-    title: "Payment Integration",
-    status: "DONE",
-    type: "FEATURE",
-    priority: "HIGH",
-    due_date: "2025-01-20",
-  },
-];
+type PriorityChartData = {
+  name: string;
+  value: number;
+  percentage: number;
+};
+
 
 /**
  * Main analytics container component.
  * Uses mock data automatically if real tasks are missing.
  */
-const ProjectAnalytics: React.FC<ProjectAnalyticsProps> = ({
-  project,
-  tasks,
-}) => {
+const ProjectAnalytics = () => {
+
+  const { projectId, project } = useProjectContext();
+
+  const { data: tasks = [], isLoading } = useGetTasksQuery(projectId!, {
+    skip: !projectId,  //  prevents invalid API call
+  });
+
+
+  // useEffect(() => {
+  //   console.log("project", project);
+  // }, [project]); 
+
+
+
   // Uses real tasks if available, otherwise fallback to mock
-  const effectiveTasks =
-    tasks && tasks.length > 0 ? tasks : mockTasks;
+  const effectiveTasks = tasks;
 
   const analytics = useMemo(() => {
     const now = new Date();
@@ -130,13 +105,49 @@ const ProjectAnalytics: React.FC<ProjectAnalyticsProps> = ({
       typeData,
       priorityData,
     };
-  }, [effectiveTasks]);
+  }, [[JSON.stringify(tasks)]]); // Deep compare tasks for memoization 
 
   const completionRate = analytics.total
     ? Math.round(
       (analytics.completed / analytics.total) * 100
     )
     : 0;
+
+
+
+  const metrics = [
+    {
+      title: "Completion Rate",
+      value: `${completionRate}%`,
+      icon: <CheckCircle className="text-green-500" />,
+      color: "text-green-500",
+    },
+    {
+      title: "Active Tasks",
+      value: analytics.inProgress,
+      icon: <Clock className="text-blue-500" />,
+      color: "text-blue-500",
+    },
+    {
+      title: "Overdue Tasks",
+      value: analytics.overdue,
+      icon: <AlertTriangle className="text-red-500" />,
+      color: "text-red-500",
+    },
+    {
+      title: "Team Size",
+      value: project?.members?.length || 0,
+      icon: <Users className="text-purple-500" />,
+      color: "text-purple-500",
+    },
+  ];
+
+  if (!projectId) return <div>Loading analytics...</div>;
+
+  if (!tasks || tasks.length === 0) {
+    return <div>No data available</div>;
+  }
+
 
   return (
     <main className="space-y-10">
@@ -154,30 +165,9 @@ const ProjectAnalytics: React.FC<ProjectAnalyticsProps> = ({
       </div>
       {/* ================= KPI CARDS ================= */}
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        <MetricCard
-          title="Completion Rate"
-          value={`${completionRate}%`}
-          icon={<CheckCircle className="text-green-500" />}
-          color="text-green-500"
-        />
-        <MetricCard
-          title="Active Tasks"
-          value={analytics.inProgress}
-          icon={<Clock className="text-blue-500" />}
-          color="text-blue-500"
-        />
-        <MetricCard
-          title="Overdue Tasks"
-          value={analytics.overdue}
-          icon={<AlertTriangle className="text-red-500" />}
-          color="text-red-500"
-        />
-        <MetricCard
-          title="Team Size"
-          value={project?.members?.length || 0}
-          icon={<Users className="text-purple-500" />}
-          color="text-purple-500"
-        />
+        {metrics.map((metric) => (
+          <MetricCard key={metric.title} {...metric} />
+        ))}
       </section>
 
       {/* ================= CHARTS ================= */}

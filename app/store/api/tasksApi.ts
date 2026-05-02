@@ -115,7 +115,7 @@ export const tasksApi = baseApi.injectEndpoints({
                 body: { message },
             }),
 
-          async onQueryStarted({ taskId, message, user }, { dispatch, queryFulfilled }) {
+            async onQueryStarted({ taskId, message, user }, { dispatch, queryFulfilled }) {
 
                 const tempId = `temp-${Date.now()}`;
 

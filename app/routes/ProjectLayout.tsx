@@ -34,7 +34,7 @@ const ProjectLayout = () => {
   const { members } = useProjectMembers(projectId);
 
   const safeTasks = isError ? [] : tasks;
-// Calculate task statistics
+  // Calculate task statistics
   const total = safeTasks.length;
   const completed = safeTasks.filter(t => t.status === "DONE").length;
   const inProgress = safeTasks.filter(t => t.status === "IN_PROGRESS").length;
@@ -153,7 +153,7 @@ const ProjectLayout = () => {
 
       {/* Content */}
       <section className="pt-4 flex-1">
-        <Outlet />
+        <Outlet context={{ project, projectId }} />
       </section>
       {isTaskModalOpen && (
         <CreateTaskDialog setIsDialogOpen={setIsTaskModalOpen} />

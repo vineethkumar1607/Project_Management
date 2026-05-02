@@ -28,6 +28,7 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({
             await onConfirm();
             onOpenChange(false); // close ONLY on success
         } catch (err) {
+            console.log(" err")
             // keep dialog open if error
         }
     };

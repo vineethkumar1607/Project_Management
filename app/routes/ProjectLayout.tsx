@@ -1,22 +1,14 @@
 import { Outlet, useNavigate, useLocation, useParams } from "react-router";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { ListTodo, BarChart2, Calendar, Settings, } from "lucide-react";
-import { useAppSelector } from "~/store/hooks";
-import type { RootState } from "~/store/store";
-import type { Project } from "~/types/workspace";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import StatsCard from "~/components/StatsCard";
 import CreateTaskDialog from "~/components/CreateTaskDialog";
-import { useDispatch, } from "react-redux";
-import type { AppDispatch } from "~/store/store";
-
-import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
 
 import { useProject } from "~/hooks/useProject";
 import { TextSkeleton } from "~/components/Common/TextSkeleton";
-import { useProjectMembers } from "~/hooks/useProjectMembers";
 
 
 
@@ -31,7 +23,6 @@ const ProjectLayout = () => {
 
   const { data: tasks = [], isLoading, isError } = useGetTasksQuery(projectId!);
 
-  const { members } = useProjectMembers(projectId);
 
   const safeTasks = isError ? [] : tasks;
   // Calculate task statistics
@@ -39,6 +30,8 @@ const ProjectLayout = () => {
   const completed = safeTasks.filter(t => t.status === "DONE").length;
   const inProgress = safeTasks.filter(t => t.status === "IN_PROGRESS").length;
   const overdue = safeTasks.filter(t => {
+    if (!t.due_date) return false; // No due date means it can't be overdue
+
     return new Date(t.due_date) < new Date() && t.status !== "DONE";
   }).length;
 

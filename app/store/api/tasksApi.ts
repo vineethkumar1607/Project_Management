@@ -16,6 +16,19 @@ type TaskComment = {
 export const tasksApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
 
+        // UPDATE TASK -  This mutation allows us to update specific fields of a task (like status, title, description, etc.) without needing to send the entire task object. The invalidatesTags: ["Tasks"] ensures that any cached data related to tasks is invalidated and refetched, keeping the UI in sync with the latest data from the server.
+        updateTask: builder.mutation<
+            { success: boolean; data: Task },
+            { taskId: string; body: Partial<Task> }
+        >({
+            query: ({ taskId, body }) => ({
+                url: `/tasks/${taskId}`,
+                method: "PUT",
+                body,
+            }),
+            invalidatesTags: ["Tasks"], // refresh list
+        }),
+
         // GET TASKS 
         getTasks: builder.query<Task[], string>({
             query: (projectId) => `/tasks/project/${projectId}/tasks`,
@@ -165,10 +178,13 @@ export const tasksApi = baseApi.injectEndpoints({
         })
 
     }),
+
+
     overrideExisting: true, // allows us to redefine endpoints without TypeScript errors, which is useful during development when we might be iterating on the API design. In production, you might want to set this to false to catch accidental endpoint redefinitions.
 });
 
 export const {
+    useUpdateTaskMutation,
     useGetTasksQuery,
     useCreateTaskMutation,
     useGetTaskByIdQuery,

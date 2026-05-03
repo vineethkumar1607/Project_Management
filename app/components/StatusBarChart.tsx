@@ -1,14 +1,6 @@
 import React from "react";
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    ResponsiveContainer,
-    Tooltip,
-    Legend,
-} from "recharts";
-import type { ChartData } from "../lib/analyticsTypes";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, } from "recharts";
+import type { ChartData } from "~/types/workspace";
 
 interface StatusBarChartProps {
     data: ChartData[];
@@ -26,8 +18,14 @@ const STATUS_COLORS: Record<string, string> = {
  * Future-safe (no deprecated Cell usage).
  */
 const StatusBarChart: React.FC<StatusBarChartProps> = ({ data }) => {
-    // 🔥 Add fill dynamically to data (cleanest approach)
-    const coloredData = data.map((item) => ({
+    //  Add fill dynamically to data to avoid deprecated Cell usage
+
+    const optimizedData = [...data]
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+
+
+    const coloredData = optimizedData.map((item) => ({
         ...item,
         fill: STATUS_COLORS[item.name] || "#8884d8",
     }));
@@ -46,6 +44,10 @@ const StatusBarChart: React.FC<StatusBarChartProps> = ({ data }) => {
             </div>
         );
     };
+
+    if (!data || data.length === 0) {
+        return <div className="h-[300px]" />;
+    }
 
     return (
         <section

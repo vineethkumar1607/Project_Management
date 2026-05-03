@@ -1,13 +1,7 @@
 import React from "react";
-import {
-    PieChart,
-    Pie,
-    Cell,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-} from "recharts";
-import type { ChartData } from "../lib/analyticsTypes";
+import { PieChart, Pie, Tooltip, Legend, ResponsiveContainer, Cell, } from "recharts";
+import type { ChartData } from "~/types/workspace";
+
 
 interface TypePieChartProps {
     data: ChartData[];
@@ -28,7 +22,7 @@ const COLORS = [
 const TypePieChart: React.FC<TypePieChartProps> = ({
     data,
 }) => {
-
+    //  Custom tooltip for better accessibility and styling 
     const CustomTooltip = ({ active, payload }: any) => {
         if (!active || !payload || !payload.length) return null;
 
@@ -43,6 +37,25 @@ const TypePieChart: React.FC<TypePieChartProps> = ({
             </div>
         );
     };
+
+    if (!data || data.length === 0) {
+        return <div className="h-[300px]" />;
+    }
+
+    // optimize data for better visualization: sort by value, take top 5 and group rest into "Others"
+    const optimizedData = [...data]
+        .sort((a, b) => b.value - a.value);
+
+    const topItems = optimizedData.slice(0, 5);
+
+    const othersValue = optimizedData
+        .slice(5)
+        .reduce((sum, item) => sum + item.value, 0);
+
+    const finalData =
+        othersValue > 0
+            ? [...topItems, { name: "Others", value: othersValue }]
+            : topItems;
 
     return (
         <section
@@ -67,7 +80,7 @@ const TypePieChart: React.FC<TypePieChartProps> = ({
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
-                            data={data}
+                            data={finalData}
                             dataKey="value"
                             nameKey="name"
                             outerRadius={100}
@@ -75,7 +88,7 @@ const TypePieChart: React.FC<TypePieChartProps> = ({
                             isAnimationActive
                             animationDuration={600}
                         >
-                            {data.map((_, index) => (
+                            {finalData.map((_, index) => (
                                 <Cell
                                     key={`cell-${index}`}
                                     fill={COLORS[index % COLORS.length]}

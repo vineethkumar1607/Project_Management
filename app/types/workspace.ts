@@ -59,7 +59,7 @@ export type Task = {
   title: string;
   status: "TODO" | "IN_PROGRESS" | "DONE";
   type: "BUG" | "FEATURE" | "IMPROVEMENT";
-  priority: string;
+priority: "LOW" | "MEDIUM" | "HIGH";
 
   assignee: {
     id: string;
@@ -192,3 +192,11 @@ export interface ProjectState {
   projectMembersByProject: ProjectMembersByProject;
   error: string | null;
 }
+
+// ================== ANALYTICS TYPES==================
+
+
+export type ChartData = {
+  name: string;
+  value: number;
+};

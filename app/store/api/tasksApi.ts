@@ -15,6 +15,37 @@ type TaskComment = {
 
 export const tasksApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
+        // DELETE TASKS - This mutation allows us to delete multiple tasks at once by sending an array of task IDs. The optimistic update removes the deleted tasks from the UI immediately, and if the server call fails, it rolls back to the previous state. The invalidatesTags: ["Tasks"] ensures that any cached data related to tasks is invalidated and refetched, keeping the UI in sync with the latest data from the server.
+        deleteTasks: builder.mutation<
+            any,
+            { taskIds: string[]; projectId: string }
+        >({
+            query: ({ taskIds }) => ({
+                url: "/tasks",
+                method: "DELETE",
+                body: { taskIds },
+            }),
+
+            async onQueryStarted({ taskIds, projectId }, { dispatch, queryFulfilled }) {
+                const patchResult = dispatch(
+                    tasksApi.util.updateQueryData(
+                        "getTasks",
+                        projectId,
+                        (draft) => {
+                            return draft.filter(task => !taskIds.includes(task.id));
+                        }
+                    )
+                );
+
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patchResult.undo();
+                }
+            },
+
+            invalidatesTags: ["Tasks"],
+        }),
 
         // UPDATE TASK -  This mutation allows us to update specific fields of a task (like status, title, description, etc.) without needing to send the entire task object. The invalidatesTags: ["Tasks"] ensures that any cached data related to tasks is invalidated and refetched, keeping the UI in sync with the latest data from the server.
         updateTask: builder.mutation<
@@ -175,15 +206,18 @@ export const tasksApi = baseApi.injectEndpoints({
                     patchResult.undo();
                 }
             },
+
         })
 
     }),
+
 
 
     overrideExisting: true, // allows us to redefine endpoints without TypeScript errors, which is useful during development when we might be iterating on the API design. In production, you might want to set this to false to catch accidental endpoint redefinitions.
 });
 
 export const {
+    useDeleteTasksMutation,
     useUpdateTaskMutation,
     useGetTasksQuery,
     useCreateTaskMutation,

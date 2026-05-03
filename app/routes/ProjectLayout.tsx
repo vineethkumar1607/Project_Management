@@ -2,13 +2,20 @@ import { Outlet, useNavigate, useLocation, useParams } from "react-router";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { ListTodo, BarChart2, Calendar, Settings, } from "lucide-react";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import StatsCard from "~/components/StatsCard";
 import CreateTaskDialog from "~/components/CreateTaskDialog";
 
 import { useProject } from "~/hooks/useProject";
 import { TextSkeleton } from "~/components/Common/TextSkeleton";
+import AnalyticsSkeleton from "~/components/Skeletons/AnalyticsSkeleton";
+import LayoutSkeleton from "~/components/Skeletons/LayoutSkeleton";
+import { motion } from "framer-motion";
+import TasksSkeleton from "~/components/Skeletons/TasksSkeleton";
+import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton";
+
+
 
 
 
@@ -21,7 +28,10 @@ const ProjectLayout = () => {
   // Fetch project details using custom hook
   const { project, isLoading: isProjectLoading } = useProject();
 
-  const { data: tasks = [], isLoading, isError } = useGetTasksQuery(projectId!);
+  const { data: tasks = [], isLoading, isError } = useGetTasksQuery(projectId!, {
+    skip: !projectId,  //  prevents invalid API call
+    refetchOnMountOrArgChange: false, //  avoids unnecessary refetches
+  });
 
 
   const safeTasks = isError ? [] : tasks;
@@ -34,6 +44,13 @@ const ProjectLayout = () => {
 
     return new Date(t.due_date) < new Date() && t.status !== "DONE";
   }).length;
+
+
+  const getSkeleton = () => {
+    if (location.pathname.includes("analytics")) return <AnalyticsSkeleton />;
+    if (location.pathname.includes("calendar")) return <CalendarSkeleton />;
+    return <TasksSkeleton />;
+  };
 
 
   const taskStats = [
@@ -58,6 +75,16 @@ const ProjectLayout = () => {
       icon: Settings,
     },
   ];
+
+
+  const TABS = [
+    { value: "tasks", label: "Tasks", icon: ListTodo },
+    { value: "analytics", label: "Analytics", icon: BarChart2 },
+    { value: "calendar", label: "Calendar", icon: Calendar },
+    { value: "settings", label: "Settings", icon: Settings },
+  ];
+
+
   // Determines active tab
   const pathSegments = location.pathname.split("/");
   const lastSegment = pathSegments[pathSegments.length - 1];
@@ -122,31 +149,38 @@ const ProjectLayout = () => {
         }}
       >
         <TabsList className="bg-muted p-1 w-fit gap-2">
-          <TabsTrigger value="tasks" className="flex items-center gap-2 px-4 py-2 text-sm">
-            <ListTodo size={16} />
-            Tasks
-          </TabsTrigger>
-
-          <TabsTrigger value="analytics" className="flex items-center gap-2 px-4 py-2 text-sm">
-            <BarChart2 size={16} />
-            Analytics
-          </TabsTrigger>
-
-          <TabsTrigger value="calendar" className="flex items-center gap-2 px-4 py-2 text-sm">
-            <Calendar size={16} />
-            Calendar
-          </TabsTrigger>
-
-          <TabsTrigger value="settings" className="flex items-center gap-2 px-4 py-2 text-sm">
-            <Settings size={16} />
-            Settings
-          </TabsTrigger>
+          {TABS.map(({ value, label, icon: Icon }) => (
+            <TabsTrigger
+              key={value}
+              value={value}
+              onMouseEnter={() => {
+                import(`~/routes/Project${value.charAt(0).toUpperCase() + value.slice(1)}`);
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-sm"
+            >
+              <Icon size={16} />
+              {label}
+            </TabsTrigger>
+          ))}
         </TabsList>
       </Tabs>
 
       {/* Content */}
       <section className="pt-4 flex-1">
-        <Outlet context={{ project, projectId }} />
+        {isLoading ? (
+          <LayoutSkeleton />
+        ) : (
+          <Suspense fallback={getSkeleton()}>
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Outlet context={{ project, projectId, tasks }} />
+            </motion.div>
+          </Suspense>
+        )}
       </section>
       {isTaskModalOpen && (
         <CreateTaskDialog setIsDialogOpen={setIsTaskModalOpen} />

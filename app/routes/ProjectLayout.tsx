@@ -14,9 +14,56 @@ import LayoutSkeleton from "~/components/Skeletons/LayoutSkeleton";
 import { motion } from "framer-motion";
 import TasksSkeleton from "~/components/Skeletons/TasksSkeleton";
 import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton";
+import type { LucideIcon } from "lucide-react";
 
 
+const PROJECT_TABS = [
+  {
+    value: "tasks",
+    label: "Tasks",
+    icon: ListTodo,
+    route: ".",
+    loader: () => import("~/routes/ProjectTasks"),
+  },
+  {
+    value: "analytics",
+    label: "Analytics",
+    icon: BarChart2,
+    route: "analytics",
+    loader: () => import("~/routes/ProjectAnalytics"),
+  },
+  {
+    value: "calendar",
+    label: "Calendar",
+    icon: Calendar,
+    route: "calendar",
+    loader: () => import("~/routes/ProjectCalendar"),
+  },
+  {
+    value: "settings",
+    label: "Settings",
+    icon: Settings,
+    route: "settings",
+    loader: () => import("~/routes/ProjectSettings"),
+  },
+] as const satisfies ReadonlyArray<{
+  value: string;
+  label: string;
+  icon: LucideIcon;
+  route: string;
+  loader: () => Promise<any>;
+}>;
 
+const loadedTabs = new Set<string>();
+
+const prefetchTab = (value: TabValue, loader: () => Promise<any>) => {
+  if (loadedTabs.has(value)) return;
+
+  loadedTabs.add(value);
+  loader();
+};
+
+type TabValue = typeof PROJECT_TABS[number]["value"];
 
 
 const ProjectLayout = () => {
@@ -52,7 +99,6 @@ const ProjectLayout = () => {
     return <TasksSkeleton />;
   };
 
-
   const taskStats = [
     {
       title: "Total Tasks",
@@ -77,55 +123,43 @@ const ProjectLayout = () => {
   ];
 
 
-  const TABS = [
-    { value: "tasks", label: "Tasks", icon: ListTodo },
-    { value: "analytics", label: "Analytics", icon: BarChart2 },
-    { value: "calendar", label: "Calendar", icon: Calendar },
-    { value: "settings", label: "Settings", icon: Settings },
-  ];
-
-
   // Determines active tab
   const pathSegments = location.pathname.split("/");
   const lastSegment = pathSegments[pathSegments.length - 1];
 
-  const currentTab =
-    lastSegment === projectId || lastSegment === "projects"
-      ? "tasks"
-      : lastSegment;
+  const currentTab: TabValue =
+    PROJECT_TABS.find(tab => tab.value === lastSegment)?.value ||
+    "tasks";
 
   return (
     <div className="space-y-6 flex flex-col">
       {/* Header */}
       <header className="border-b border-border pb-4 flex items-center justify-between">
-        <>
-          <div>
-            {isProjectLoading ? (
-              <>
-                <TextSkeleton className="h-6 w-48 mb-2" />
-                <TextSkeleton className="h-4 w-64" />
-              </>
-            ) : (
-              <>
-                <h1 className="text-2xl font-semibold">
-                  {project?.name}
-                </h1>
-
-                <p className="text-sm text-muted-foreground mt-1">
-                  Manage tasks, analytics, calendar and settings
-                </p>
-              </>
-            )}
-          </div>
-
+        <div>
           {isProjectLoading ? (
-            <TextSkeleton className="h-9 w-28 rounded-md" />
+            <>
+              <TextSkeleton className="h-6 w-48 mb-2" />
+              <TextSkeleton className="h-4 w-64" />
+            </>
           ) : (
-            <PrimaryButton onClick={() => setIsTaskModalOpen(true)}>
-              + Add Task
-            </PrimaryButton>
+            <>
+              <h1 className="text-2xl font-semibold">
+                {project?.name}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage tasks, analytics, calendar and settings
+              </p>
+            </>
           )}
-        </>
+        </div>
+
+        {isProjectLoading ? (
+          <TextSkeleton className="h-9 w-28 rounded-md" />
+        ) : (
+          <PrimaryButton onClick={() => setIsTaskModalOpen(true)}>
+            + Add Task
+          </PrimaryButton>
+        )}
       </header>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {taskStats.map((stat) => (
@@ -141,25 +175,22 @@ const ProjectLayout = () => {
       <Tabs
         value={currentTab}
         onValueChange={(value) => {
-          if (value === "tasks") {
-            navigate(".");
-          } else {
-            navigate(value);
-          }
+          if (!PROJECT_TABS.some(t => t.value === value)) return;
+
+          const tab = PROJECT_TABS.find(t => t.value === value)!;
+          navigate(tab.route);
         }}
       >
         <TabsList className="bg-muted p-1 w-fit gap-2">
-          {TABS.map(({ value, label, icon: Icon }) => (
+          {PROJECT_TABS.map((tab) => (
             <TabsTrigger
-              key={value}
-              value={value}
-              onMouseEnter={() => {
-                import(`~/routes/Project${value.charAt(0).toUpperCase() + value.slice(1)}`);
-              }}
+              key={tab.value}
+              value={tab.value}
+              onMouseEnter={() => prefetchTab(tab.value, tab.loader)}
               className="flex items-center gap-2 px-4 py-2 text-sm"
             >
-              <Icon size={16} />
-              {label}
+              <tab.icon size={16} />
+              {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>

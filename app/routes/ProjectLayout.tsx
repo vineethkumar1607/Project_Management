@@ -4,10 +4,9 @@ import { ListTodo, BarChart2, Calendar, Settings, } from "lucide-react";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
 import { Suspense, useState } from "react";
 import PrimaryButton from "~/components/Common/PrimaryButton";
-import StatsCard from "~/components/StatsCard";
 import CreateTaskDialog from "~/components/CreateTaskDialog";
 
-import { useProject } from "~/hooks/useProject";
+import { useCurrentProject } from "~/hooks/useCurrentProject";
 import { TextSkeleton } from "~/components/Common/TextSkeleton";
 import AnalyticsSkeleton from "~/components/Skeletons/AnalyticsSkeleton";
 import LayoutSkeleton from "~/components/Skeletons/LayoutSkeleton";
@@ -15,7 +14,9 @@ import { motion } from "framer-motion";
 import TasksSkeleton from "~/components/Skeletons/TasksSkeleton";
 import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton";
 import type { LucideIcon } from "lucide-react";
-
+import MetricCard from "~/components/MetricCard";
+import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
+import { useUser } from "@clerk/clerk-react";
 
 const PROJECT_TABS = [
   {
@@ -72,26 +73,23 @@ const ProjectLayout = () => {
   const location = useLocation();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
+  const { user } = useUser();
+
   // Fetch project details using custom hook
-  const { project, isLoading: isProjectLoading } = useProject();
+  const { project, loading: isProjectLoading, error, } = useCurrentProject();
 
   const { data: tasks = [], isLoading, isError } = useGetTasksQuery(projectId!, {
     skip: !projectId,  //  prevents invalid API call
     refetchOnMountOrArgChange: false, //  avoids unnecessary refetches
   });
 
-
   const safeTasks = isError ? [] : tasks;
-  // Calculate task statistics
-  const total = safeTasks.length;
-  const completed = safeTasks.filter(t => t.status === "DONE").length;
-  const inProgress = safeTasks.filter(t => t.status === "IN_PROGRESS").length;
-  const overdue = safeTasks.filter(t => {
-    if (!t.due_date) return false; // No due date means it can't be overdue
 
-    return new Date(t.due_date) < new Date() && t.status !== "DONE";
-  }).length;
-
+  const analytics = useTaskAnalytics({
+    tasks: safeTasks,
+    userEmail:
+      user?.primaryEmailAddress?.emailAddress,
+  });
 
   const getSkeleton = () => {
     if (location.pathname.includes("analytics")) return <AnalyticsSkeleton />;
@@ -99,26 +97,30 @@ const ProjectLayout = () => {
     return <TasksSkeleton />;
   };
 
-  const taskStats = [
+  const metrics = [
     {
       title: "Total Tasks",
-      value: total,
+      value: analytics.totalTasks,
       icon: ListTodo,
+      description: "all project tasks",
     },
     {
       title: "Completed",
-      value: completed,
+      value: analytics.completedTasks,
       icon: BarChart2,
+      description: "finished successfully",
     },
     {
       title: "In Progress",
-      value: inProgress,
+      value: analytics.inProgressTasks,
       icon: Calendar,
+      description: "currently active",
     },
     {
       title: "Overdue",
-      value: overdue,
+      value: analytics.overdueTasks,
       icon: Settings,
+      description: "require attention",
     },
   ];
 
@@ -130,6 +132,14 @@ const ProjectLayout = () => {
   const currentTab: TabValue =
     PROJECT_TABS.find(tab => tab.value === lastSegment)?.value ||
     "tasks";
+
+  if (error) {
+    return (
+      <div className="p-6 text-red-500">
+        Failed to load project
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 flex flex-col">
@@ -162,10 +172,10 @@ const ProjectLayout = () => {
         )}
       </header>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {taskStats.map((stat) => (
-          <StatsCard
-            key={stat.title}
-            {...stat}
+        {metrics.map((metric) => (
+          <MetricCard
+            key={metric.title}
+            {...metric}
             isLoading={isLoading}
           />
         ))}

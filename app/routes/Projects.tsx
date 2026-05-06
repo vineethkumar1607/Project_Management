@@ -1,37 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import ProjectCard from "~/components/ProjectCard";
 import type { Project } from "~/types/workspace";
 import { filterProjects } from "~/lib/filterProjects";
-
-import { useSelector } from "react-redux";
-import type { RootState } from "~/store/store";
 import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
 import CreateProjectDialogBox from "~/components/CreateProjectDialogBox";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
 import FiltersBar from "~/components/Common/FiltersBar";
+import { useProjects } from "~/hooks/useProjects";
+import { FolderOpen, CheckCircle, Clock, ClipboardList } from "lucide-react";
+import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";
+import MetricCard from "~/components/MetricCard";
+
 
 const Projects = () => {
-  /* =======================
-     Redux Data
-  ======================= */
-  const workspaceId = useSelector(
-    (state: RootState) => state.workspace.currentWorkspaceId
-  );
 
-  const projectData = useSelector((state: RootState) =>
-    workspaceId
-      ? state.project.projectsByWorkspace[workspaceId]
-      : null
-  );
+  const { projects, loading, error } = useProjects();
 
-  const projects = projectData?.data || [];
-  const loading = !projectData || projectData.status === "loading";
-  const error = projectData?.status === "failed";
-
+  const analytics = useProjectAnalytics(projects);
   /* =======================
      UI State
   ======================= */
@@ -88,6 +77,41 @@ const Projects = () => {
     );
   }
 
+  const metrics = [
+    {
+      title: "Total Projects",
+      value: analytics.totalProjects,
+      description: "all workspace projects",
+      icon: FolderOpen,
+      iconBgColor: "bg-blue-500/10",
+      iconColor: "text-blue-500",
+    },
+    {
+      title: "Completed",
+      value: analytics.completedProjects,
+      description: "successfully finished",
+      icon: CheckCircle,
+      iconBgColor: "bg-emerald-500/10",
+      iconColor: "text-emerald-500",
+    },
+    {
+      title: "Active",
+      value: analytics.activeProjects,
+      description: "currently in progress",
+      icon: Clock,
+      iconBgColor: "bg-purple-500/10",
+      iconColor: "text-purple-500",
+    },
+    {
+      title: "Planning",
+      value: analytics.planningProjects,
+      description: "in planning phase",
+      icon: ClipboardList,
+      iconBgColor: "bg-amber-500/10",
+      iconColor: "text-amber-500",
+    },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -108,6 +132,15 @@ const Projects = () => {
 
         {open && <CreateProjectDialogBox setIsDialogOpen={setOpen} />}
       </header>
+      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {metrics.map((metric) => (
+          <MetricCard
+            key={metric.title}
+            {...metric}
+            isLoading={loading}
+          />
+        ))}
+      </section>
 
       {/* Filters */}
       <FiltersBar

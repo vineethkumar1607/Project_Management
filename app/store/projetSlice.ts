@@ -9,7 +9,6 @@ import type { ProjectState } from "~/types/workspace";
 const initialState: ProjectState = {
     projectsByWorkspace: {},
     projectMembersByProject: {},
-    error: null,
 };
 
 // Create the project slice using createSlice from Redux Toolkit. This defines the reducers and extraReducers to handle the various actions related to projects and their members.
@@ -30,6 +29,7 @@ const projectSlice = createSlice({
                 state.projectsByWorkspace[workspaceId] = {
                     data: existing?.data || [],
                     status: "loading",
+                    error: null,
                     lastFetched: existing?.lastFetched,
                 };
             })
@@ -40,6 +40,7 @@ const projectSlice = createSlice({
                 state.projectsByWorkspace[workspaceId] = {
                     data: action.payload,
                     status: "succeeded",
+                    error: null,
                     lastFetched: Date.now(),
                 };
             })
@@ -51,6 +52,9 @@ const projectSlice = createSlice({
                 state.projectsByWorkspace[workspaceId] = {
                     data: existing?.data || [],
                     status: "failed",
+                    error:
+                        action.error.message ||
+                        "Failed to fetch projects",
                     lastFetched: existing?.lastFetched,
                 };
             })

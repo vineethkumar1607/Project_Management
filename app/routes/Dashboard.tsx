@@ -1,63 +1,82 @@
-import { Suspense, lazy, useState, memo, useEffect, useRef } from "react";
-import { Plus } from "lucide-react";
+import { Suspense, lazy, memo, useState, } from "react";
+import { CheckCircle, Clock, FolderOpen, PauseCircle, Plus } from "lucide-react";
 import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
 import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
 import RecentActivitySkeleton from "~/components/ui/RecentActivitySkeleton";
 import TaskSummarySkeleton from "~/components/ui/TaskSummarySkeleton";
-import { useOrganization, useUser } from "@clerk/clerk-react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchWorkspaces } from "~/store/workspaceThunk";
-import type { AppDispatch, RootState } from "~/store/store";
-import { fetchProjects } from "~/store/projectThunk";
-import { setCurrentWorkspace } from "~/store/workspaceSlice";
-import { Button } from "~/components/ui/button";
+import { useUser } from "@clerk/clerk-react";
 import PrimaryButton from "~/components/Common/PrimaryButton";
+import { useProjects } from "~/hooks/useProjects";
+import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";
+import MetricCard from "~/components/MetricCard";
+import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
 
 // Lazy components
 const StatsGrid = lazy(() => import("../components/dashboard/StatsGrid"));
 const ProjectOverview = lazy(() => import("../components/ProjectOverview"));
 const RecentActivity = lazy(() => import("../components/RecentActivity"));
 const TasksSummary = lazy(() => import("../components/dashboard/TasksSummary"));
-const CreateProjectDialogBox = lazy(() => import("../components/CreateProjectDialogBox"));
+
 
 const Dashboard = () => {
+  const [, setIsDialogOpen] = useState(false);
   const { user, isLoaded } = useUser();
-  const dispatch = useDispatch<AppDispatch>();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const { projects, loading, } = useProjects();
 
-  // Clerk organization
-  const { organization } = useOrganization();
-  const workspaceId = useSelector(
-    (state: RootState) => state.workspace.currentWorkspaceId
+  const analytics = useProjectAnalytics(projects);
+
+  const allTasks = projects.flatMap(
+    (project) => project.tasks ?? []
   );
 
-  const projectsData = useSelector((state: RootState) =>
-    workspaceId
-      ? state.project.projectsByWorkspace[workspaceId]
-      : null
-  );
+  const taskAnalytics = useTaskAnalytics({
+    tasks: allTasks,
+    userEmail:
+      user?.primaryEmailAddress?.emailAddress,
+  });
 
-
-  //  Fetch projects when workspace changes
-  useEffect(() => {
-    if (!workspaceId) return;
-
-    const STALE_TIME = 5 * 60 * 1000;
-
-    const isStale =
-      projectsData?.lastFetched &&
-      Date.now() - projectsData.lastFetched > STALE_TIME;
-
-    if (!projectsData || projectsData.status === "failed" || isStale) {
-      dispatch(fetchProjects(workspaceId));
-    }
-  }, [workspaceId, dispatch]);
-
+  console.log("allTasks",allTasks)
+  console.log("taskAnalytics",taskAnalytics)
   /**
    * Loading state
    */
   if (!isLoaded) return null;
+
+  const metrics = [
+    {
+      title: "Total Projects",
+      value: analytics.totalProjects,
+      description: "projects in workspace",
+      icon: FolderOpen,
+      iconBgColor: "bg-blue-500/10",
+      iconColor: "text-blue-500",
+    },
+    {
+      title: "Completed",
+      value: analytics.completedProjects,
+      description: "successfully completed",
+      icon: CheckCircle,
+      iconBgColor: "bg-emerald-500/10",
+      iconColor: "text-emerald-500",
+    },
+    {
+      title: "My Tasks",
+      value: taskAnalytics.myTasks,
+      description: "assigned to you",
+      icon: Clock,
+      iconBgColor: "bg-purple-500/10",
+      iconColor: "text-purple-500",
+    },
+    {
+      title: "Overdue Tasks",
+      value: taskAnalytics.overdueTasks,
+      description: "require attention",
+      icon: PauseCircle,
+      iconBgColor: "bg-amber-500/10",
+      iconColor: "text-amber-500",
+    },
+  ];
 
   return (
     <div className="space-y-8">
@@ -81,9 +100,18 @@ const Dashboard = () => {
       </header>
 
       <section>
-        <Suspense fallback={<StatsGridSkeleton />}>
-          <StatsGrid />
-        </Suspense>
+        {loading ? (
+          <StatsGridSkeleton />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {metrics.map((metric) => (
+              <MetricCard
+                key={metric.title}
+                {...metric}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <section

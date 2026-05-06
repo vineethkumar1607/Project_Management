@@ -6,7 +6,7 @@ import { Calendar, MessageCircle, Pencil, Send } from "lucide-react";
 import { useGetTaskByIdQuery, useGetTaskCommentsQuery, useAddCommentMutation } from "~/store/api/tasksApi";
 import { useUser } from "@clerk/clerk-react";
 
-//  Local type for comments (based on your backend)
+//  Local type for comments since the API response is paginated and we want to maintain a local list of comments that can be updated optimistically when a new comment is added.
 type TaskComment = {
   id: string;
   content: string;

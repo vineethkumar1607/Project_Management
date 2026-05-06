@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { CheckCircle, Clock, AlertTriangle, Users } from "lucide-react";
 
 import MetricCard from "../components/MetricCard";
@@ -8,20 +8,6 @@ import PriorityBreakdown from "../components/PriorityBreakdown";
 
 import { useProjectContext } from "~/hooks/useProjectContext";
 import { useAnalytics } from "~/hooks/useAnalytics";
-
-
-type ChartData = {
-  name: string;
-  value: number;
-};
-
-type PriorityChartData = {
-  name: string;
-  value: number;
-  percentage: number;
-};
-
-
 
 
 /**
@@ -38,31 +24,38 @@ const ProjectAnalytics = () => {
       (analytics.completed / analytics.total) * 100
     )
     : 0;
-
   const metrics = [
     {
       title: "Completion Rate",
       value: `${completionRate}%`,
-      icon: <CheckCircle className="text-green-500" />,
-      color: "text-green-500",
+      description: "tasks completed successfully",
+      icon: CheckCircle,
+      iconColor: "text-green-500",
+      iconBgColor: "bg-green-500/10",
     },
     {
       title: "Active Tasks",
       value: analytics.inProgress,
-      icon: <Clock className="text-blue-500" />,
-      color: "text-blue-500",
+      description: "currently in progress",
+      icon: Clock,
+      iconColor: "text-blue-500",
+      iconBgColor: "bg-blue-500/10",
     },
     {
       title: "Overdue Tasks",
       value: analytics.overdue,
-      icon: <AlertTriangle className="text-red-500" />,
-      color: "text-red-500",
+      description: "require immediate attention",
+      icon: AlertTriangle,
+      iconColor: "text-red-500",
+      iconBgColor: "bg-red-500/10",
     },
     {
       title: "Team Size",
       value: project?.members?.length || 0,
-      icon: <Users className="text-purple-500" />,
-      color: "text-purple-500",
+      description: "active project members",
+      icon: Users,
+      iconColor: "text-purple-500",
+      iconBgColor: "bg-purple-500/10",
     },
   ];
 

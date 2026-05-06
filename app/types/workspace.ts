@@ -17,14 +17,11 @@ export interface Project {
   id: string;
   name: string;
   description?: string | null;
-
   status: "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
   priority: "LOW" | "MEDIUM" | "HIGH";
-
   progress?: number;
   start_date?: string;
   end_date?: string;
-
   workspaceId: string;
   team_lead: string;
 
@@ -59,18 +56,17 @@ export type Task = {
   title: string;
   status: "TODO" | "IN_PROGRESS" | "DONE";
   type: "BUG" | "FEATURE" | "IMPROVEMENT";
-priority: "LOW" | "MEDIUM" | "HIGH";
-
+  priority: "LOW" | "MEDIUM" | "HIGH";
   assignee: {
     id: string;
     name: string;
     image?: string;
+     email?: string;
   };
 
   project: {
     team_lead: string;
   };
-
   due_date?: string;
 };
 
@@ -96,16 +92,13 @@ export type TaskDetails = {
 };
 
 
-
-
-
 // ================== API PAYLOADS ==================
 
 export type CreateProjectPayload = {
   name: string;
   description?: string;
-  status: Project["status"];      
-  priority: Project["priority"];  
+  status: Project["status"];
+  priority: Project["priority"];
   progress?: number;
   start_date?: string;
   end_date?: string;
@@ -130,15 +123,11 @@ export type TaskFormData = {
 export type ConfirmDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-
   title?: string;
   description?: string;
-
   confirmText?: string;
   cancelText?: string;
-
   onConfirm: () => Promise<void> | void;
-
   loading?: boolean;
 };
 
@@ -173,6 +162,7 @@ export interface AsyncState<T> {
   data: T;
   status: AsyncStatus;
   lastFetched?: number;
+  error?: string | null;
 }
 
 
@@ -190,7 +180,6 @@ export type ProjectMembersByProject = {
 export interface ProjectState {
   projectsByWorkspace: ProjectsByWorkspace;
   projectMembersByProject: ProjectMembersByProject;
-  error: string | null;
 }
 
 // ================== ANALYTICS TYPES==================

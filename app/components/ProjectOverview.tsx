@@ -1,12 +1,11 @@
 import { useState, type FC } from "react";
 import { Link } from "react-router";
-import { useSelector } from "react-redux";
-import type { RootState } from "~/store/store";
 import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
 import type { Project } from "~/types/workspace";
 import EmptyState from "~/components/Common/EmptyState";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { FolderOpen, Plus } from "lucide-react";
+import { useProjects } from "~/hooks/useProjects";
 
 /* =======================
    Types
@@ -51,29 +50,14 @@ const priorityColors: Record<ProjectPriority, string> = {
 const ProjectOverview: FC = () => {
 
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [, setIsDialogOpen] = useState(false);
 
+  const { projects, loading, error } = useProjects();
 
-  const workspaceId = useSelector(
-    (state: RootState) => state.workspace.currentWorkspaceId
-  );
+  const isInitialLoading = loading && projects.length === 0;
 
-  const projectData = useSelector((state: RootState) =>
-    workspaceId
-      ? state.project.projectsByWorkspace[workspaceId]
-      : null
-  );
-  const isInitialLoading = !projectData;
-  const isBackgroundLoading = projectData?.status === "loading";
-
-  const projects = projectData?.data || [];
-  const loading = projectData?.status === "loading";
-  const error = projectData?.status === "failed";
-
-
-
-  console.log("workspaceId:", workspaceId);
-  console.log("projectData:", projectData);
+  const isBackgroundLoading =
+    loading && projects.length > 0;
 
   return (
     <section

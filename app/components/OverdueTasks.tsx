@@ -19,7 +19,7 @@ const OverdueTasks = ({ tasks }: Props) => {
 
       {tasks.length === 0 ? (
         <p className="text-sm text-gray-500 dark:text-zinc-400">
-          No overdue tasks 🚀
+          No overdue tasks at the moment. Great job staying on track!
         </p>
       ) : (
         <ul className="space-y-3">

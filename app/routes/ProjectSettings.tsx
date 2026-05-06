@@ -2,17 +2,20 @@
 
 import ProjectDetailsForm from "~/components/ProjectDetailsForm";
 import ProjectMembers from "~/components/ProjectMembers";
-import { useProject } from "~/hooks/useProject";
+import { useCurrentProject } from "~/hooks/useCurrentProject";
 import { useWorkspaceMembers } from "~/hooks/useWorkspaceMembers";
 
 const ProjectSettings = () => {
-  const { project, isLoading } = useProject();
+  const { project, loading: isLoading, error, } = useCurrentProject();
   const { members: workspaceMembers } = useWorkspaceMembers();
 
   if (isLoading) {
     return <p>Loading project...</p>;
   }
 
+  if (error) {
+    return <p>Failed to load project</p>;
+  }
   if (!project) {
     return <p>Project not found</p>;
   }

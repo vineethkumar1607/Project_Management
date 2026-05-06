@@ -1,52 +1,68 @@
-import React from "react";
+import { Card } from "~/components/ui/card";
+import type { LucideIcon } from "lucide-react";
+import clsx from "clsx";
 
 interface MetricCardProps {
     title: string;
     value: string | number;
-    icon: React.ReactNode;
-    color: string;
+    icon: LucideIcon;
     description?: string;
+
+    iconBgColor?: string;
+    iconColor?: string;
+
+    className?: string;
+    isLoading?: boolean;
 }
 
-/**
- * Reusable KPI metric card.
- * Displays a title, value, and icon.
- */
-const MetricCard: React.FC<MetricCardProps> = ({
+function MetricCard({
     title,
     value,
-    icon,
-    color,
+    icon: Icon,
     description,
-}) => {
+    iconBgColor = "bg-muted",
+    iconColor = "text-muted-foreground",
+    className,
+    isLoading = false,
+}: MetricCardProps) {
     return (
-        <article
-            className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1"
-            aria-label={title}
+        <Card
+            className={clsx(
+                `
+        p-6 py-4
+        bg-white dark:bg-zinc-950
+        border border-zinc-200 dark:border-zinc-800
+        hover:border-zinc-300 dark:hover:border-zinc-700
+        hover:shadow-md hover:-translate-y-1
+        transition-all duration-200
+        rounded-xl
+        `,
+                className
+            )}
         >
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
                 <div>
-                    <h3 className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">
                         {title}
-                    </h3>
+                    </p>
 
-                    <p className={`text-2xl font-bold ${color}`}>
-                        {value}
+                    <p className="text-3xl font-bold text-zinc-800 dark:text-white">
+                        {isLoading ? "..." : value}
                     </p>
 
                     {description && (
-                        <p className="text-xs text-zinc-400 mt-1">
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
                             {description}
                         </p>
                     )}
                 </div>
 
-                <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                    {icon}
+                <div className={clsx("p-3 rounded-xl", iconBgColor)}>
+                    <Icon size={20} className={iconColor} />
                 </div>
             </div>
-        </article>
+        </Card>
     );
-};
+}
 
-export default React.memo(MetricCard);
+export default MetricCard;

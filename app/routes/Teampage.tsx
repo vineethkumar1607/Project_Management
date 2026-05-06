@@ -15,8 +15,9 @@ import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "~/store/store";
 import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
-import StatsCard from "~/components/StatsCard";
+
 import EmptyState from "~/components/Common/EmptyState";
+import MetricCard from "~/components/MetricCard";
 
 
 export default function TeamPage() {
@@ -212,7 +213,7 @@ export default function TeamPage() {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         {stats.map((stat) => (
-          <StatsCard key={stat.title} {...stat} />
+          <MetricCard key={stat.title} {...stat} />
         ))}
       </motion.section>
 

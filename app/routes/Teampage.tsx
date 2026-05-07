@@ -1,25 +1,21 @@
 import { useState, useMemo, useEffect, } from "react";
 import { Users, UserPlus } from "lucide-react";
 
-
 import TeamTable from "~/components/TeamTable";
 import InviteMemberDialog from "../components/InviteMemberDialog";
 import { Button } from "~/components/ui/button";
-import { Badge } from "~/components/ui/badge";
 import { useOrganization } from "@clerk/clerk-react";
 import type { Role } from "~/types/workspace";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
 import FiltersBar from "~/components/Common/FiltersBar";
 import { motion } from "framer-motion";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState, AppDispatch } from "~/store/store";
-import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
-
+import { useWorkspaceMembers } from "~/hooks/useWorkspaceMembers";
 import EmptyState from "~/components/Common/EmptyState";
 import MetricCard from "~/components/MetricCard";
+import toast from "react-hot-toast";
 
-
+// This component represents the team management page, allowing users to view and manage workspace members. It includes features such as searching, filtering by role, and inviting new members. The component utilizes the `useWorkspaceMembers` hook to fetch and manage the members data, ensuring that the UI is responsive to loading states and errors while providing a seamless user experience for team management tasks.
 export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<Role | "ALL">("ALL");
@@ -29,21 +25,8 @@ export default function TeamPage() {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 500);
 
-  const dispatch = useDispatch<AppDispatch>();
-
-  const workspaceId = useSelector(
-    (state: RootState) => state.workspace.currentWorkspaceId
-  );
-
-  const workspaceData = useSelector((state: RootState) =>
-    workspaceId
-      ? state.workspace.membersByWorkspace[workspaceId]
-      : null
-  );
-
-  const members = workspaceData?.data || [];
-  const isInitialLoading = !workspaceData;
-  const isBackgroundLoading = workspaceData?.status === "loading";
+  // Get workspace members and related loading states using the custom hook. This hook abstracts away the logic for fetching members, handling loading states, and managing errors, providing a clean interface for the component to consume.
+  const { members, isInitialLoading, isBackgroundLoading, } = useWorkspaceMembers();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -56,33 +39,8 @@ export default function TeamPage() {
   };
 
   useEffect(() => {
-    if (!workspaceId) return;
-
-    const STALE_TIME = 5 * 60 * 1000; // 5 minutes
-
-    const isStale =
-      workspaceData?.lastFetched &&
-      Date.now() - workspaceData.lastFetched > STALE_TIME;
-
-    if (
-      !workspaceData || // if no data
-      workspaceData.status === "failed" || // retries if  failed
-      isStale // if data outdated
-    ) {
-      dispatch(fetchWorkspaceMembers(workspaceId));
-    }
-  }, [workspaceId, workspaceData, dispatch]);
-
-  useEffect(() => {
     setSearchQuery(debouncedQuery);
   }, [debouncedQuery]);
-
-
-
-  useEffect(() => {
-    console.log("ORG:", organization);
-  }, [organization]);
-
 
   const normalizedMembers = useMemo(() => {
     return members.map((m: any) => ({
@@ -155,26 +113,30 @@ export default function TeamPage() {
     return <div className="p-6">Loading members...</div>;
   }
 
-  {
-    isBackgroundLoading && (
-      <p className="text-xs text-muted-foreground">
-        Refreshing...
-      </p>
-    )
-  }
-
-  const handleInvite = async ({ email, role }: { email: string; role: Role }) => {
+  // Handle inviting a new member to the workspace. This function interacts with the organization object from Clerk to send an invitation email to the specified address with the selected role. It also provides user feedback through toast notifications for loading, success, and error states, ensuring that users are informed about the status of their invitation actions.
+  const handleInvite = async ({ email, role, }: { email: string; role: Role; }) => {
     try {
-      if (!organization) return;
+      if (!organization) {
+        toast.error("Organization not found");
+        return;
+      }
 
-      console.log(" Sending invite...");
-
-      await organization.inviteMember({
+      const invitePromise = organization.inviteMember({
         emailAddress: email,
-        role: role,
+        role,
       });
 
-      console.log(" Invite sent");
+      toast.promise(invitePromise, {
+        loading: "Sending invitation...",
+        success: `Invitation sent to ${email}`,
+        error: (err) =>
+          err?.errors?.[0]?.message ||
+          "Failed to send invitation",
+      });
+
+      await invitePromise;
+
+      setIsInviteOpen(false);
 
     } catch (err) {
       console.error("Invite failed", err);
@@ -217,21 +179,6 @@ export default function TeamPage() {
         ))}
       </motion.section>
 
-      {/* Role Summary */}
-      <section className="flex flex-wrap gap-2">
-        <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-          Total: {roleSummary.total}
-        </Badge>
-
-        <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-          Admins: {roleSummary.admins}
-        </Badge>
-
-        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-          Members: {roleSummary.teamMembers}
-        </Badge>
-      </section>
-
       {/* Search + Filter Section */}
       <FiltersBar<Role | "ALL">
         search={{
@@ -252,6 +199,16 @@ export default function TeamPage() {
           },
         ]}
       />
+
+      {/* Background Refresh Indicator */}
+      {isBackgroundLoading && (
+        <div className="flex items-center justify-end">
+          <p className="text-xs text-muted-foreground animate-pulse">
+            Refreshing team members...
+          </p>
+        </div>
+      )}
+
       {/* Table or Empty State */}
       <section aria-label="Team members" className="min-h-[60vh]">
         {filteredMembers.length > 0 ? (

@@ -1,153 +1,30 @@
-import { memo, useEffect, type FC } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "~/components/ui/dialog";
+import { memo, type FC } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "~/components/ui/select";
+import { useCreateProjectDialog } from "../hooks/useCreateProjectDialog";
+import type { WorkspaceMember } from "~/types/workspace";
+import { Controller } from "react-hook-form";
 
-import { useDispatch, useSelector } from "react-redux";
-import { createProject } from "~/store/projectThunk";
-import type { AppDispatch, RootState } from "~/store/store";
-import { fetchWorkspaceMembers } from "~/store/workspaceThunk";
-
-import { useForm, Controller } from "react-hook-form";
-import toast from "react-hot-toast";
-
-/* ======================= */
 
 interface CreateProjectDialogProps {
   setIsDialogOpen: (open: boolean) => void;
 }
 
-/* ======================= */
+const CreateProjectDialog: FC<CreateProjectDialogProps> = ({ setIsDialogOpen, }) => {
 
-type FormData = {
-  name: string;
-  description?: string;
-  status: string;
-  priority: string;
-  startDate?: string;
-  endDate?: string;
-  lead?: string;
-  members: string[];
-};
-
-type Member = {
-  email: string;
-};
-
-/* ======================= */
-
-const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
-  setIsDialogOpen,
-}) => {
-  const dispatch = useDispatch<AppDispatch>();
-
-  const workspaceId = useSelector(
-    (state: RootState) => state.workspace.currentWorkspaceId
-  );
-
-  const membersList = useSelector((state: RootState) => {
-    const id = state.workspace.currentWorkspaceId;
-
-    if (!id) return [];
-
-    return state.workspace.membersByWorkspace[id]?.data ?? [];
-  });
-
-
-  console.log("membersList", membersList)
   const {
     register,
     handleSubmit,
     control,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    defaultValues: {
-      name: "",
-      status: "PLANNING",
-      priority: "MEDIUM",
-      startDate: "",
-      endDate: "",
-      lead: "",
-      members: [],
-    },
-  });
+    errors,
+    isSubmitting,
+    members,
+    membersList,
+    handleMemberToggle, onSubmit, } = useCreateProjectDialog({ onSuccess: () => setIsDialogOpen(false), });
 
- const members = watch("members") || [];
-
-
-  /* ======================= */
-
-  const handleMemberToggle = (email: string) => {
-    const updated = members.includes(email)
-      ? members.filter((m) => m !== email)
-      : [...members, email];
-
-    setValue("members", updated);
-  };
-
-  /* ======================= */
-
-  const onSubmit = async (data: FormData) => {
-    if (!workspaceId) return;
-
-    const toastId = toast.loading("Creating project...");
-
-    const transformedPayload = {
-      workspaceId,
-      name: data.name,
-      description: data.description || "",
-      status: data.status,
-      priority: data.priority,
-      progress: 0,
-
-      start_date: data.startDate,
-      end_date: data.endDate,
-      team_lead: data.lead,
-      team_members: data.members,
-    };
-
-    console.log("FINAL PAYLOAD:", transformedPayload);
-
-    try {
-      await dispatch(
-        createProject({
-          workspaceId,
-          payload: transformedPayload,
-        })
-      ).unwrap();
-      console.log("CREATED PROJECT:", data);
-
-      toast.success("Project created", { id: toastId });
-
-      setIsDialogOpen(false);
-    } catch (err: any) {
-      toast.error(err || "Failed", { id: toastId });
-    }
-  };
-
-  /* ======================= */
-  useEffect(() => {
-    if (workspaceId) {
-      dispatch(fetchWorkspaceMembers(workspaceId));
-    }
-  }, [workspaceId]);
   return (
     <Dialog open onOpenChange={setIsDialogOpen}>
       <DialogContent className="sm:max-w-xl">
@@ -267,7 +144,7 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
                     <SelectValue placeholder="Select lead" />
                   </SelectTrigger>
                   <SelectContent>
-                    {membersList.map((m: Member) => (
+                    {membersList.map((m: WorkspaceMember) => (
                       <SelectItem key={m.email} value={m.email}>
                         {m.email}
                       </SelectItem>
@@ -287,7 +164,7 @@ const CreateProjectDialog: FC<CreateProjectDialogProps> = ({
                 <SelectValue placeholder="Add team members" />
               </SelectTrigger>
               <SelectContent>
-                {membersList.map((m: Member) => (
+                {membersList.map((m: WorkspaceMember) => (
                   <SelectItem key={m.email} value={m.email}>
                     {members.includes(m.email) ? `✓ ${m.email}` : m.email}
                   </SelectItem>

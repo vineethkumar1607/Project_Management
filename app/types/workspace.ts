@@ -26,6 +26,7 @@ export interface Project {
   team_lead: string;
 
   members?: ProjectMember[];
+  tasks?: Task[];
 }
 
 export interface ProjectMember {

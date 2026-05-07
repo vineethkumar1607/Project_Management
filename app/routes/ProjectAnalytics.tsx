@@ -12,7 +12,6 @@ import { useAnalytics } from "~/hooks/useAnalytics";
 
 /**
  * Main analytics container component.
- * Uses mock data automatically if real tasks are missing.
  */
 const ProjectAnalytics = () => {
   const { tasks, project, projectId } = useProjectContext();

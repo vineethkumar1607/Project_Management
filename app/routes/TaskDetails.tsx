@@ -35,11 +35,11 @@ export default function TaskDetails() {
   }, [taskId]);
 
 
-// Optimistic update for adding a comment
+  // Optimistic update for adding a comment
   const { data: task, isLoading } = useGetTaskByIdQuery(taskId!, {
     skip: !taskId,
   });
-// Fetch comments with pagination using cursor. The skip option prevents the query from running until we have a valid taskId. The comments are stored in the local state and updated whenever new data is fetched.
+  // Fetch comments with pagination using cursor. The skip option prevents the query from running until we have a valid taskId. The comments are stored in the local state and updated whenever new data is fetched.
   const { data, isFetching } = useGetTaskCommentsQuery(
     { taskId, cursor },
     { skip: !taskId }
@@ -61,21 +61,25 @@ export default function TaskDetails() {
   const [newComment, setNewComment] = useState("");
 
 
-// Function to handle comment submission with optimistic update 
+  // Function to handle comment submission with optimistic update 
   const submitComment = async () => {
     if (!newComment.trim() || !taskId) return;
 
     const message = newComment;
     setNewComment("");
 
+    if (!user?.id) {
+      return;
+    }
+
     try {
       await addComment({
         taskId,
         message,
         user: {
-          id: user?.id!,
-          name: user?.fullName ?? "You",
-          image: user?.imageUrl,
+          id: user.id,
+          name: user.fullName ?? "You",
+          image: user.imageUrl,
         },
       }).unwrap();
     } catch (err) {
@@ -174,7 +178,7 @@ ${isMe
         >
           <textarea
             value={newComment}
-          
+
             onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) { // prevents new line on Enter and submits instead
@@ -186,7 +190,7 @@ ${isMe
             className="flex-1 border rounded-md p-2 text-sm resize-none max-h-40 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={2}
           />
-         
+
 
           <button
             type="submit"

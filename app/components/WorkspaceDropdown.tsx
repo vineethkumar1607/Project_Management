@@ -1,63 +1,33 @@
 "use client"
 
 import { Check, ChevronDown, Plus } from "lucide-react"
-import { useSelector } from "react-redux"
 import { useNavigate } from "react-router"
-import { useClerk, useOrganizationList } from "@clerk/clerk-react"
+import { useClerk, } from "@clerk/clerk-react"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, } from "~/components/ui/dropdown-menu"
+import { Button } from "~/components/ui/button";
+import { useCurrentWorkspace } from "~/hooks/useCurrentWorkspace";
 
 
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "~/components/ui/dropdown-menu"
-
-import { Button } from "~/components/ui/button"
-import { type RootState } from "~/store/store"
-import { useMemo } from "react"
-
-
-/**
- * WorkspaceDropdown
- * Allows user to switch between workspaces in SaaS application.
- 
- * Handles:
- * - Workspace switching
- * - Clerk org sync
- * - Redux state update
- * - Navigation
- */
 
 export function WorkspaceDropdown() {
   const navigate = useNavigate()
 
   // Clerk modal trigger
   const { openCreateOrganization, setActive } = useClerk()
+  const { workspaces, currentWorkspaceId, currentWorkspace, } = useCurrentWorkspace();
 
-  // Redux workspace state
-  const { workspaces, currentWorkspaceId } = useSelector(
-    (state: RootState) => state.workspace
-  )
   console.log("workspaces:", workspaces, "currentWorkspaceId:", currentWorkspaceId)
   // Current workspace for UI
-  const currentWorkspace = useMemo(() => {
-  return workspaces.find((ws) => ws.id === currentWorkspaceId);
-}, [workspaces, currentWorkspaceId]);
+
 
   // Switch workspace: Clerk + Redux + route
   const handleWorkspaceSelect = async (workspaceId: string) => {
-    
 
     await setActive({ organization: workspaceId })
     // dispatch(setCurrentWorkspace(workspaceId))
     navigate(`/workspace/${workspaceId}`)
   }
 
-  // Sync Clerk when Redux changes
- 
 
   return (
     <div className="px-3 py-3 border-b">

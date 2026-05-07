@@ -4,13 +4,11 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "~/components/ui/select";
-
+import type { WorkspaceMember } from "~/types/workspace";
 import { useForm, Controller } from "react-hook-form";
 import { useCreateTaskMutation } from "~/store/api/tasksApi";
 import { useParams } from "react-router";
-import type { RootState } from "~/store/store";
 import toast from "react-hot-toast";
-import { useSelector } from "react-redux";
 import { useWorkspaceMembers } from "~/hooks/useWorkspaceMembers";
 
 
@@ -29,20 +27,14 @@ type TaskFormData = {
     due_date: string;
 };
 
-type Member = {
-    id: string;
-    email: string;
-    name?: string;
-    role: string;
-};
 const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
     const { projectId } = useParams();
-    const [createTask, { isLoading }] = useCreateTaskMutation();
+    const [createTask,] = useCreateTaskMutation();
 
     // Fetch members list for the workspace
-    const { members: membersList, isLoading: membersLoading } = useWorkspaceMembers();
+    const { members: membersList, isInitialLoading: membersLoading, } = useWorkspaceMembers();
     // Initialize form with react-hook-form
-    const { register, handleSubmit, watch, control, formState: { errors, isSubmitting }, reset,
+    const { register, handleSubmit, control, formState: { errors, isSubmitting }, reset,
     } = useForm<TaskFormData>({
         defaultValues: {
             status: "TODO", priority: "MEDIUM", type: "TASK", assigneeId: "", due_date: "",
@@ -208,7 +200,7 @@ const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
                                                 No members found
                                             </div>
                                         ) : (
-                                            membersList.map((m: Member) => (
+                                            membersList.map((m: WorkspaceMember) => (
                                                 <SelectItem key={m.id} value={m.id}>
                                                     {m.name || m.email}
                                                 </SelectItem>
@@ -226,7 +218,6 @@ const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
                             type="button"
                             variant="outline"
                             onClick={() => setIsDialogOpen(false)}
-                            disabled={!watch("assigneeId")}
                         >
                             Cancel
                         </Button>

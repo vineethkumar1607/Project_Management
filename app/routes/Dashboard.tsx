@@ -11,7 +11,10 @@ import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";
 import MetricCard from "~/components/MetricCard";
 import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
 import CreateProjectDialog from "../components/CreateProjectDialogBox";
+<<<<<<< HEAD
 import { useProjectsFetcher } from "~/hooks/useProjectsFetcher ";
+=======
+>>>>>>> 8e83313f9c5f14f6db63ec8c7a4d88821ce81e61
 
 // Lazy components
 const ProjectOverview = lazy(() => import("../components/ProjectOverview"));

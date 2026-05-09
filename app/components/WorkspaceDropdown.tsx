@@ -11,6 +11,14 @@ import { memo } from "react"
 
 
 export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
+import { useClerk, } from "@clerk/clerk-react"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, } from "~/components/ui/dropdown-menu"
+import { Button } from "~/components/ui/button";
+import { useCurrentWorkspace } from "~/hooks/useCurrentWorkspace";
+
+
+
+export function WorkspaceDropdown() {
   const navigate = useNavigate()
   
   // Clerk modal trigger
@@ -18,6 +26,9 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
   const { workspaces, currentWorkspaceId, currentWorkspace, } = useCurrentWorkspace();
 
   // console.log("workspaces:", workspaces, "currentWorkspaceId:", currentWorkspaceId)
+  const { workspaces, currentWorkspaceId, currentWorkspace, } = useCurrentWorkspace();
+
+  console.log("workspaces:", workspaces, "currentWorkspaceId:", currentWorkspaceId)
   // Current workspace for UI
 
   console.count("WorkspaceDropdown Render");
@@ -28,6 +39,7 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
     // dispatch(setCurrentWorkspace(workspaceId))
     navigate(`/workspace/${workspaceId}`)
   }
+
 
 
   return (

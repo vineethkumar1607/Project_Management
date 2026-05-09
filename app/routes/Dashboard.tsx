@@ -1,27 +1,23 @@
 import { Suspense, lazy, memo, useState, } from "react";
-import { CheckCircle, Clock, FolderOpen, PauseCircle, Plus } from "lucide-react";
+import { CheckCircle, Clock, FolderOpen, ListTodo, PauseCircle, Plus, } from "lucide-react";
 import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
 import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
 import RecentActivitySkeleton from "~/components/ui/RecentActivitySkeleton";
 import TaskSummarySkeleton from "~/components/ui/TaskSummarySkeleton";
 import { useUser } from "@clerk/clerk-react";
 import PrimaryButton from "~/components/Common/PrimaryButton";
-import { useProjectsData } from "~/hooks/useProjectsData ";
 import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";
 import MetricCard from "~/components/MetricCard";
 import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
 import CreateProjectDialog from "../components/CreateProjectDialogBox";
-<<<<<<< HEAD
 import { useProjectsFetcher } from "~/hooks/useProjectsFetcher ";
-=======
->>>>>>> 8e83313f9c5f14f6db63ec8c7a4d88821ce81e61
+import { useProjectsData } from "~/hooks/useProjectsData";
 
 // Lazy components
 const ProjectOverview = lazy(() => import("../components/ProjectOverview"));
 const RecentActivity = lazy(() => import("../components/RecentActivity"));
 const TasksSummary = lazy(() => import("../components/dashboard/TasksSummary"));
 
-// Dashboard component that displays project and task analytics, recent activity, and a summary of tasks. It also includes a button to create new projects.
 const Dashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user, isLoaded } = useUser();
@@ -34,52 +30,52 @@ const Dashboard = () => {
   const allTasks = projects.flatMap(
     (project) => project.tasks ?? []
   );
- console.count("Dashboard Render");
-  const taskAnalytics = useTaskAnalytics({
-    tasks: allTasks,
-    userEmail:
-      user?.primaryEmailAddress?.emailAddress,
-  });
-  console.log("Projects: " , projects)
 
-  console.log("allTasks", allTasks)
-  console.log("taskAnalytics", taskAnalytics)
-  /**
-   * Loading state
-   */
+  const currentUserTasks = allTasks.filter(
+    (task) =>
+      task.assignee?.email ===
+      user?.primaryEmailAddress?.emailAddress &&
+      task.status !== "DONE"
+  );
+
+  const taskAnalytics = useTaskAnalytics({
+    tasks: currentUserTasks,
+  });
+
   if (!isLoaded) return null;
 
   const metrics = [
     {
       title: "Total Projects",
       value: analytics.totalProjects,
-      description: "projects in workspace",
       icon: FolderOpen,
+      description: "projects in workspace",
       iconBgColor: "bg-blue-500/10",
-      iconColor: "text-blue-500",
+       iconColor: "text-blue-500",
     },
     {
-      title: "Completed",
+      title: "Completed Projects",
       value: analytics.completedProjects,
-      description: "successfully completed",
       icon: CheckCircle,
-      iconBgColor: "bg-emerald-500/10",
+      description: "successfully completed",
+      iconBgColor: "bg-emerald-500/10", 
       iconColor: "text-emerald-500",
     },
     {
       title: "My Tasks",
-      value: taskAnalytics.myTasks,
-      description: "assigned to you",
-      icon: Clock,
+      value: taskAnalytics.totalTasks,
+      icon: ListTodo,
+      description: "your active tasks",
       iconBgColor: "bg-purple-500/10",
-      iconColor: "text-purple-500",
+       iconColor: "text-purple-500",
     },
+  
     {
-      title: "Overdue Tasks",
-      value: taskAnalytics.overdueTasks,
-      description: "require attention",
+      title: "Overdue",
+      value: taskAnalytics.overdueTasksCount,
       icon: PauseCircle,
-      iconBgColor: "bg-amber-500/10",
+      description: "require attention",
+      iconBgColor: "bg-amber-500/10", 
       iconColor: "text-amber-500",
     },
   ];

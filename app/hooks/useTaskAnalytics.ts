@@ -1,23 +1,23 @@
+
 import { useMemo } from "react";
 import type { Task } from "~/types/workspace";
 
 interface UseTaskAnalyticsProps {
     tasks: Task[];
-    userEmail?: string;
 }
 
-export const useTaskAnalytics = ({ tasks, userEmail }: UseTaskAnalyticsProps) => {
+export const useTaskAnalytics = ({
+    tasks,
+}: UseTaskAnalyticsProps) => {
     return useMemo(() => {
-        const totalTasks = tasks.length;
-
         const completedTasks = tasks.filter(
             (task) => task.status === "DONE"
-        ).length;
+        );
 
         const inProgressTasks = tasks.filter(
             (task) =>
                 task.status === "IN_PROGRESS"
-        ).length;
+        );
 
         const overdueTasks = tasks.filter(
             (task) => {
@@ -29,19 +29,26 @@ export const useTaskAnalytics = ({ tasks, userEmail }: UseTaskAnalyticsProps) =>
                     task.status !== "DONE"
                 );
             }
-        ).length;
-
-        const myTasks = tasks.filter(
-            (task) =>
-                task.assignee?.email === userEmail
-        ).length;
+        );
 
         return {
-            totalTasks,
+            // counts
+            totalTasks: tasks.length,
+
+            completedTasksCount:
+                completedTasks.length,
+
+            inProgressTasksCount:
+                inProgressTasks.length,
+
+            overdueTasksCount:
+                overdueTasks.length,
+
+            // arrays
             completedTasks,
             inProgressTasks,
             overdueTasks,
-            myTasks,
         };
-    }, [tasks, userEmail]);
+    }, [tasks]);
 };
+

@@ -5,7 +5,7 @@ import type { Project } from "~/types/workspace";
 import EmptyState from "~/components/Common/EmptyState";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { FolderOpen, Plus } from "lucide-react";
-import { useProjectsData } from "~/hooks/useProjectsData ";
+import { useProjectsData } from "~/hooks/useProjectsData";
 
 /* =======================
    Types

@@ -16,7 +16,6 @@ import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton";
 import type { LucideIcon } from "lucide-react";
 import MetricCard from "~/components/MetricCard";
 import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
-import { useUser } from "@clerk/clerk-react";
 
 const PROJECT_TABS = [
   {
@@ -73,8 +72,6 @@ const ProjectLayout = () => {
   const location = useLocation();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
-  const { user } = useUser();
-
   // Fetch project details using custom hook
   const { project, loading: isProjectLoading, error, } = useCurrentProject();
 
@@ -87,8 +84,6 @@ const ProjectLayout = () => {
 
   const analytics = useTaskAnalytics({
     tasks: safeTasks,
-    userEmail:
-      user?.primaryEmailAddress?.emailAddress,
   });
 
   const getSkeleton = () => {

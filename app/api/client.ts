@@ -10,6 +10,7 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
     async (config) => {
+        console.count("AXIOS GET TOKEN");
         const token = await getToken(); // from Clerk
 
         if (token) {

@@ -7,7 +7,7 @@ import TypePieChart from "../components/TypePieChart";
 import PriorityBreakdown from "../components/PriorityBreakdown";
 
 import { useProjectContext } from "~/hooks/useProjectContext";
-import { useAnalytics } from "~/hooks/useAnalytics";
+import { useAnalytics } from "~/hooks/useCurrentProjectAnalytics";
 
 
 /**

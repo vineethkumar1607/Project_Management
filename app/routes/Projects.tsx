@@ -10,15 +10,16 @@ import CreateProjectDialogBox from "~/components/CreateProjectDialogBox";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
 import FiltersBar from "~/components/Common/FiltersBar";
-import { useProjects } from "~/hooks/useProjects";
+import { useProjectsFetcher } from "~/hooks/useProjectsFetcher ";
+import { useProjectsData } from "~/hooks/useProjectsData ";
 import { FolderOpen, CheckCircle, Clock, ClipboardList } from "lucide-react";
 import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";
 import MetricCard from "~/components/MetricCard";
 
-
+// The Projects component is responsible for displaying a list of projects within the current workspace. It utilizes the useProjectsFetcher hook to ensure that project data is fetched and up-to-date. The component also manages UI state for filtering projects by search term, status, and priority. It displays loading and error states appropriately, and renders a grid of ProjectCard components for the filtered projects. Additionally, it includes a header with a button to create new projects, and a section for displaying project analytics metrics.
 const Projects = () => {
-
-  const { projects, loading, error } = useProjects();
+  useProjectsFetcher();
+  const { projects, loading, error } = useProjectsData();
 
   const analytics = useProjectAnalytics(projects);
   /* =======================

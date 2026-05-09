@@ -6,35 +6,41 @@ import RecentActivitySkeleton from "~/components/ui/RecentActivitySkeleton";
 import TaskSummarySkeleton from "~/components/ui/TaskSummarySkeleton";
 import { useUser } from "@clerk/clerk-react";
 import PrimaryButton from "~/components/Common/PrimaryButton";
-import { useProjects } from "~/hooks/useProjects";
+import { useProjectsData } from "~/hooks/useProjectsData ";
 import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";
 import MetricCard from "~/components/MetricCard";
 import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
 import CreateProjectDialog from "../components/CreateProjectDialogBox";
+<<<<<<< HEAD
+import { useProjectsFetcher } from "~/hooks/useProjectsFetcher ";
+=======
+>>>>>>> 8e83313f9c5f14f6db63ec8c7a4d88821ce81e61
 
 // Lazy components
 const ProjectOverview = lazy(() => import("../components/ProjectOverview"));
 const RecentActivity = lazy(() => import("../components/RecentActivity"));
 const TasksSummary = lazy(() => import("../components/dashboard/TasksSummary"));
 
-
+// Dashboard component that displays project and task analytics, recent activity, and a summary of tasks. It also includes a button to create new projects.
 const Dashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user, isLoaded } = useUser();
+  useProjectsFetcher();
 
-  const { projects, loading, } = useProjects();
+  const { projects, loading, } = useProjectsData();
 
   const analytics = useProjectAnalytics(projects);
 
   const allTasks = projects.flatMap(
     (project) => project.tasks ?? []
   );
-
+ console.count("Dashboard Render");
   const taskAnalytics = useTaskAnalytics({
     tasks: allTasks,
     userEmail:
       user?.primaryEmailAddress?.emailAddress,
   });
+  console.log("Projects: " , projects)
 
   console.log("allTasks", allTasks)
   console.log("taskAnalytics", taskAnalytics)

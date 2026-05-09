@@ -5,7 +5,7 @@ import type { Project } from "~/types/workspace";
 import EmptyState from "~/components/Common/EmptyState";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { FolderOpen, Plus } from "lucide-react";
-import { useProjects } from "~/hooks/useProjects";
+import { useProjectsData } from "~/hooks/useProjectsData ";
 
 /* =======================
    Types
@@ -52,7 +52,7 @@ const ProjectOverview: FC = () => {
 
   const [, setIsDialogOpen] = useState(false);
 
-  const { projects, loading, error } = useProjects();
+  const { projects, loading, error } = useProjectsData();
 
   const isInitialLoading = loading && projects.length === 0;
 

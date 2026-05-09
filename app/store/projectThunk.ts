@@ -2,17 +2,22 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { projectApi } from "~/api/projectApi";
 import type { Project } from "~/types/workspace";
 import type { CreateProjectPayload } from "~/types/workspace";
+import type { RootState } from "~/store/store";
 
 
 // Thunks for project-related actions: fetching projects, creating a project, updating a project, adding/removing members, and fetching project members.
 
-// Fetch projects by workspace ID - This is used to load the list of projects when viewing a workspace.
+// Fetch projects for a workspace - This is used to load the list of projects when the user navigates to the Projects page. It takes the workspace ID as an argument and returns an array of projects. The condition function prevents duplicate requests if a fetch is already in progress for the same workspace.
 export const fetchProjects = createAsyncThunk<
   Project[],
   string,
-  { rejectValue: string }
+  {
+    rejectValue: string;
+    state: RootState;
+  }
 >(
   "project/fetchProjects",
+
   async (workspaceId, thunkAPI) => {
     try {
       const data = await projectApi.getByWorkspace(workspaceId);
@@ -23,6 +28,22 @@ export const fetchProjects = createAsyncThunk<
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.message);
     }
+  },
+
+  {
+    condition: (workspaceId, { getState }) => {
+      const state = getState();
+
+      const existingProjects =
+        state.project.projectsByWorkspace[workspaceId];
+
+      // Prevent duplicate requests
+      if (existingProjects?.status === "loading") {
+        return false;
+      }
+
+      return true;
+    },
   }
 );
 

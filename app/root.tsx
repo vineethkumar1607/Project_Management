@@ -151,6 +151,7 @@ export default function App() {
     if (!isLoaded || !user) return;
 
     dispatch(fetchWorkspaces());
+    console.count("FETCH WORKSPACES");
   }, [isLoaded, user?.id]);
 
 

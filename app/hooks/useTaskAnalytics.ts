@@ -6,10 +6,7 @@ interface UseTaskAnalyticsProps {
     userEmail?: string;
 }
 
-export const useTaskAnalytics = ({
-    tasks,
-    userEmail,
-}: UseTaskAnalyticsProps) => {
+export const useTaskAnalytics = ({ tasks, userEmail }: UseTaskAnalyticsProps) => {
     return useMemo(() => {
         const totalTasks = tasks.length;
 

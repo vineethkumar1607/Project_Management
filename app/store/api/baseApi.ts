@@ -7,6 +7,7 @@ export const baseApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: "http://localhost:5000/api",
         prepareHeaders: async (headers) => {
+            console.count("RTK GET TOKEN");
             const token = await getToken();
 
             if (token) {

@@ -3,7 +3,8 @@ import { NavLink } from "react-router"
 import ProjectSidebar from "./ProjectSideBar"
 import MyTasksSidebar from "./MyTasksSidebar"
 import { FolderOpen, LayoutDashboard, Settings, Users, X } from "lucide-react"
-import { WorkspaceDropdown } from "../WorkspaceDropdown"
+import { WorkspaceDropdown } from "../WorkspaceDropdown";
+import { useCurrentUserProjects } from "~/hooks/useCurrentUserProjects"
 
 interface SidebarProps {
   isSidebarOpen: boolean
@@ -11,13 +12,14 @@ interface SidebarProps {
 }
 
 const SIDEBAR_WIDTH = "w-[280px]"
-const mockProjects = [
-  { id: "1", name: "Website Redesign" },
-  { id: "2", name: "Mobile App MVP" },
-]
+
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
-  const sidebarRef = useRef<HTMLElement>(null)
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  const { projects } = useCurrentUserProjects();
+
+  console.log("sidebar",projects)
 
   const menuItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -115,7 +117,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
 
           {/* Sub-sections for specific task and project navigation */}
           <MyTasksSidebar />
-          <ProjectSidebar projects={mockProjects} />
+          <ProjectSidebar projects={projects} />
         </nav>
       </aside>
     </>

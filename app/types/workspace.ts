@@ -62,13 +62,16 @@ export type Task = {
     id: string;
     name: string;
     image?: string;
-     email?: string;
+    email?: string;
   };
 
-  project: {
-    team_lead: string;
+  projectId: string;
+
+  project?: {
+    id?: string;
+    name?: string;
+    team_lead?: string;
   };
-  due_date?: string;
 };
 
 export type TaskDetails = {

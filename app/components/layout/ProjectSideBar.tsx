@@ -6,8 +6,10 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-
-import { ChevronRight, Settings, Kanban, BarChart3, Calendar, ArrowRight, } from "lucide-react";
+import {
+    PROJECT_NAVIGATION_ITEMS,
+} from "~/lib/projectNavigation";
+import { ChevronRight, ArrowRight, } from "lucide-react";
 
 /**
  * Minimal project shape required for sidebar rendering.
@@ -31,12 +33,7 @@ interface ProjectSidebarProps {
     * Uses dynamic routing structure:
     * /projects/:projectId/:tab
     */
-const getProjectSubItems = (projectId: string) => [
-    { title: "Tasks", icon: Kanban, path: `/projects/${projectId}` },
-    { title: "Analytics", icon: BarChart3, path: `/projects/${projectId}/analytics` },
-    { title: "Calendar", icon: Calendar, path: `/projects/${projectId}/calendar` },
-    { title: "Settings", icon: Settings, path: `/projects/${projectId}/settings` },
-];
+
 
 const ProjectSidebar = ({ projects }: ProjectSidebarProps) => {
     const location = useLocation();
@@ -105,24 +102,30 @@ const ProjectSidebar = ({ projects }: ProjectSidebarProps) => {
 
                             {/* Nested project navigation items */}
                             <CollapsibleContent className="ml-6 mt-1 space-y-1">
-                                {getProjectSubItems(project.id).map((subItem) => (
+                                {PROJECT_NAVIGATION_ITEMS.map((subItem) => (
                                     <NavLink
-                                        key={subItem.title}
-                                        to={subItem.path}
-                                        end={subItem.title === "Tasks"}
+                                        key={subItem.value}
+                                        to={
+                                            subItem.route === "."
+                                                ? `/projects/${project.id}`
+                                                : `/projects/${project.id}/${subItem.route}`
+                                        }
+                                        end={subItem.value === "tasks"}
                                         /**
                                          * NavLink provides automatic active state detection.
                                          * Active sub-item gets highlighted.
                                          */
                                         className={({ isActive }) =>
                                             `flex items-center gap-3 px-3 py-1.5 rounded-md text-xs transition ${isActive
-                                                ? "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
+                                                ? subItem.activeColor
                                                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                             }`
                                         }
                                     >
-                                        <subItem.icon className="size-3" />
-                                        {subItem.title}
+                                        <subItem.icon
+                                            className={`size-3 ${subItem.iconColor}`}
+                                        />
+                                        {subItem.label}
                                     </NavLink>
                                 ))}
                             </CollapsibleContent>

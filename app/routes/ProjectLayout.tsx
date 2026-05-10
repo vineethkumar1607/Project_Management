@@ -13,46 +13,11 @@ import LayoutSkeleton from "~/components/Skeletons/LayoutSkeleton";
 import { motion } from "framer-motion";
 import TasksSkeleton from "~/components/Skeletons/TasksSkeleton";
 import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton";
-import type { LucideIcon } from "lucide-react";
 import MetricCard from "~/components/MetricCard";
 import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
+import { PROJECT_NAVIGATION_ITEMS, } from "~/lib/projectNavigation";
 
-const PROJECT_TABS = [
-  {
-    value: "tasks",
-    label: "Tasks",
-    icon: ListTodo,
-    route: ".",
-    loader: () => import("~/routes/ProjectTasks"),
-  },
-  {
-    value: "analytics",
-    label: "Analytics",
-    icon: BarChart2,
-    route: "analytics",
-    loader: () => import("~/routes/ProjectAnalytics"),
-  },
-  {
-    value: "calendar",
-    label: "Calendar",
-    icon: Calendar,
-    route: "calendar",
-    loader: () => import("~/routes/ProjectCalendar"),
-  },
-  {
-    value: "settings",
-    label: "Settings",
-    icon: Settings,
-    route: "settings",
-    loader: () => import("~/routes/ProjectSettings"),
-  },
-] as const satisfies ReadonlyArray<{
-  value: string;
-  label: string;
-  icon: LucideIcon;
-  route: string;
-  loader: () => Promise<any>;
-}>;
+
 
 const loadedTabs = new Set<string>();
 
@@ -63,7 +28,7 @@ const prefetchTab = (value: TabValue, loader: () => Promise<any>) => {
   loader();
 };
 
-type TabValue = typeof PROJECT_TABS[number]["value"];
+type TabValue = typeof PROJECT_NAVIGATION_ITEMS[number]["value"];
 
 
 const ProjectLayout = () => {
@@ -92,30 +57,46 @@ const ProjectLayout = () => {
     return <TasksSkeleton />;
   };
 
+
   const metrics = [
     {
       title: "Total Tasks",
       value: analytics.totalTasks,
       icon: ListTodo,
       description: "all project tasks",
+
+      iconBgColor: "bg-blue-500/10",
+      iconColor: "text-blue-500",
     },
+
     {
       title: "Completed",
-      value: analytics.completedTasks,
+      value: analytics.completedTasksCount,
       icon: BarChart2,
       description: "finished successfully",
+
+      iconBgColor: "bg-emerald-500/10",
+      iconColor: "text-emerald-500",
     },
+
     {
       title: "In Progress",
-      value: analytics.inProgressTasks,
+      value: analytics.inProgressTasksCount,
       icon: Calendar,
       description: "currently active",
+
+      iconBgColor: "bg-violet-500/10",
+      iconColor: "text-violet-500",
     },
+
     {
       title: "Overdue",
-      value: analytics.overdueTasks,
+      value: analytics.overdueTasksCount,
       icon: Settings,
       description: "require attention",
+
+      iconBgColor: "bg-amber-500/10",
+      iconColor: "text-amber-500",
     },
   ];
 
@@ -125,7 +106,7 @@ const ProjectLayout = () => {
   const lastSegment = pathSegments[pathSegments.length - 1];
 
   const currentTab: TabValue =
-    PROJECT_TABS.find(tab => tab.value === lastSegment)?.value ||
+    PROJECT_NAVIGATION_ITEMS.find(tab => tab.value === lastSegment)?.value ||
     "tasks";
 
   if (error) {
@@ -180,21 +161,28 @@ const ProjectLayout = () => {
       <Tabs
         value={currentTab}
         onValueChange={(value) => {
-          if (!PROJECT_TABS.some(t => t.value === value)) return;
+          if (!PROJECT_NAVIGATION_ITEMS.some(t => t.value === value)) return;
 
-          const tab = PROJECT_TABS.find(t => t.value === value)!;
-          navigate(tab.route);
+          const tab = PROJECT_NAVIGATION_ITEMS.find(t => t.value === value)!;
+          navigate(
+            tab.route === "."
+              ? `/projects/${projectId}`
+              : `/projects/${projectId}/${tab.route}`
+          );
         }}
       >
         <TabsList className="bg-muted p-1 w-fit gap-2">
-          {PROJECT_TABS.map((tab) => (
+          {PROJECT_NAVIGATION_ITEMS.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
               onMouseEnter={() => prefetchTab(tab.value, tab.loader)}
               className="flex items-center gap-2 px-4 py-2 text-sm"
             >
-              <tab.icon size={16} />
+              <tab.icon
+                size={16}
+                className={tab.iconColor}
+              />
               {tab.label}
             </TabsTrigger>
           ))}

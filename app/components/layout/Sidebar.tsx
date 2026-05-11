@@ -17,9 +17,9 @@ const SIDEBAR_WIDTH = "w-[280px]"
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
   const sidebarRef = useRef<HTMLElement>(null);
 
-  const { projects } = useCurrentUserProjects();
+  const { projects, loading, } = useCurrentUserProjects();
 
-  console.log("sidebar",projects)
+  console.log("sidebar", projects)
 
   const menuItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -65,7 +65,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
       <aside
         ref={sidebarRef}
         aria-label="Primary"
-        className={`fixed sm:static z-30 top-0 left-0 h-screen ${SIDEBAR_WIDTH} bg-background border-r flex flex-col transform transition-transform duration-300
+        className={`fixed z-30 top-0 left-0 h-screen ${SIDEBAR_WIDTH} bg-background border-r flex flex-col transform transition-transform duration-300
         ${isSidebarOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"}`}
       >
         <WorkspaceDropdown />
@@ -80,7 +80,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
         </button>
 
         {/* This scrollable area holds all our main links and secondary menus */}
-        <nav aria-label="Main" className="flex-1 overflow-y-auto no-scrollbar">
+        <nav aria-label="Main" className="flex-1 overflow-y-auto no-scrollbar pb-10">
           <ul role="list" className="px-3 py-4 space-y-1">
             {menuItems.map(item => (
               <li key={item.name}>
@@ -117,7 +117,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
 
           {/* Sub-sections for specific task and project navigation */}
           <MyTasksSidebar />
-          <ProjectSidebar projects={projects} />
+          <ProjectSidebar projects={projects} loading={loading} />
         </nav>
       </aside>
     </>

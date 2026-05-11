@@ -7,7 +7,7 @@ import PrimaryButton from "~/components/Common/PrimaryButton";
 import CreateTaskDialog from "~/components/CreateTaskDialog";
 
 import { useCurrentProject } from "~/hooks/useCurrentProject";
-import { TextSkeleton } from "~/components/Common/TextSkeleton";
+import { TextSkeleton } from "~/components/Skeletons/TextSkeleton";
 import AnalyticsSkeleton from "~/components/Skeletons/AnalyticsSkeleton";
 import LayoutSkeleton from "~/components/Skeletons/LayoutSkeleton";
 import { motion } from "framer-motion";
@@ -16,6 +16,7 @@ import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton";
 import MetricCard from "~/components/MetricCard";
 import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
 import { PROJECT_NAVIGATION_ITEMS, } from "~/lib/projectNavigation";
+import StatsGridSkeleton from "~/components/Skeletons/StatsGridSkeleton";
 
 
 
@@ -147,15 +148,18 @@ const ProjectLayout = () => {
           </PrimaryButton>
         )}
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metrics.map((metric) => (
-          <MetricCard
-            key={metric.title}
-            {...metric}
-            isLoading={isLoading}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <StatsGridSkeleton />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {metrics.map((metric) => (
+            <MetricCard
+              key={metric.title}
+              {...metric}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs

@@ -18,6 +18,8 @@ import { useClerk, } from "@clerk/clerk-react";
 import { setCurrentWorkspace } from "./store/workspaceSlice";
 import { Toaster } from "react-hot-toast";
 import AppWrapper from "./providers/AppWrapper";
+import { useProjectsFetcher } from "./hooks/useProjectsFetcher ";
+
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
@@ -133,6 +135,7 @@ export default function App() {
 
   const { user, isLoaded } = useUser();
   const dispatch = useAppDispatch();
+  useProjectsFetcher();
 
 
 
@@ -208,14 +211,14 @@ export default function App() {
               setIsSidebarOpen={setIsSidebarOpen}
             />
 
-            <div className="flex-1 flex flex-col min-h-screen">
+            <div className="flex-1 flex flex-col min-h-screen sm:ml-[280px]">
               <Navbar
                 isSidebarOpen={isSidebarOpen}
                 setIsSidebarOpen={setIsSidebarOpen}
               />
 
-              <main className="flex-1 overflow-y-auto">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <main className="flex-1 overflow-y-auto ">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ">
                   <Outlet />
                 </div>
               </main>

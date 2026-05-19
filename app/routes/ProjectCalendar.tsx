@@ -6,83 +6,122 @@ import { useCalendarEvents } from "../hooks/useCalendarEvents"
 import TaskModal from "../components/TaskModel"
 import UpcomingTasks from "../components/UpcomingTasks"
 import OverdueTasks from "../components/OverdueTasks"
-import type { CalendarTask } from "../lib/types"
+import { useParams } from "react-router";
+import { useGetTasksQuery } from "~/store/api/tasksApi";
+import ErrorState from "~/components/Common/ErrorState"
+import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton"
+import EmptyState from "~/components/Common/EmptyState";
+import type { CalendarTask } from "~/types/workspace"
 
-/*
-  Temporary mock data.
-  Later this will come from Redux / API.
-*/
-const dummyTasks: CalendarTask[] = [
-  { id: "1", title: "Design Landing Page", date: "2026-02-20", priority: "high" },
-  { id: "2", title: "Fix API Bugs", date: "2026-02-22", priority: "medium" },
-]
-
+//    
 const ProjectCalendar = () => {
-  /*
-    Local UI state.
-    Modal visibility is purely presentation concern,
-    so we keep it inside the component.
-  */
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const { projectId } = useParams();
 
-  /*
-    Convert tasks into grouped calendar events.
-    This keeps transformation logic separate from UI.
-  */
-  const events = useCalendarEvents(dummyTasks)
+  const formatDateKey = (date: string | Date) =>
+    new Date(date).toLocaleDateString("en-CA");
 
-  /*
-    Create a fast lookup set for dates that contain events.
-    This allows O(1) checks when styling cells.
-  */
-  const taskDateSet = useMemo(() => {
-    return new Set(events.map((event) => event.start as string))
-  }, [events])
+  const {
+    data: tasks = [],
+    isLoading,
+    error,
+    refetch,
+  } = useGetTasksQuery(projectId!);
 
-  /*
-    Derive upcoming & overdue tasks.
-    This is derived state — we do NOT store it separately.
-    Production rule: never store what can be derived.
-  */
-  const today = new Date().toISOString().split("T")[0]
+  const calendarTasks: CalendarTask[] = useMemo(() => {
+    return tasks
+      .filter((task) => task.due_date)
+      .map((task) => ({
+        id: task.id,
+        title: task.title,
+        date: task.due_date!,
+        priority:
+          task.priority.toLowerCase() as CalendarTask["priority"],
+      }));
+  }, [tasks]);
 
+
+  const events = useCalendarEvents(calendarTasks)
+
+  const today = formatDateKey(new Date());
+
+  // Separate upcoming and overdue tasks for sidebar sections
   const upcomingTasks = useMemo(() => {
-    return dummyTasks.filter(task => task.date >= today)
-  }, [dummyTasks, today])
+    return calendarTasks.filter(
+      (task) => formatDateKey(task.date) >= today
+    );
+  }, [calendarTasks, today]);
 
   const overdueTasks = useMemo(() => {
-    return dummyTasks.filter(task => task.date < today)
-  }, [dummyTasks, today])
+    return calendarTasks.filter(
+      (task) => formatDateKey(task.date) < today
+    );
+  }, [calendarTasks, today]);
 
-
+  // Precompute a date-to-events map for efficient lookups during rendering
   const eventMap = useMemo(() => {
-    const map = new Map<string, any>()
+    const map = new Map<string, typeof events>();
+
     events.forEach((event) => {
-      map.set(event.start as string, event)
-    })
-    return map
-  }, [events])
-  /*
-    Open modal when a date cell is clicked.
-  */
+      const dateKey = formatDateKey(event.start as string);
+
+      const existingEvents = map.get(dateKey) || [];
+
+      map.set(dateKey, [...existingEvents, event]);
+    });
+
+    return map;
+  }, [events]);
+
+
+
   const handleDateClick = (info: any) => {
     setSelectedDate(info.dateStr)
   }
 
-  /*
-    Placeholder for drag-and-drop update logic.
-    Later this will dispatch optimistic update to Redux.
-  */
+
   const handleEventDrop = (info: any) => {
     console.log("Task moved to:", info.event.startStr)
   }
 
+  // Compute tasks for the selected date in the modal
+  const selectedTasks = useMemo(() => {
+    if (!selectedDate) return [];
+
+    return tasks.filter(task => {
+      if (!task.due_date) return false;
+
+      return formatDateKey(task.due_date) === selectedDate;
+    });
+  }, [tasks, selectedDate]);
+
+
+  if (isLoading) {
+    return <CalendarSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Failed to load calendar"
+        description="We couldn't fetch calendar tasks right now."
+        onRetry={refetch}
+      />
+    );
+  }
+
+  if (!calendarTasks.length) {
+    return (
+      <EmptyState
+        title="No calendar tasks"
+        description="Tasks with due dates will appear here."
+      />
+    );
+  }
+
   return (
-    /*
-      Responsive Layout:
-      - Mobile → stacked layout
-      - Desktop (lg+) → 2/3 Calendar | 1/3 Sidebar
-    */
+
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
       {/* 
@@ -106,15 +145,15 @@ const ProjectCalendar = () => {
             - Injects custom task badge
           */
           dayCellDidMount={(arg) => {
-            const dateStr = arg.date.toISOString().split("T")[0]
+            const dateStr = formatDateKey(arg.date)
 
             /*
               Instead of looping events every time,
               we first check from the precomputed Set (O(1))
             */
-            const eventForDay = eventMap.get(dateStr)
+            const eventsForDay = eventMap.get(dateStr)
 
-            if (eventForDay) {
+            if (eventsForDay?.length) {
 
               const frame = arg.el.querySelector(".fc-daygrid-day-frame")
 
@@ -126,7 +165,7 @@ const ProjectCalendar = () => {
 
               // Inject custom badge
               const badge = document.createElement("div")
-              badge.innerText = eventForDay?.title || ""
+              badge.innerText = eventsForDay[0]?.title || ""
               badge.className =
                 "absolute bottom-2 left-2 text-xs bg-white dark:bg-zinc-800 text-blue-600 px-2 py-1 rounded-md font-semibold"
 
@@ -141,20 +180,17 @@ const ProjectCalendar = () => {
          */}
       <div className="space-y-6">
 
-        {/* Upcoming Tasks Component */}
         <UpcomingTasks tasks={upcomingTasks} />
 
-        {/* Overdue Tasks Component */}
+
         <OverdueTasks tasks={overdueTasks} />
 
       </div>
 
-      {/* 
-          MODAL RENDER
-         */}
       {selectedDate && (
         <TaskModal
           selectedDate={selectedDate}
+          tasks={selectedTasks}
           onClose={() => setSelectedDate(null)}
         />
       )}

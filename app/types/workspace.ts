@@ -200,3 +200,10 @@ export type PriorityChartData = {
   value: number;
   percentage: number;
 };
+
+export type CalendarTask = {
+  id: string;
+  title: string;
+  date: string;
+  priority: "low" | "medium" | "high";
+};

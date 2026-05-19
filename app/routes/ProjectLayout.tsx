@@ -1,6 +1,5 @@
 import { Outlet, useNavigate, useLocation, useParams } from "react-router";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { ListTodo, BarChart2, Calendar, Settings, } from "lucide-react";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
 import { Suspense, useState } from "react";
 import PrimaryButton from "~/components/Common/PrimaryButton";
@@ -16,7 +15,12 @@ import MetricCard from "~/components/MetricCard";
 import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
 import { PROJECT_NAVIGATION_ITEMS, } from "~/lib/projectNavigation";
 import StatsGridSkeleton from "~/components/Skeletons/StatsGridSkeleton";
-
+import {
+  ListTodo,
+  CheckCircle2,
+  Clock3,
+  AlertTriangle,
+} from "lucide-react";
 
 
 const loadedTabs = new Set<string>();
@@ -72,7 +76,7 @@ const ProjectLayout = () => {
     {
       title: "Completed",
       value: analytics.completedTasksCount,
-      icon: BarChart2,
+      icon: CheckCircle2,
       description: "finished successfully",
 
       iconBgColor: "bg-emerald-500/10",
@@ -82,7 +86,7 @@ const ProjectLayout = () => {
     {
       title: "In Progress",
       value: analytics.inProgressTasksCount,
-      icon: Calendar,
+      icon: Clock3,
       description: "currently active",
 
       iconBgColor: "bg-violet-500/10",
@@ -92,7 +96,7 @@ const ProjectLayout = () => {
     {
       title: "Overdue",
       value: analytics.overdueTasksCount,
-      icon: Settings,
+      icon: AlertTriangle,
       description: "require attention",
 
       iconBgColor: "bg-amber-500/10",

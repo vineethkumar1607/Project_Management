@@ -58,6 +58,7 @@ export type Task = {
   status: "TODO" | "IN_PROGRESS" | "DONE";
   type: "BUG" | "FEATURE" | "IMPROVEMENT";
   priority: "LOW" | "MEDIUM" | "HIGH";
+  due_date?: string;
   assignee: {
     id: string;
     name: string;
@@ -192,4 +193,17 @@ export interface ProjectState {
 export type ChartData = {
   name: string;
   value: number;
+};
+
+export type PriorityChartData = {
+  name: string;
+  value: number;
+  percentage: number;
+};
+
+export type CalendarTask = {
+  id: string;
+  title: string;
+  date: string;
+  priority: "low" | "medium" | "high";
 };

@@ -1,22 +1,26 @@
 import { Outlet, useNavigate, useLocation, useParams } from "react-router";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { ListTodo, BarChart2, Calendar, Settings, } from "lucide-react";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
 import { Suspense, useState } from "react";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import CreateTaskDialog from "~/components/CreateTaskDialog";
 
 import { useCurrentProject } from "~/hooks/useCurrentProject";
-import { TextSkeleton } from "~/components/Common/TextSkeleton";
+import { TextSkeleton } from "~/components/Skeletons/TextSkeleton";
 import AnalyticsSkeleton from "~/components/Skeletons/AnalyticsSkeleton";
-import LayoutSkeleton from "~/components/Skeletons/LayoutSkeleton";
 import { motion } from "framer-motion";
 import TasksSkeleton from "~/components/Skeletons/TasksSkeleton";
 import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton";
 import MetricCard from "~/components/MetricCard";
 import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
 import { PROJECT_NAVIGATION_ITEMS, } from "~/lib/projectNavigation";
-
+import StatsGridSkeleton from "~/components/Skeletons/StatsGridSkeleton";
+import {
+  ListTodo,
+  CheckCircle2,
+  Clock3,
+  AlertTriangle,
+} from "lucide-react";
 
 
 const loadedTabs = new Set<string>();
@@ -72,7 +76,7 @@ const ProjectLayout = () => {
     {
       title: "Completed",
       value: analytics.completedTasksCount,
-      icon: BarChart2,
+      icon: CheckCircle2,
       description: "finished successfully",
 
       iconBgColor: "bg-emerald-500/10",
@@ -82,7 +86,7 @@ const ProjectLayout = () => {
     {
       title: "In Progress",
       value: analytics.inProgressTasksCount,
-      icon: Calendar,
+      icon: Clock3,
       description: "currently active",
 
       iconBgColor: "bg-violet-500/10",
@@ -92,7 +96,7 @@ const ProjectLayout = () => {
     {
       title: "Overdue",
       value: analytics.overdueTasksCount,
-      icon: Settings,
+      icon: AlertTriangle,
       description: "require attention",
 
       iconBgColor: "bg-amber-500/10",
@@ -147,15 +151,18 @@ const ProjectLayout = () => {
           </PrimaryButton>
         )}
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metrics.map((metric) => (
-          <MetricCard
-            key={metric.title}
-            {...metric}
-            isLoading={isLoading}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <StatsGridSkeleton />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {metrics.map((metric) => (
+            <MetricCard
+              key={metric.title}
+              {...metric}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs
@@ -191,20 +198,16 @@ const ProjectLayout = () => {
 
       {/* Content */}
       <section className="pt-4 flex-1">
-        {isLoading ? (
-          <LayoutSkeleton />
-        ) : (
-          <Suspense fallback={getSkeleton()}>
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Outlet context={{ project, projectId, tasks }} />
-            </motion.div>
-          </Suspense>
-        )}
+        <Suspense fallback={getSkeleton()}>
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Outlet context={{ project, projectId,  }} />
+          </motion.div>
+        </Suspense>
       </section>
       {isTaskModalOpen && (
         <CreateTaskDialog setIsDialogOpen={setIsTaskModalOpen} />

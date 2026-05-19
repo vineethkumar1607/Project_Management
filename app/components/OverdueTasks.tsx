@@ -1,4 +1,5 @@
-import type { CalendarTask } from "../lib/types"
+import { formatDisplayDate } from "~/lib/formatters"
+import type { CalendarTask } from "~/types/workspace"
 
 interface Props {
   tasks: CalendarTask[]
@@ -36,7 +37,7 @@ const OverdueTasks = ({ tasks }: Props) => {
                 dateTime={task.date}
                 className="text-xs text-red-500 dark:text-red-300"
               >
-                {task.date}
+                {formatDisplayDate(task.date)}
               </time>
             </li>
           ))}

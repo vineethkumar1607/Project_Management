@@ -1,7 +1,11 @@
 // ProjectSettings.tsx
 
+import EmptyState from "~/components/Common/EmptyState";
+import ErrorState from "~/components/Common/ErrorState";
 import ProjectDetailsForm from "~/components/ProjectDetailsForm";
 import ProjectMembers from "~/components/ProjectMembers";
+import LayoutSkeleton from "~/components/Skeletons/LayoutSkeleton";
+import { TextSkeleton } from "~/components/Skeletons/TextSkeleton";
 import { useCurrentProject } from "~/hooks/useCurrentProject";
 import { useWorkspaceMembers } from "~/hooks/useWorkspaceMembers";
 
@@ -10,14 +14,52 @@ const ProjectSettings = () => {
   const { members: workspaceMembers } = useWorkspaceMembers();
 
   if (isLoading) {
-    return <p>Loading project...</p>;
+    return (
+      <section className="space-y-6">
+        <header className="space-y-2">
+          <TextSkeleton className="h-6 w-48" />
+          <TextSkeleton className="h-4 w-72" />
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[1, 2].map((item) => (
+            <div
+              key={item}
+              className="rounded-md border p-4 space-y-4"
+            >
+              <div className="space-y-2">
+                <TextSkeleton className="h-5 w-32" />
+                <TextSkeleton className="h-4 w-48" />
+              </div>
+
+              <div className="space-y-3">
+                <TextSkeleton className="h-10 w-full rounded-md" />
+                <TextSkeleton className="h-10 w-full rounded-md" />
+                <TextSkeleton className="h-10 w-full rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
   }
 
   if (error) {
-    return <p>Failed to load project</p>;
+    return (
+      <ErrorState
+        title="Failed to load project settings"
+        description="We couldn't load project settings right now."
+      />
+    );
   }
+
   if (!project) {
-    return <p>Project not found</p>;
+    return (
+      <EmptyState
+        title="Project not found"
+        description="The requested project does not exist or was removed."
+      />
+    );
   }
 
   return (

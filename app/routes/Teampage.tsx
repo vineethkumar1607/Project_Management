@@ -14,6 +14,10 @@ import { useWorkspaceMembers } from "~/hooks/useWorkspaceMembers";
 import EmptyState from "~/components/Common/EmptyState";
 import MetricCard from "~/components/MetricCard";
 import toast from "react-hot-toast";
+import TableSkeleton from "~/components/Skeletons/TableSkeleton";
+import ErrorState from "~/components/Common/ErrorState";
+import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
+import { TextSkeleton } from "~/components/Skeletons/TextSkeleton";
 
 // This component represents the team management page, allowing users to view and manage workspace members. It includes features such as searching, filtering by role, and inviting new members. The component utilizes the `useWorkspaceMembers` hook to fetch and manage the members data, ensuring that the UI is responsive to loading states and errors while providing a seamless user experience for team management tasks.
 export default function TeamPage() {
@@ -26,7 +30,7 @@ export default function TeamPage() {
   const debouncedQuery = useDebounce(query, 500);
 
   // Get workspace members and related loading states using the custom hook. This hook abstracts away the logic for fetching members, handling loading states, and managing errors, providing a clean interface for the component to consume.
-  const { members, isInitialLoading, isBackgroundLoading, } = useWorkspaceMembers();
+  const { members, isInitialLoading, isBackgroundLoading, error, } = useWorkspaceMembers();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -109,10 +113,6 @@ export default function TeamPage() {
     },
   ], [roleSummary]);
 
-  if (isInitialLoading) {
-    return <div className="p-6">Loading members...</div>;
-  }
-
   // Handle inviting a new member to the workspace. This function interacts with the organization object from Clerk to send an invitation email to the specified address with the selected role. It also provides user feedback through toast notifications for loading, success, and error states, ensuring that users are informed about the status of their invitation actions.
   const handleInvite = async ({ email, role, }: { email: string; role: Role; }) => {
     try {
@@ -142,6 +142,47 @@ export default function TeamPage() {
       console.error("Invite failed", err);
     }
   };
+  if (isInitialLoading) {
+  return (
+    <div className="space-y-8">
+
+      {/* Header Skeleton */}
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-2">
+          <TextSkeleton className="h-8 w-56" />
+          <TextSkeleton className="h-4 w-72" />
+        </div>
+
+        <TextSkeleton className="h-10 w-40 rounded-md" />
+      </header>
+
+      {/* Stats Skeleton */}
+      <StatsGridSkeleton />
+
+      {/* Filters Skeleton */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <TextSkeleton className="h-10 flex-1 rounded-md" />
+        <TextSkeleton className="h-10 w-[180px] rounded-md" />
+      </div>
+
+      {/* Table Skeleton */}
+      <TableSkeleton
+        rows={4}
+        columns={3}
+      />
+    </div>
+  );
+}
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Failed to load team members"
+        description="Unable to fetch workspace members right now."
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-8">

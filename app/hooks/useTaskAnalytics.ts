@@ -19,17 +19,21 @@ export const useTaskAnalytics = ({
                 task.status === "IN_PROGRESS"
         );
 
-        const overdueTasks = tasks.filter(
-            (task) => {
-                if (!task.due_date) return false;
+        const overdueTasks = tasks.filter((task) => {
+            if (!task.due_date) return false;
 
-                return (
-                    new Date(task.due_date) <
-                    new Date() &&
-                    task.status !== "DONE"
-                );
-            }
-        );
+            const dueDate = new Date(task.due_date);
+            const today = new Date();
+
+            // normalize both dates
+            dueDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            return (
+                dueDate < today &&
+                task.status !== "DONE"
+            );
+        });
 
         return {
             // counts

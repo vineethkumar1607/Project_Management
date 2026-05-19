@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle, Clock, AlertTriangle, Users } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Users, BarChart2 } from "lucide-react";
 
 import MetricCard from "../components/MetricCard";
 import StatusBarChart from "../components/StatusBarChart";
@@ -8,15 +8,61 @@ import PriorityBreakdown from "../components/PriorityBreakdown";
 
 import { useProjectContext } from "~/hooks/useProjectContext";
 import { useAnalytics } from "~/hooks/useCurrentProjectAnalytics";
+import { useNavigate, useParams } from "react-router";
+import { useGetTasksQuery } from "~/store/api/tasksApi";
+import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
+import ErrorState from "~/components/Common/ErrorState";
+import EmptyState from "~/components/Common/EmptyState";
+import PrimaryButton from "~/components/Common/PrimaryButton";
 
 
 /**
  * Main analytics container component.
  */
 const ProjectAnalytics = () => {
-  const { tasks, project, projectId } = useProjectContext();
+  const { project } = useProjectContext();
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+
+  const { data: tasks = [], isLoading, error, refetch, } = useGetTasksQuery(projectId!);
 
   const analytics = useAnalytics(tasks);
+
+
+  if (isLoading) {
+    return (
+      <div className="space-y-10">
+        <StatsGridSkeleton />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Failed to load analytics"
+        description="We couldn't fetch analytics data right now."
+        onRetry={refetch}
+      />
+    );
+  }
+
+  if (!tasks || tasks.length === 0) {
+    return (
+      <EmptyState
+        icon={<BarChart2 className="h-10 w-10 text-muted-foreground" />}
+        title="No analytics available"
+        description="Create tasks to start seeing project insights and analytics."
+        action={
+          <PrimaryButton
+            onClick={() => navigate(`/projects/${projectId}`)}
+          >
+            Create Task
+          </PrimaryButton>
+        }
+      />
+    );
+  }
 
   const completionRate = analytics.total
     ? Math.round(
@@ -58,15 +104,7 @@ const ProjectAnalytics = () => {
     },
   ];
 
-  if (!projectId) return <div>Loading analytics...</div>;
 
-  if (!tasks || tasks.length === 0) {
-    return (
-      <div className="space-y-10">
-        <p className="text-sm text-zinc-500">No analytics data available</p>
-      </div>
-    );
-  }
 
   return (
     <main className="space-y-10">

@@ -1,6 +1,8 @@
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, } from "recharts";
 import type { ChartData } from "~/types/workspace";
+import { useInView } from "framer-motion";
+import { useRef } from "react";
 
 interface StatusBarChartProps {
     data: ChartData[];
@@ -18,8 +20,14 @@ const STATUS_COLORS: Record<string, string> = {
  * Future-safe (no deprecated Cell usage).
  */
 const StatusBarChart: React.FC<StatusBarChartProps> = ({ data }) => {
-    //  Add fill dynamically to data to avoid deprecated Cell usage
 
+    const ref = useRef(null);
+
+    const isInView = useInView(ref, {
+        once: true,
+        amount: 0.3,
+    });
+    // optimize data for better visualization: sort by value and take top 5
     const optimizedData = [...data]
         .sort((a, b) => b.value - a.value)
         .slice(0, 5);
@@ -51,6 +59,7 @@ const StatusBarChart: React.FC<StatusBarChartProps> = ({ data }) => {
 
     return (
         <section
+            ref={ref}
             aria-labelledby="status-chart-title"
             className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6"
         >
@@ -69,7 +78,7 @@ const StatusBarChart: React.FC<StatusBarChartProps> = ({ data }) => {
                 className="w-full h-[300px]"
             >
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={coloredData}>
+                    <BarChart  key={isInView ? "chart-visible" : "chart-hidden"} data={coloredData}>
                         <XAxis dataKey="name" />
                         <YAxis />
                         <Tooltip content={<CustomTooltip />} />
@@ -79,8 +88,9 @@ const StatusBarChart: React.FC<StatusBarChartProps> = ({ data }) => {
                         <Bar
                             dataKey="value"
                             radius={[8, 8, 0, 0]}
-                            isAnimationActive
-                            animationDuration={600}
+                            isAnimationActive={isInView}
+                            animationDuration={1000}
+                            animationEasing="ease-out"
                         />
                     </BarChart>
                 </ResponsiveContainer>

@@ -9,7 +9,6 @@ import CreateTaskDialog from "~/components/CreateTaskDialog";
 import { useCurrentProject } from "~/hooks/useCurrentProject";
 import { TextSkeleton } from "~/components/Skeletons/TextSkeleton";
 import AnalyticsSkeleton from "~/components/Skeletons/AnalyticsSkeleton";
-import LayoutSkeleton from "~/components/Skeletons/LayoutSkeleton";
 import { motion } from "framer-motion";
 import TasksSkeleton from "~/components/Skeletons/TasksSkeleton";
 import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton";
@@ -195,20 +194,16 @@ const ProjectLayout = () => {
 
       {/* Content */}
       <section className="pt-4 flex-1">
-        {isLoading ? (
-          <LayoutSkeleton />
-        ) : (
-          <Suspense fallback={getSkeleton()}>
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Outlet context={{ project, projectId, tasks }} />
-            </motion.div>
-          </Suspense>
-        )}
+        <Suspense fallback={getSkeleton()}>
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Outlet context={{ project, projectId,  }} />
+          </motion.div>
+        </Suspense>
       </section>
       {isTaskModalOpen && (
         <CreateTaskDialog setIsDialogOpen={setIsTaskModalOpen} />

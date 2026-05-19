@@ -1,7 +1,8 @@
 import React from "react";
 import { PieChart, Pie, Tooltip, Legend, ResponsiveContainer, Cell, } from "recharts";
 import type { ChartData } from "~/types/workspace";
-
+import { useInView } from "framer-motion";
+import { useRef } from "react";
 
 interface TypePieChartProps {
     data: ChartData[];
@@ -19,9 +20,14 @@ const COLORS = [
  * Displays distribution of task types.
  * Fully responsive, semantic and accessible.
  */
-const TypePieChart: React.FC<TypePieChartProps> = ({
-    data,
-}) => {
+const TypePieChart: React.FC<TypePieChartProps> = ({data,}) => {
+const ref = useRef(null);
+
+const isInView = useInView(ref, {
+    once: true,
+    amount: 0.3,
+});
+    
     //  Custom tooltip for better accessibility and styling 
     const CustomTooltip = ({ active, payload }: any) => {
         if (!active || !payload || !payload.length) return null;
@@ -59,6 +65,7 @@ const TypePieChart: React.FC<TypePieChartProps> = ({
 
     return (
         <section
+    ref={ref}
             aria-labelledby="type-chart-title"
             className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6"
         >
@@ -78,15 +85,16 @@ const TypePieChart: React.FC<TypePieChartProps> = ({
                 className="w-full h-[300px]"
             >
                 <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
+                    <PieChart  key={isInView ? "chart-visible" : "chart-hidden"}>
                         <Pie
                             data={finalData}
                             dataKey="value"
                             nameKey="name"
                             outerRadius={100}
                             label
-                            isAnimationActive
-                            animationDuration={600}
+                           isAnimationActive={isInView}
+                            animationDuration={1200}
+                            animationEasing="ease-out"
                         >
                             {finalData.map((_, index) => (
                                 <Cell

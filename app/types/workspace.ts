@@ -194,3 +194,9 @@ export type ChartData = {
   name: string;
   value: number;
 };
+
+export type PriorityChartData = {
+  name: string;
+  value: number;
+  percentage: number;
+};

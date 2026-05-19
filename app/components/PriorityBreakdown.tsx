@@ -1,5 +1,5 @@
 import React from "react";
-import type  { PriorityChartData } from "../lib/analyticsTypes";
+import type { PriorityChartData } from "~/types/workspace";
 
 interface PriorityBreakdownProps {
     data: PriorityChartData[];
@@ -45,7 +45,7 @@ const PriorityBreakdown: React.FC<PriorityBreakdownProps> = ({
 
                         <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2">
                             <div
-                                className={`h-2 rounded-full ${PRIORITY_STYLES[item.name]}`}
+                                className={`h-2 rounded-full transition-all duration-1000 ${PRIORITY_STYLES[item.name]}`}
                                 style={{ width: `${item.percentage}%` }}
                             />
                         </div>

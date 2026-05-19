@@ -21,6 +21,8 @@ import { useGetTasksQuery } from "~/store/api/tasksApi";
 import { useDeleteTasksHandler } from "~/hooks/useDeleteTasksHandler";
 import { useTaskSelection } from "~/hooks/useTaskSelection";
 import type { SortingState } from "@tanstack/react-table";
+import TableSkeleton from "~/components/Skeletons/TableSkeleton";
+import ErrorState from "~/components/Common/ErrorState";
 
 const formatIndianDate = (dateString?: string) => {
   if (!dateString) return "-";
@@ -207,8 +209,23 @@ const ProjectTasks = () => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  if (isLoading) return <div>Loading tasks...</div>;
-  if (error) return <div>Failed to load tasks</div>;
+  if (isLoading) {
+    return (
+      <div className="space-y-5">
+        <TableSkeleton rows={6} columns={7} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="Failed to load tasks"
+        description="We couldn't fetch project tasks right now."
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
 
   return (
     <>

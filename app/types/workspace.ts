@@ -58,6 +58,7 @@ export type Task = {
   status: "TODO" | "IN_PROGRESS" | "DONE";
   type: "BUG" | "FEATURE" | "IMPROVEMENT";
   priority: "LOW" | "MEDIUM" | "HIGH";
+  due_date?: string;
   assignee: {
     id: string;
     name: string;

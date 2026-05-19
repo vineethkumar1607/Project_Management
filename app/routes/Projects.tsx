@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 
-import { Button } from "~/components/ui/button";
 import ProjectCard from "~/components/ProjectCard";
 import type { Project } from "~/types/workspace";
 import { filterProjects } from "~/lib/filterProjects";
-import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
 import CreateProjectDialogBox from "~/components/CreateProjectDialogBox";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
@@ -15,6 +13,11 @@ import { useProjectsData } from "~/hooks/useProjectsData";
 import { FolderOpen, CheckCircle, Clock, ClipboardList } from "lucide-react";
 import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";
 import MetricCard from "~/components/MetricCard";
+import ErrorState from "~/components/Common/ErrorState";
+import EmptyState from "~/components/Common/EmptyState";
+import StatsGridSkeleton from "~/components/Skeletons/StatsGridSkeleton";
+import { TextSkeleton } from "~/components/Skeletons/TextSkeleton";
+import ProjectCardSkeleton from "~/components/Skeletons/ProjectCardSkeleton";
 
 // The Projects component is responsible for displaying a list of projects within the current workspace. It utilizes the useProjectsFetcher hook to ensure that project data is fetched and up-to-date. The component also manages UI state for filtering projects by search term, status, and priority. It displays loading and error states appropriately, and renders a grid of ProjectCard components for the filtered projects. Additionally, it includes a header with a button to create new projects, and a section for displaying project analytics metrics.
 const Projects = () => {
@@ -45,36 +48,52 @@ const Projects = () => {
     [projects, searchTerm, status, priority]
   );
 
-  /* =======================
-     Loading
-  ======================= */
+
   if (loading) {
     return (
-      <div className="p-4 sm:p-6">
-        <ProjectOverviewSkeleton />
+      <div className="space-y-8">
+
+        {/* Header Skeleton */}
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-2">
+            <TextSkeleton className="h-8 w-48" />
+            <TextSkeleton className="h-4 w-72" />
+          </div>
+
+          <TextSkeleton className="h-10 w-36 rounded-md" />
+        </header>
+
+        {/* Metrics Skeleton */}
+        <StatsGridSkeleton />
+
+        {/* Filters Skeleton */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <TextSkeleton className="h-10 flex-1 rounded-md" />
+
+          <TextSkeleton className="h-10 w-[180px] rounded-md" />
+
+          <TextSkeleton className="h-10 w-[180px] rounded-md" />
+        </div>
+
+        {/* Project Cards Skeleton */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <ProjectCardSkeleton key={index} />
+          ))}
+        </section>
       </div>
     );
   }
-
   /* =======================
      Error
   ======================= */
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] px-4">
-        <div className="text-center max-w-md w-full">
-          <h2 className="text-lg font-semibold text-red-500 mb-2">
-            Something went wrong
-          </h2>
-          <p className="text-sm text-zinc-500 mb-4">
-            Unable to load projects. Please try again.
-          </p>
-
-          <Button onClick={() => window.location.reload()}>
-            Retry
-          </Button>
-        </div>
-      </div>
+      <ErrorState
+        title="Failed to load projects"
+        description="Unable to fetch projects right now."
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
@@ -110,6 +129,37 @@ const Projects = () => {
       icon: ClipboardList,
       iconBgColor: "bg-amber-500/10",
       iconColor: "text-amber-500",
+    },
+  ];
+
+  /* =======================
+   Filter Configurations
+======================= */
+
+  const projectFilters = [
+    {
+      value: status,
+      onChange: setStatus,
+      placeholder: "Status",
+      options: [
+        { label: "All Status", value: "ALL", },
+        { label: "Active", value: "ACTIVE" },
+        { label: "Planning", value: "PLANNING", },
+        { label: "On Hold", value: "ON_HOLD", },
+        { label: "Completed", value: "COMPLETED", },
+        { label: "Cancelled", value: "CANCELLED", },
+      ],
+    },
+    {
+      value: priority,
+      onChange: setPriority,
+      placeholder: "Priority",
+      options: [
+        { label: "All Priority", value: "ALL", },
+        { label: "High", value: "HIGH", },
+        { label: "Medium", value: "MEDIUM", },
+        { label: "Low", value: "LOW", },
+      ],
     },
   ];
 
@@ -150,41 +200,23 @@ const Projects = () => {
           onChange: setQuery,
           placeholder: "Search projects...",
         }}
-        filters={[
-          {
-            value: status,
-            onChange: setStatus,
-            placeholder: "Status",
-            options: [
-              { label: "All Status", value: "ALL" },
-              { label: "Active", value: "ACTIVE" },
-              { label: "Planning", value: "PLANNING" },
-              { label: "On Hold", value: "ON_HOLD" },
-              { label: "Completed", value: "COMPLETED" },
-              { label: "Cancelled", value: "CANCELLED" },
-            ],
-          },
-          {
-            value: priority,
-            onChange: setPriority,
-            placeholder: "Priority",
-            options: [
-              { label: "All Priority", value: "ALL" },
-              { label: "High", value: "HIGH" },
-              { label: "Medium", value: "MEDIUM" },
-              { label: "Low", value: "LOW" },
-            ],
-          },
-        ]}
-      />
+        filters={projectFilters} />
 
       {/* Empty State */}
       {filteredProjects.length === 0 ? (
-        <div className="flex items-center justify-center min-h-[40vh]">
-          <p className="text-sm text-zinc-500">
-            No projects found
-          </p>
-        </div>
+        <EmptyState
+          icon={<FolderOpen className="size-10 text-blue-500" />}
+          title="No projects found"
+          description="Try adjusting your filters or create a new project."
+          action={
+            <PrimaryButton
+              onClick={() => setOpen(true)}
+              icon={<Plus className="size-4" />}
+            >
+              Create Project
+            </PrimaryButton>
+          }
+        />
       ) : (
         /* Projects Grid */
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

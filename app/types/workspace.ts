@@ -1,5 +1,7 @@
 // ================== CORE DOMAIN ==================
 
+import type { LucideIcon } from "lucide-react";
+
 export type Role = "ADMIN" | "MEMBER";
 
 export interface Workspace {
@@ -93,6 +95,40 @@ export type TaskDetails = {
     name: string;
     status: string;
     priority: string;
+  };
+};
+
+export interface TaskItem {
+    id: string;
+    title: string;
+    type?: string;
+    priority?: string;
+    date?: string;
+}
+
+export interface TaskListCardProps {
+    title: string;
+    count?: number;
+    tasks: TaskItem[];
+
+    icon?: LucideIcon;
+
+    emptyMessage: string;
+
+    variant?: "default" | "overdue";
+
+    showDate?: boolean;
+    showMeta?: boolean;
+}
+
+export type TaskComment = {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    image?: string;
   };
 };
 

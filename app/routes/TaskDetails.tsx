@@ -1,76 +1,136 @@
 import { format } from "date-fns";
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
-import { Calendar, MessageCircle, Pencil, Send } from "lucide-react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { useGetTaskByIdQuery, useGetTaskCommentsQuery, useAddCommentMutation } from "~/store/api/tasksApi";
+import { useParams } from "react-router";
+
+import {
+  Calendar,
+  MessageCircle,
+  Send,
+  AlertCircle,
+  Loader2,
+  User2,
+  FolderKanban,
+  CheckCircle2,
+  Flag,
+  Layers3,
+} from "lucide-react";
+
 import { useUser } from "@clerk/clerk-react";
 
-//  Local type for comments since the API response is paginated and we want to maintain a local list of comments that can be updated optimistically when a new comment is added.
-type TaskComment = {
-  id: string;
-  content: string;
-  createdAt: string;
-  user: {
-    id: string;
-    name: string;
-    image?: string;
-  };
-};
+import {
+  useAddCommentMutation,
+  useGetTaskByIdQuery,
+  useGetTaskCommentsQuery,
+} from "~/store/api/tasksApi";
+
+import type { TaskComment } from "~/types/workspace";
 
 export default function TaskDetails() {
   const { taskId } = useParams();
-  const listRef = useRef<HTMLUListElement>(null);
-
-  if (!taskId) {
-    return <p>Invalid task</p>;
-  }
 
   const { user } = useUser();
 
-  const [cursor, setCursor] = useState<string | undefined>();
+  const listRef =
+    useRef<HTMLUListElement>(null);
 
+  const [cursor, setCursor] = useState<
+    string | undefined
+  >();
+
+  const [newComment, setNewComment] =
+    useState("");
+
+  /*
+    Reset pagination when task changes
+  */
   useEffect(() => {
     setCursor(undefined);
   }, [taskId]);
 
+  /*
+    Invalid route
+  */
+  if (!taskId) {
+    return (
+      <section className="flex items-center justify-center h-[60vh]">
+        <div className="text-center">
+          <AlertCircle className="mx-auto size-10 text-red-500 mb-3" />
 
-  // Optimistic update for adding a comment
-  const { data: task, isLoading } = useGetTaskByIdQuery(taskId!, {
+          <h1 className="text-xl font-semibold">
+            Invalid task
+          </h1>
+
+          <p className="text-sm text-muted-foreground mt-1">
+            Task ID is missing or invalid.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  /*
+    Fetch task
+  */
+  const {
+    data: task,
+    isLoading: isTaskLoading,
+    isError: isTaskError,
+    refetch: refetchTask,
+  } = useGetTaskByIdQuery(taskId, {
     skip: !taskId,
   });
-  // Fetch comments with pagination using cursor. The skip option prevents the query from running until we have a valid taskId. The comments are stored in the local state and updated whenever new data is fetched.
-  const { data, isFetching } = useGetTaskCommentsQuery(
+
+  /*
+    Fetch comments
+  */
+  const {
+    data,
+    isFetching,
+    isError: isCommentsError,
+    refetch: refetchComments,
+  } = useGetTaskCommentsQuery(
     { taskId, cursor },
     { skip: !taskId }
   );
-  const comments: TaskComment[] = data?.items ?? [];
 
-  // Scroll to bottom when comments change
+  const comments: TaskComment[] =
+    data?.items ?? [];
+
+  /*
+    Scroll latest comment into view
+  */
   useEffect(() => {
     if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
+      listRef.current.scrollTop =
+        listRef.current.scrollHeight;
     }
   }, [comments]);
 
+  /*
+    Add comment mutation
+  */
+  const [
+    addComment,
+    { isLoading: isAddingComment },
+  ] = useAddCommentMutation();
 
-
-  const [addComment, { isLoading: isAdding }] =
-    useAddCommentMutation();
-
-  const [newComment, setNewComment] = useState("");
-
-
-  // Function to handle comment submission with optimistic update 
+  /*
+    Submit comment
+  */
   const submitComment = async () => {
-    if (!newComment.trim() || !taskId) return;
+    if (!newComment.trim()) return;
+
+    if (!taskId || !user?.id) return;
 
     const message = newComment;
-    setNewComment("");
 
-    if (!user?.id) {
-      return;
-    }
+    setNewComment("");
 
     try {
       await addComment({
@@ -82,190 +142,461 @@ export default function TaskDetails() {
           image: user.imageUrl,
         },
       }).unwrap();
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
+
+      /*
+        Restore message on failure
+      */
       setNewComment(message);
     }
   };
 
-  // Infinite scroll handler for comments
-  const handleScroll = (e: React.UIEvent<HTMLUListElement>) => {
-    const bottom =
-      e.currentTarget.scrollHeight - e.currentTarget.scrollTop <=
-      e.currentTarget.clientHeight + 10;
+  /*
+    Infinite scroll
+  */
+  const handleScroll = (
+    e: React.UIEvent<HTMLUListElement>
+  ) => {
+    const bottomReached =
+      e.currentTarget.scrollHeight -
+        e.currentTarget.scrollTop <=
+      e.currentTarget.clientHeight + 20;
 
-    if (bottom && data?.nextCursor && !isFetching) {
+    if (
+      bottomReached &&
+      data?.nextCursor &&
+      !isFetching
+    ) {
       setCursor(data.nextCursor);
     }
   };
 
-  if (isLoading) return <p>Loading...</p>;
-  if (!task) return <p>Task not found</p>;
+  /*
+    Status chip styles
+  */
+  const statusClasses = useMemo(() => {
+    switch (task?.status) {
+      case "DONE":
+        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300";
 
+      case "IN_PROGRESS":
+        return "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
 
+      default:
+        return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
+    }
+  }, [task?.status]);
 
-  return (
-    <section className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-220px)]">
+  /*
+    Priority chip styles
+  */
+  const priorityClasses = useMemo(() => {
+    switch (task?.priority) {
+      case "HIGH":
+        return "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300";
 
-      {/* ================= COMMENTS ================= */}
-      <section className="w-full lg:w-2/3 flex flex-col border rounded-xl bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+      case "MEDIUM":
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300";
 
-        {/* Header */}
-        <header className="px-5 py-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <MessageCircle size={18} />
-            Discussion
-          </h2>
-          <span className="text-sm text-muted-foreground">
-            {comments.length} comments
-          </span>
-        </header>
+      default:
+        return "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
+    }
+  }, [task?.priority]);
 
-        {/* Scrollable Comments */}
-        <ul
-          ref={listRef}
-          onScroll={handleScroll}
-          className="flex-1 overflow-y-auto px-5 py-4 space-y-4 hide-scrollbar"
-        >
-          {comments.length > 0 ? (
-            comments.map((comment) => {
-              const isMe = comment.user.id === user?.id;
+  /*
+    Loading State
+  */
+  if (isTaskLoading) {
+    return (
+      <section className="grid grid-cols-1 lg:grid-cols-10 gap-6 lg:h-[calc(100vh-140px)]">
+        <div className="lg:col-span-3 space-y-4">
+          <div className="h-64 rounded-2xl bg-muted animate-pulse" />
+          <div className="h-40 rounded-2xl bg-muted animate-pulse" />
+        </div>
 
-              return (
-                <li
-                  key={comment.id}
-                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                >
-                  <article
-                    className={`inline-block max-w-[70%] w-fit p-3 rounded-lg text-sm border break-words
-${isMe
-                        ? "ml-auto bg-blue-50 border-blue-200"
-                        : "mr-auto bg-muted border-gray-200 dark:border-zinc-700"
-                      }`}
-                  >
-                    <div className="flex items-center gap-2 text-xs mb-1 text-muted-foreground">
-                      <img
-                        src={comment.user.image || "https://i.pravatar.cc/40"}
-                        className="size-6 rounded-full"
-                      />
-                      <span className="font-medium text-foreground">
-                        {comment.user.name}
-                      </span>
-                      <span>
-                        • {format(new Date(comment.createdAt), "dd MMM HH:mm")}
-                      </span>
-                    </div>
+        <div className="lg:col-span-7 rounded-2xl bg-muted animate-pulse" />
+      </section>
+    );
+  }
 
-                    <p>{comment.content}</p>
-                  </article>
-                </li>
-              );
-            })
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No comments yet.
+  /*
+    Error State
+  */
+  if (isTaskError || !task) {
+    return (
+      <section className="flex items-center justify-center h-[60vh]">
+        <div className="text-center max-w-sm">
+          <AlertCircle className="mx-auto size-10 text-red-500 mb-3" />
+
+          <h1 className="text-xl font-semibold">
+            Failed to load task
+          </h1>
+
+          <p className="text-sm text-muted-foreground mt-2">
+            Something went wrong while loading
+            this task.
+          </p>
+
+          <button
+            onClick={() => refetchTask()}
+            className="mt-5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm transition"
+          >
+            Retry
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+return (
+<section
+  className="
+    grid grid-cols-1 lg:grid-cols-10
+    gap-6
+    lg:h-[calc(100vh-140px)]
+    min-h-0
+    pt-0
+  "
+>
+    {/* ======================================================
+        LEFT PANEL
+    ====================================================== */}
+    <aside
+      className="
+        lg:col-span-3
+        min-h-0
+        lg:overflow-y-auto
+        no-scrollbar
+        pr-1
+      "
+    >
+      <div className="space-y-10 pb-8">
+        {/* ================= TASK OVERVIEW ================= */}
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-3">
+            Task Overview
+          </p>
+
+          <h1 className="text-3xl font-bold leading-tight break-words text-zinc-900 dark:text-white">
+            {task.title}
+          </h1>
+
+          {/* Chips */}
+          <div className="flex flex-wrap gap-2 mt-5">
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${statusClasses}`}
+            >
+              <CheckCircle2 size={12} />
+              {task.status.replace("_", " ")}
+            </span>
+
+            <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+              <Layers3 size={12} />
+              {task.type}
+            </span>
+
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${priorityClasses}`}
+            >
+              <Flag size={12} />
+              {task.priority}
+            </span>
+          </div>
+        </section>
+
+        {/* ================= DESCRIPTION ================= */}
+        {task.description && (
+          <section>
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-white mb-3">
+              Description
+            </h2>
+
+            <p className="text-sm leading-7 text-muted-foreground whitespace-pre-wrap break-words">
+              {task.description}
             </p>
-          )}
-        </ul>
+          </section>
+        )}
 
-        {/* Sticky Input */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submitComment();
-          }}
-          className="border-t p-4 flex gap-3 items-end bg-background"
-        >
+        {/* ================= TASK DETAILS ================= */}
+        <section className="space-y-5">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
+            Task Details
+          </h2>
+
+          {/* Assignee */}
+          <div className="flex items-center gap-3">
+            <img
+              src={
+                task.assignee.image ||
+                "https://i.pravatar.cc/40"
+              }
+              alt={task.assignee.name}
+              className="size-11 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
+            />
+
+            <div>
+              <p className="text-xs text-muted-foreground">
+                Assignee
+              </p>
+
+              <p className="text-sm font-medium">
+                {task.assignee.name}
+              </p>
+            </div>
+          </div>
+
+          {/* Due Date */}
+          <div className="flex items-center gap-3">
+            <div className="size-11 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+              <Calendar size={18} />
+            </div>
+
+            <div>
+              <p className="text-xs text-muted-foreground">
+                Due Date
+              </p>
+
+              <time className="text-sm font-medium">
+                {format(
+                  new Date(task.due_date),
+                  "dd MMM yyyy"
+                )}
+              </time>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= PROJECT INFO ================= */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <FolderKanban
+              size={18}
+              className="text-blue-600 dark:text-blue-400"
+            />
+
+            <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
+              Project Information
+            </h2>
+          </div>
+
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">
+              Project Name
+            </p>
+
+            <p className="font-medium text-lg">
+              {task.project.name}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+              {task.project.status}
+            </span>
+
+            <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300">
+              {task.project.priority}
+            </span>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    {/* ======================================================
+        RIGHT PANEL — DISCUSSION
+    ====================================================== */}
+  <section
+  className="
+    lg:col-span-7
+    flex flex-col
+    min-h-0
+    lg:h-full
+
+    lg:border-l
+    lg:border-zinc-200
+    lg:dark:border-zinc-800
+
+    lg:pl-6
+  "
+>
+      {/* Header */}
+      <header className="shrink-0 pb-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="size-11 rounded-2xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+            <MessageCircle
+              size={22}
+              className="text-blue-600 dark:text-blue-400"
+            />
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold">
+              Discussion
+            </h2>
+
+            <p className="text-sm text-muted-foreground">
+              Collaborate with your team
+            </p>
+          </div>
+        </div>
+
+        <span className="text-sm text-muted-foreground">
+          {comments.length} comments
+        </span>
+      </header>
+
+      {/* Comments */}
+      <ul
+        ref={listRef}
+        onScroll={handleScroll}
+        className="
+          flex-1
+          min-h-0
+          overflow-y-auto
+          overscroll-contain
+          py-6
+          space-y-6
+          no-scrollbar
+        "
+      >
+        {comments.map((comment) => {
+          const isMe =
+            comment.user.id === user?.id;
+
+          return (
+            <li
+              key={comment.id}
+              className="flex gap-3"
+            >
+              {/* Avatar */}
+              <div className="shrink-0">
+                {comment.user.image ? (
+                  <img
+                    src={comment.user.image}
+                    alt={comment.user.name}
+                    className="size-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="size-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
+                    <User2 size={16} />
+                  </div>
+                )}
+              </div>
+
+              {/* Message */}
+              <article className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3
+                    className={`text-sm font-medium ${
+                      isMe
+                        ? "text-blue-600 dark:text-blue-400"
+                        : "text-zinc-900 dark:text-white"
+                    }`}
+                  >
+                    {isMe
+                      ? "You"
+                      : comment.user.name}
+                  </h3>
+
+                  <span className="text-xs text-muted-foreground">
+                    {format(
+                      new Date(
+                        comment.createdAt
+                      ),
+                      "dd MMM yyyy • HH:mm"
+                    )}
+                  </span>
+                </div>
+
+                <div
+                  className={`mt-2 rounded-2xl px-4 py-3 border text-sm leading-7 whitespace-pre-wrap break-words ${
+                    isMe
+                      ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-900"
+                      : "bg-zinc-100 border-zinc-200 dark:bg-zinc-800/60 dark:border-zinc-700"
+                  }`}
+                >
+                  {comment.content}
+                </div>
+              </article>
+            </li>
+          );
+        })}
+
+        {isFetching && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+      </ul>
+
+      {/* Composer */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submitComment();
+        }}
+        className="shrink-0 pt-4 border-t border-zinc-200 dark:border-zinc-800"
+      >
+        <div className="flex gap-3 items-end">
           <textarea
             value={newComment}
-
-            onChange={(e) => setNewComment(e.target.value)}
+            disabled={isAddingComment}
+            onChange={(e) =>
+              setNewComment(e.target.value)
+            }
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) { // prevents new line on Enter and submits instead
-                e.preventDefault(); // prevents new line
+              if (
+                e.key === "Enter" &&
+                !e.shiftKey
+              ) {
+                e.preventDefault();
                 submitComment();
               }
             }}
             placeholder="Write a comment..."
-            className="flex-1 border rounded-md p-2 text-sm resize-none max-h-40 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={2}
+            rows={3}
+            className="
+              flex-1
+              resize-none
+              rounded-2xl
+              border border-zinc-300 dark:border-zinc-700
+              bg-white dark:bg-zinc-950
+              px-4 py-3
+              text-sm
+              focus:outline-none
+              focus:ring-2
+              focus:ring-blue-500
+            "
           />
-
 
           <button
             type="submit"
-            disabled={isAdding || !newComment.trim()}
-            className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition"
+            disabled={
+              isAddingComment ||
+              !newComment.trim()
+            }
+            className="
+              size-12
+              shrink-0
+              rounded-2xl
+              bg-blue-600
+              hover:bg-blue-700
+              disabled:opacity-50
+              text-white
+              flex items-center justify-center
+              transition
+            "
           >
-            {isAdding ? (
-              <span className="text-xs">...</span>
+            {isAddingComment ? (
+              <Loader2 className="size-5 animate-spin" />
             ) : (
               <Send size={18} />
             )}
           </button>
-        </form>
-
-      </section>
-
-      {/* ================= TASK INFO ================= */}
-      <aside className="w-full lg:w-1/3 flex flex-col gap-4">
-
-        {/* Task */}
-        <div className="border rounded-xl p-5 bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm">
-          <h1 className="text-xl font-semibold mb-3">
-            {task.title}
-          </h1>
-
-          <div className="flex flex-wrap gap-2 mb-4 text-xs">
-            <span className="px-2 py-1 rounded bg-zinc-200 dark:bg-zinc-700">
-              {task.status}
-            </span>
-            <span className="px-2 py-1 rounded bg-blue-200 dark:bg-blue-900">
-              {task.type}
-            </span>
-            <span className="px-2 py-1 rounded bg-green-200 dark:bg-emerald-900">
-              {task.priority}
-            </span>
-          </div>
-
-          {task.description && (
-            <p className="text-sm text-muted-foreground mb-4">
-              {task.description}
-            </p>
-          )}
-
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center gap-2">
-              <img
-                src={task.assignee.image || "https://i.pravatar.cc/41"}
-                className="size-6 rounded-full"
-              />
-              <span>{task.assignee.name}</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Calendar size={14} />
-              <span>
-                {format(new Date(task.due_date), "dd MMM yyyy")}
-              </span>
-            </div>
-          </div>
         </div>
-
-        {/* Project */}
-        <div className="border rounded-xl p-4 bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm">
-          <h2 className="text-sm font-semibold flex items-center gap-2">
-            <Pencil size={14} />
-            {task.project.name}
-          </h2>
-
-          <div className="text-xs mt-2 text-muted-foreground">
-            <p>Status: {task.project.status}</p>
-            <p>Priority: {task.project.priority}</p>
-          </div>
-        </div>
-
-      </aside>
+      </form>
     </section>
-  );
+  </section>
+);
 }

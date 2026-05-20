@@ -3,17 +3,20 @@ import dayGridPlugin from "@fullcalendar/daygrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import { useState, useMemo } from "react"
 import { useCalendarEvents } from "../hooks/useCalendarEvents"
-import TaskModal from "../components/TaskModel"
-import UpcomingTasks from "../components/UpcomingTasks"
-import OverdueTasks from "../components/OverdueTasks"
+import TaskModal from "../components/TaskPreviewModel"
 import { useParams } from "react-router";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
 import ErrorState from "~/components/Common/ErrorState"
 import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton"
 import EmptyState from "~/components/Common/EmptyState";
-import type { CalendarTask } from "~/types/workspace"
+import type { CalendarTask } from "~/types/workspace";
+import { isTaskOverdue } from "~/lib/taskUtils";
+import TaskListCard from "~/components/Common/TaskListCard";
+import { AlertTriangle, Clock } from "lucide-react";
 
-//    
+
+// This component renders a calendar view of tasks for a specific project. It fetches tasks with due dates, displays them on a calendar, and allows users to click on dates to see task details in a modal. The right sidebar shows upcoming and overdue tasks. It handles loading and error states gracefully, providing feedback to the user. The calendar is interactive, allowing users to drag and drop tasks to change their due dates.
+
 const ProjectCalendar = () => {
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -53,11 +56,40 @@ const ProjectCalendar = () => {
     );
   }, [calendarTasks, today]);
 
+
   const overdueTasks = useMemo(() => {
-    return calendarTasks.filter(
-      (task) => formatDateKey(task.date) < today
-    );
-  }, [calendarTasks, today]);
+    return tasks
+      .filter(isTaskOverdue)
+      .map((task) => ({
+        id: task.id,
+        title: task.title,
+        date: task.due_date!,
+        priority:
+          task.priority.toLowerCase() as CalendarTask["priority"],
+      }));
+  }, [tasks]);
+
+  const sidebarSections = [
+    {
+      title: "Upcoming Tasks",
+      tasks: upcomingTasks,
+      count: upcomingTasks.length,
+      icon: Clock,
+      emptyMessage: "No upcoming tasks.",
+      showDate: true,
+    },
+
+    {
+      title: "Overdue Tasks",
+      tasks: overdueTasks,
+      count: overdueTasks.length,
+      icon: AlertTriangle,
+      emptyMessage:
+        "No overdue tasks at the moment.",
+      variant: "overdue" as const,
+      showDate: true,
+    },
+  ];
 
   // Precompute a date-to-events map for efficient lookups during rendering
   const eventMap = useMemo(() => {
@@ -78,11 +110,6 @@ const ProjectCalendar = () => {
 
   const handleDateClick = (info: any) => {
     setSelectedDate(info.dateStr)
-  }
-
-
-  const handleEventDrop = (info: any) => {
-    console.log("Task moved to:", info.event.startStr)
   }
 
   // Compute tasks for the selected date in the modal
@@ -136,7 +163,6 @@ const ProjectCalendar = () => {
           selectable
           height="auto"
           dateClick={handleDateClick}
-          eventDrop={handleEventDrop}
 
           /*
             Customize day cells:
@@ -166,25 +192,27 @@ const ProjectCalendar = () => {
               // Inject custom badge
               const badge = document.createElement("div")
               badge.innerText = eventsForDay[0]?.title || ""
-              badge.className =
-                "absolute bottom-2 left-2 text-xs bg-white dark:bg-zinc-800 text-blue-600 px-2 py-1 rounded-md font-semibold"
-
+              badge.className = "absolute bottom-2 left-2 text-xs bg-white dark:bg-zinc-800 text-blue-600 px-2 py-1 rounded-md font-semibold"
               frame?.appendChild(badge)
             }
           }}
         />
       </div>
 
-      {/* 
-          RIGHT SECTION — SIDEBAR
-         */}
+      {/* RIGHT SECTION — SIDEBAR*/}
       <div className="space-y-6">
-
-        <UpcomingTasks tasks={upcomingTasks} />
-
-
-        <OverdueTasks tasks={overdueTasks} />
-
+        {sidebarSections.map((section) => (
+          <TaskListCard
+            key={section.title}
+            title={section.title}
+            tasks={section.tasks}
+            count={section.count}
+            icon={section.icon}
+            emptyMessage={section.emptyMessage}
+            variant={section.variant}
+            showDate={section.showDate}
+          />
+        ))}
       </div>
 
       {selectedDate && (

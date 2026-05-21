@@ -14,6 +14,7 @@ import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
 import ErrorState from "~/components/Common/ErrorState";
 import EmptyState from "~/components/Common/EmptyState";
 import PrimaryButton from "~/components/Common/PrimaryButton";
+import { workspaceRoutes } from "~/lib/routesHelper";
 
 
 /**
@@ -21,7 +22,7 @@ import PrimaryButton from "~/components/Common/PrimaryButton";
  */
 const ProjectAnalytics = () => {
   const { project } = useProjectContext();
-  const { projectId } = useParams();
+  const { workspaceId, projectId } = useParams();
   const navigate = useNavigate();
 
   const { data: tasks = [], isLoading, error, refetch, } = useGetTasksQuery(projectId!);
@@ -54,9 +55,7 @@ const ProjectAnalytics = () => {
         title="No analytics available"
         description="Create tasks to start seeing project insights and analytics."
         action={
-          <PrimaryButton
-            onClick={() => navigate(`/projects/${projectId}`)}
-          >
+          <PrimaryButton onClick={() => navigate(workspaceRoutes.projectDetails(workspaceId!, projectId!))}>
             Create Task
           </PrimaryButton>
         }

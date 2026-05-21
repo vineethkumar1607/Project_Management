@@ -11,6 +11,8 @@ import {
 } from "~/lib/projectNavigation";
 import { ChevronRight, ArrowRight, } from "lucide-react";
 import { TextSkeleton } from "../Skeletons/TextSkeleton";
+import { useCurrentWorkspace } from "~/hooks/useCurrentWorkspace";
+import { workspaceRoutes } from "~/lib/routesHelper";
 
 /**
  * Minimal project shape required for sidebar rendering.
@@ -39,41 +41,42 @@ interface ProjectSidebarProps {
 
 const ProjectSidebar = ({ projects, loading, }: ProjectSidebarProps) => {
     const location = useLocation();
+    const { currentWorkspaceId } = useCurrentWorkspace();
 
-     if (loading) {
-    return (
-      <nav
-        className="mt-2 px-3"
-        aria-label="Project navigation"
-      >
-        {/* Header Skeleton */}
-        <div className="flex items-center justify-between px-3 py-2">
-          <TextSkeleton className="h-4 w-16" />
-
-          <TextSkeleton className="h-4 w-4 rounded" />
-        </div>
-
-        {/* Project Item Skeletons */}
-        <div className="space-y-2 px-1">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 px-3 py-2"
+    if (loading) {
+        return (
+            <nav
+                className="mt-2 px-3"
+                aria-label="Project navigation"
             >
-              {/* Chevron */}
-              <TextSkeleton className="size-4 rounded" />
+                {/* Header Skeleton */}
+                <div className="flex items-center justify-between px-3 py-2">
+                    <TextSkeleton className="h-4 w-16" />
 
-              {/* Dot */}
-              <TextSkeleton className="size-2 rounded-full" />
+                    <TextSkeleton className="h-4 w-4 rounded" />
+                </div>
 
-              {/* Project Name */}
-              <TextSkeleton className="h-4 flex-1" />
-            </div>
-          ))}
-        </div>
-      </nav>
-    );
-  }
+                {/* Project Item Skeletons */}
+                <div className="space-y-2 px-1">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                        <div
+                            key={index}
+                            className="flex items-center gap-2 px-3 py-2"
+                        >
+                            {/* Chevron */}
+                            <TextSkeleton className="size-4 rounded" />
+
+                            {/* Dot */}
+                            <TextSkeleton className="size-2 rounded-full" />
+
+                            {/* Project Name */}
+                            <TextSkeleton className="h-4 flex-1" />
+                        </div>
+                    ))}
+                </div>
+            </nav>
+        );
+    }
 
 
     return (
@@ -88,9 +91,8 @@ const ProjectSidebar = ({ projects, loading, }: ProjectSidebarProps) => {
 
                 {/* Shortcut to full projects page */}
                 <NavLink
-                    to="/projects"
-                    className="text-muted-foreground hover:text-foreground transition"
-                >
+                    to={currentWorkspaceId ? workspaceRoutes.projects(currentWorkspaceId) : "/"}
+                    className="text-muted-foreground hover:text-foreground transition">
                     <ArrowRight className="size-4" />
                 </NavLink>
             </div>
@@ -102,17 +104,10 @@ const ProjectSidebar = ({ projects, loading, }: ProjectSidebarProps) => {
                      * Auto-expands the project if current route
                      * belongs to this project's nested pages.
                      */
-                    const isProjectActive = location.pathname.startsWith(
-                        `/projects/${project.id}`
-                    );
+                    const isProjectActive = location.pathname.startsWith(`/workspace/${currentWorkspaceId}/projects/${project.id}`)
 
                     return (
-                        <Collapsible
-                            key={project.id}
-                            defaultOpen={isProjectActive}
-                            className="group"
-                        >
-
+                        <Collapsible key={project.id} defaultOpen={isProjectActive} className="group">
 
                             {/* Project header (collapsible trigger) */}
                             <CollapsibleTrigger asChild>
@@ -143,8 +138,8 @@ const ProjectSidebar = ({ projects, loading, }: ProjectSidebarProps) => {
                                         key={subItem.value}
                                         to={
                                             subItem.route === "."
-                                                ? `/projects/${project.id}`
-                                                : `/projects/${project.id}/${subItem.route}`
+                                                ? workspaceRoutes.projectDetails(currentWorkspaceId!, project.id)
+                                                : `${workspaceRoutes.projectDetails(currentWorkspaceId!, project.id)}/${subItem.route}`
                                         }
                                         end={subItem.value === "tasks"}
                                         /**

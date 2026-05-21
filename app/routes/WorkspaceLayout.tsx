@@ -1,7 +1,19 @@
-import { Outlet } from "react-router";
+import { Outlet, useParams } from "react-router";
+import { useEffect } from "react";
 
-// This component serves as a layout for all workspace-related routes. It can include common UI elements like a sidebar or header that are shared across all workspace pages. The <Outlet /> component renders the matched child route component. 
+import { useAppDispatch } from "~/store/hooks";
+import { setCurrentWorkspace } from "~/store/workspaceSlice";
+// This layout component is responsible for setting the current workspace in the Redux store based on the workspaceId URL parameter. It renders an <Outlet /> for nested routes. 
 const WorkspaceLayout = () => {
+  const { workspaceId } = useParams();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (!workspaceId) return;
+
+    dispatch(setCurrentWorkspace(workspaceId));
+  }, [dispatch, workspaceId]);
+
   return <Outlet />;
 };
 

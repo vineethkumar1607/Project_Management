@@ -1,5 +1,5 @@
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, } from "react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
@@ -18,7 +18,7 @@ import { useClerk, } from "@clerk/clerk-react";
 import { setCurrentWorkspace } from "./store/workspaceSlice";
 import { Toaster } from "react-hot-toast";
 import AppWrapper from "./providers/AppWrapper";
-import { useProjectsFetcher } from "./hooks/useProjectsFetcher ";
+import { useProjectsFetcher } from "./hooks/useProjectsFetcher";
 
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -122,7 +122,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   App Component ("APP.TSX")
 --------------------------------------------------- */
 
-
+// This is the root component for all routes. It handles global layout (Navbar + Sidebar) and route protection based on authentication status. 
 export default function App() {
   const theme = useAppSelector((state) => state.theme.theme);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -137,9 +137,6 @@ export default function App() {
   const dispatch = useAppDispatch();
   useProjectsFetcher();
 
-
-
-  const { setActive } = useClerk();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -158,7 +155,7 @@ export default function App() {
   }, [isLoaded, user?.id]);
 
 
-  const { workspaces, currentWorkspaceId } = useSelector(
+  const {  currentWorkspaceId } = useSelector(
     (state: RootState) => state.workspace
   );
 
@@ -168,11 +165,6 @@ export default function App() {
     const orgId = user.organizationMemberships?.[0]?.organization?.id;
 
     if (!orgId) return;
-
-    // If Redux not set yet → sync it
-    if (!currentWorkspaceId) {
-      dispatch(setCurrentWorkspace(orgId));
-    }
 
   }, [isLoaded, user, currentWorkspaceId]);
   /* --------------------------------------------------

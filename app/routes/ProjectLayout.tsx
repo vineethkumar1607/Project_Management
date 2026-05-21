@@ -21,6 +21,7 @@ import {
   Clock3,
   AlertTriangle,
 } from "lucide-react";
+import { workspaceRoutes } from "~/lib/routesHelper";
 
 
 const loadedTabs = new Set<string>();
@@ -36,7 +37,7 @@ type TabValue = typeof PROJECT_NAVIGATION_ITEMS[number]["value"];
 
 
 const ProjectLayout = () => {
-  const { projectId } = useParams();
+  const { workspaceId, projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -172,9 +173,8 @@ const ProjectLayout = () => {
 
           const tab = PROJECT_NAVIGATION_ITEMS.find(t => t.value === value)!;
           navigate(
-            tab.route === "."
-              ? `/projects/${projectId}`
-              : `/projects/${projectId}/${tab.route}`
+            tab.route === "." ? workspaceRoutes.projectDetails(workspaceId!, projectId!)
+              : `${workspaceRoutes.projectDetails(workspaceId!, projectId!)}/${tab.route}`
           );
         }}
       >
@@ -205,7 +205,7 @@ const ProjectLayout = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <Outlet context={{ project, projectId,  }} />
+            <Outlet context={{ project, projectId, }} />
           </motion.div>
         </Suspense>
       </section>

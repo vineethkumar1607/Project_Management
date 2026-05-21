@@ -1,45 +1,63 @@
 import { type RouteConfig } from "@react-router/dev/routes";
 
+
+// This file defines the route configuration for the application. Each route object specifies the path, the component file to render, and any nested child routes. The configuration is structured to support a workspace-centric navigation flow, with routes for dashboards, projects, team management, and task details. The use of nested routes allows for a clean and organized structure, making it easier to manage complex navigation scenarios within the application.
 export default [
-  {
+   {
     path: "/",
-    file: "routes/Dashboard.tsx",
+    file: "routes/IndexRedirect.tsx",
   },
   {
-    path: "/projects",
-    file: "routes/Projects.tsx",
-  },
-  {
-    path: "/projects/:projectId",
-    file: "routes/ProjectLayout.tsx",
+    path: "/workspace/:workspaceId",
+    file: "routes/WorkspaceLayout.tsx",
+
     children: [
       {
         index: true,
-        file: "routes/ProjectTasks.tsx",
+        file: "routes/Dashboard.tsx",
       },
+
       {
-        path: "analytics",
-        file: "routes/ProjectAnalytics.tsx",
+        path: "projects",
+        file: "routes/Projects.tsx",
       },
+
       {
-        path: "calendar",
-        file: "routes/ProjectCalendar.tsx",
+        path: "projects/:projectId",
+        file: "routes/ProjectLayout.tsx",
+
+        children: [
+          {
+            index: true,
+            file: "routes/ProjectTasks.tsx",
+          },
+
+          {
+            path: "analytics",
+            file: "routes/ProjectAnalytics.tsx",
+          },
+
+          {
+            path: "calendar",
+            file: "routes/ProjectCalendar.tsx",
+          },
+
+          {
+            path: "settings",
+            file: "routes/ProjectSettings.tsx",
+          },
+        ],
       },
+
       {
-        path: "settings",
-        file: "routes/ProjectSettings.tsx",
+        path: "team",
+        file: "routes/Teampage.tsx",
       },
     ],
   },
-
   {
     path: "/tasks/:taskId",
     file: "routes/TaskDetails.tsx",
-  },
-
-  {
-    path: "/team",
-    file: "routes/Teampage.tsx",
   },
   {
     path: "/login",

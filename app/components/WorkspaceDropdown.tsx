@@ -16,9 +16,12 @@ import {
 
 import { Button } from "~/components/ui/button";
 import { useCurrentWorkspace } from "~/hooks/useCurrentWorkspace";
+import { setCurrentWorkspace } from "~/store/workspaceSlice";
+import { useDispatch } from "react-redux";
 
 export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Clerk organization management
   const {
@@ -41,9 +44,11 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
       organization: workspaceId,
     });
 
+    dispatch(setCurrentWorkspace(workspaceId));
+
     navigate(`/workspace/${workspaceId}`);
   };
-
+  
   return (
     <div className="px-3 py-3 border-b">
       <DropdownMenu>

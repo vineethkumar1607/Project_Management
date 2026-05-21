@@ -1,76 +1,70 @@
-import { format } from "date-fns";
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
-import { Calendar, MessageCircle, Pencil, Send } from "lucide-react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { useGetTaskByIdQuery, useGetTaskCommentsQuery, useAddCommentMutation } from "~/store/api/tasksApi";
+import { useParams } from "react-router";
+import { AlertCircle } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 
-//  Local type for comments since the API response is paginated and we want to maintain a local list of comments that can be updated optimistically when a new comment is added.
-type TaskComment = {
-  id: string;
-  content: string;
-  createdAt: string;
-  user: {
-    id: string;
-    name: string;
-    image?: string;
-  };
-};
+import TaskDiscussionPanel from "~/components/task-details/TaskDiscussionPanel";
+import TaskInfoPanel from "~/components/task-details/TaskInfoPanel";
+
+import {
+  useAddCommentMutation,
+  useGetTaskByIdQuery,
+  useGetTaskCommentsQuery,
+} from "~/store/api/tasksApi";
+
+import type { TaskComment } from "~/types/workspace";
 
 export default function TaskDetails() {
   const { taskId } = useParams();
+  const safeTaskId = taskId ?? "";
+  const { user } = useUser();
   const listRef = useRef<HTMLUListElement>(null);
 
-  if (!taskId) {
-    return <p>Invalid task</p>;
-  }
-
-  const { user } = useUser();
-
   const [cursor, setCursor] = useState<string | undefined>();
+  const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
     setCursor(undefined);
   }, [taskId]);
 
-
-  // Optimistic update for adding a comment
-  const { data: task, isLoading } = useGetTaskByIdQuery(taskId!, {
+  const {
+    data: task,
+    isLoading: isTaskLoading,
+    isError: isTaskError,
+    refetch: refetchTask,
+  } = useGetTaskByIdQuery(safeTaskId, {
     skip: !taskId,
   });
-  // Fetch comments with pagination using cursor. The skip option prevents the query from running until we have a valid taskId. The comments are stored in the local state and updated whenever new data is fetched.
+
   const { data, isFetching } = useGetTaskCommentsQuery(
-    { taskId, cursor },
+    { taskId: safeTaskId, cursor },
     { skip: !taskId }
   );
+
   const comments: TaskComment[] = data?.items ?? [];
 
-  // Scroll to bottom when comments change
   useEffect(() => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [comments]);
 
-
-
-  const [addComment, { isLoading: isAdding }] =
+  const [addComment, { isLoading: isAddingComment }] =
     useAddCommentMutation();
 
-  const [newComment, setNewComment] = useState("");
-
-
-  // Function to handle comment submission with optimistic update 
   const submitComment = async () => {
-    if (!newComment.trim() || !taskId) return;
+    if (!newComment.trim()) return;
+    if (!taskId || !user?.id) return;
 
     const message = newComment;
-    setNewComment("");
 
-    if (!user?.id) {
-      return;
-    }
+    setNewComment("");
 
     try {
       await addComment({
@@ -82,190 +76,119 @@ export default function TaskDetails() {
           image: user.imageUrl,
         },
       }).unwrap();
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setNewComment(message);
     }
   };
 
-  // Infinite scroll handler for comments
   const handleScroll = (e: React.UIEvent<HTMLUListElement>) => {
-    const bottom =
+    const bottomReached =
       e.currentTarget.scrollHeight - e.currentTarget.scrollTop <=
-      e.currentTarget.clientHeight + 10;
+      e.currentTarget.clientHeight + 20;
 
-    if (bottom && data?.nextCursor && !isFetching) {
+    if (bottomReached && data?.nextCursor && !isFetching) {
       setCursor(data.nextCursor);
     }
   };
 
-  if (isLoading) return <p>Loading...</p>;
-  if (!task) return <p>Task not found</p>;
+  const statusClasses = useMemo(() => {
+    switch (task?.status) {
+      case "DONE":
+        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300";
 
+      case "IN_PROGRESS":
+        return "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
 
+      default:
+        return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
+    }
+  }, [task?.status]);
 
-  return (
-    <section className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-220px)]">
+  const priorityClasses = useMemo(() => {
+    switch (task?.priority) {
+      case "HIGH":
+        return "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
 
-      {/* ================= COMMENTS ================= */}
-      <section className="w-full lg:w-2/3 flex flex-col border rounded-xl bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+      case "MEDIUM":
+        return "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300";
 
-        {/* Header */}
-        <header className="px-5 py-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <MessageCircle size={18} />
-            Discussion
-          </h2>
-          <span className="text-sm text-muted-foreground">
-            {comments.length} comments
-          </span>
-        </header>
+      default:
+        return "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
+    }
+  }, [task?.priority]);
 
-        {/* Scrollable Comments */}
-        <ul
-          ref={listRef}
-          onScroll={handleScroll}
-          className="flex-1 overflow-y-auto px-5 py-4 space-y-4 hide-scrollbar"
-        >
-          {comments.length > 0 ? (
-            comments.map((comment) => {
-              const isMe = comment.user.id === user?.id;
+  if (!taskId) {
+    return (
+      <section className="flex items-center justify-center h-[60vh]">
+        <div className="text-center">
+          <AlertCircle className="mx-auto size-10 text-red-500 mb-3" />
 
-              return (
-                <li
-                  key={comment.id}
-                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                >
-                  <article
-                    className={`inline-block max-w-[70%] w-fit p-3 rounded-lg text-sm border break-words
-${isMe
-                        ? "ml-auto bg-blue-50 border-blue-200"
-                        : "mr-auto bg-muted border-gray-200 dark:border-zinc-700"
-                      }`}
-                  >
-                    <div className="flex items-center gap-2 text-xs mb-1 text-muted-foreground">
-                      <img
-                        src={comment.user.image || "https://i.pravatar.cc/40"}
-                        className="size-6 rounded-full"
-                      />
-                      <span className="font-medium text-foreground">
-                        {comment.user.name}
-                      </span>
-                      <span>
-                        • {format(new Date(comment.createdAt), "dd MMM HH:mm")}
-                      </span>
-                    </div>
+          <h1 className="text-xl font-semibold">Invalid task</h1>
 
-                    <p>{comment.content}</p>
-                  </article>
-                </li>
-              );
-            })
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No comments yet.
-            </p>
-          )}
-        </ul>
+          <p className="text-sm text-muted-foreground mt-1">
+            Task ID is missing or invalid.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
-        {/* Sticky Input */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submitComment();
-          }}
-          className="border-t p-4 flex gap-3 items-end bg-background"
-        >
-          <textarea
-            value={newComment}
+  if (isTaskLoading) {
+    return (
+      <section className="grid grid-cols-1 lg:grid-cols-10 gap-6 lg:h-[calc(100vh-140px)]">
+        <div className="lg:col-span-3 space-y-4">
+          <div className="h-64 rounded-2xl bg-muted animate-pulse" />
+          <div className="h-40 rounded-2xl bg-muted animate-pulse" />
+        </div>
 
-            onChange={(e) => setNewComment(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) { // prevents new line on Enter and submits instead
-                e.preventDefault(); // prevents new line
-                submitComment();
-              }
-            }}
-            placeholder="Write a comment..."
-            className="flex-1 border rounded-md p-2 text-sm resize-none max-h-40 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={2}
-          />
+        <div className="lg:col-span-7 rounded-2xl bg-muted animate-pulse" />
+      </section>
+    );
+  }
 
+  if (isTaskError || !task) {
+    return (
+      <section className="flex items-center justify-center h-[60vh]">
+        <div className="text-center max-w-sm">
+          <AlertCircle className="mx-auto size-10 text-red-500 mb-3" />
+
+          <h1 className="text-xl font-semibold">Failed to load task</h1>
+
+          <p className="text-sm text-muted-foreground mt-2">
+            Something went wrong while loading this task.
+          </p>
 
           <button
-            type="submit"
-            disabled={isAdding || !newComment.trim()}
-            className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition"
+            onClick={() => refetchTask()}
+            className="mt-5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm transition"
           >
-            {isAdding ? (
-              <span className="text-xs">...</span>
-            ) : (
-              <Send size={18} />
-            )}
+            Retry
           </button>
-        </form>
-
+        </div>
       </section>
+    );
+  }
 
-      {/* ================= TASK INFO ================= */}
-      <aside className="w-full lg:w-1/3 flex flex-col gap-4">
+  return (
+    <section className="grid grid-cols-1 lg:grid-cols-10 gap-6 lg:h-[calc(100vh-140px)] min-h-0 pt-0">
+      <TaskInfoPanel
+        task={task}
+        statusClasses={statusClasses}
+        priorityClasses={priorityClasses}
+      />
 
-        {/* Task */}
-        <div className="border rounded-xl p-5 bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm">
-          <h1 className="text-xl font-semibold mb-3">
-            {task.title}
-          </h1>
-
-          <div className="flex flex-wrap gap-2 mb-4 text-xs">
-            <span className="px-2 py-1 rounded bg-zinc-200 dark:bg-zinc-700">
-              {task.status}
-            </span>
-            <span className="px-2 py-1 rounded bg-blue-200 dark:bg-blue-900">
-              {task.type}
-            </span>
-            <span className="px-2 py-1 rounded bg-green-200 dark:bg-emerald-900">
-              {task.priority}
-            </span>
-          </div>
-
-          {task.description && (
-            <p className="text-sm text-muted-foreground mb-4">
-              {task.description}
-            </p>
-          )}
-
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center gap-2">
-              <img
-                src={task.assignee.image || "https://i.pravatar.cc/41"}
-                className="size-6 rounded-full"
-              />
-              <span>{task.assignee.name}</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Calendar size={14} />
-              <span>
-                {format(new Date(task.due_date), "dd MMM yyyy")}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Project */}
-        <div className="border rounded-xl p-4 bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-sm">
-          <h2 className="text-sm font-semibold flex items-center gap-2">
-            <Pencil size={14} />
-            {task.project.name}
-          </h2>
-
-          <div className="text-xs mt-2 text-muted-foreground">
-            <p>Status: {task.project.status}</p>
-            <p>Priority: {task.project.priority}</p>
-          </div>
-        </div>
-
-      </aside>
+      <TaskDiscussionPanel
+        comments={comments}
+        currentUserId={user?.id}
+        newComment={newComment}
+        setNewComment={setNewComment}
+        submitComment={submitComment}
+        isAddingComment={isAddingComment}
+        isFetching={isFetching}
+        handleScroll={handleScroll}
+        listRef={listRef}
+      />
     </section>
   );
 }

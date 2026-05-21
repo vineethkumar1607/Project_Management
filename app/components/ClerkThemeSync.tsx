@@ -27,7 +27,7 @@ export default function ClerkThemeSync({
         Clerk internally reads the theme only during initialization.
         Re-mounting ensures Clerk re-applies the correct theme.
       */
-      key={theme}
+     
       publishableKey={PUBLISHABLE_KEY}
       appearance={{
         /*

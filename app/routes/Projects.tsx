@@ -8,7 +8,7 @@ import CreateProjectDialogBox from "~/components/CreateProjectDialogBox";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
 import FiltersBar from "~/components/Common/FiltersBar";
-import { useProjectsFetcher } from "~/hooks/useProjectsFetcher ";
+import { useProjectsFetcher } from "~/hooks/useProjectsFetcher";
 import { useProjectsData } from "~/hooks/useProjectsData";
 import { FolderOpen, CheckCircle, Clock, ClipboardList } from "lucide-react";
 import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";

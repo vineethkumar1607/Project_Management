@@ -4,7 +4,8 @@ import ProjectSidebar from "./ProjectSideBar"
 import MyTasksSidebar from "./MyTasksSidebar"
 import { FolderOpen, LayoutDashboard, Settings, Users, X } from "lucide-react"
 import { WorkspaceDropdown } from "../WorkspaceDropdown";
-import { useCurrentUserProjects } from "~/hooks/useCurrentUserProjects"
+import { useCurrentUserProjects } from "~/hooks/useCurrentUserProjects";
+import { useCurrentWorkspace } from "~/hooks/useCurrentWorkspace";
 
 interface SidebarProps {
   isSidebarOpen: boolean
@@ -18,14 +19,31 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
   const sidebarRef = useRef<HTMLElement>(null);
 
   const { projects, loading, } = useCurrentUserProjects();
-
-  console.log("sidebar", projects)
+  const { currentWorkspaceId } = useCurrentWorkspace();
 
   const menuItems = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { name: "Projects", href: "/projects", icon: FolderOpen },
-    { name: "Team", href: "/team", icon: Users },
-  ]
+    {
+      name: "Dashboard",
+      href: currentWorkspaceId
+        ? `/workspace/${currentWorkspaceId}`
+        : "/",
+      icon: LayoutDashboard,
+    },
+    {
+      name: "Projects",
+      href: currentWorkspaceId
+        ? `/workspace/${currentWorkspaceId}/projects`
+        : "/projects",
+      icon: FolderOpen,
+    },
+    {
+      name: "Team",
+      href: currentWorkspaceId
+        ? `/workspace/${currentWorkspaceId}/team`
+        : "/team",
+      icon: Users,
+    },
+  ];
 
   // If the user clicks outside the menu, we should close it automatically
   const handleClickOutside = useCallback((event: MouseEvent) => {

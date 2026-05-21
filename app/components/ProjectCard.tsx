@@ -1,6 +1,8 @@
 import { Link } from "react-router";
 import { memo, useMemo } from "react";
 import type { Project } from "~/types/workspace";
+import { useCurrentWorkspace } from "~/hooks/useCurrentWorkspace";
+import { workspaceRoutes } from "~/lib/routesHelper";
 
 type ProjectStatus =
   | "PLANNING"
@@ -8,10 +10,6 @@ type ProjectStatus =
   | "ON_HOLD"
   | "COMPLETED"
   | "CANCELLED";
-
-type ProjectPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-
-
 
 interface ProjectCardProps {
   project: Project;
@@ -35,7 +33,9 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
     return Math.min(Math.max(project.progress ?? 0, 0), 100);
   }, [project.progress]);
 
-  const projectPath = `/projects/${project.id}`;
+  const { currentWorkspaceId } = useCurrentWorkspace();
+
+  const projectPath = currentWorkspaceId ? workspaceRoutes.projectDetails(currentWorkspaceId, project.id) : "/";
 
   return (
     <article

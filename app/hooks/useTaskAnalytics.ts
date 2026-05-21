@@ -1,6 +1,8 @@
 
 import { useMemo } from "react";
 import type { Task } from "~/types/workspace";
+import { isTaskOverdue } from "~/lib/taskUtils";
+
 
 interface UseTaskAnalyticsProps {
     tasks: Task[];
@@ -19,21 +21,8 @@ export const useTaskAnalytics = ({
                 task.status === "IN_PROGRESS"
         );
 
-        const overdueTasks = tasks.filter((task) => {
-            if (!task.due_date) return false;
 
-            const dueDate = new Date(task.due_date);
-            const today = new Date();
-
-            // normalize both dates
-            dueDate.setHours(0, 0, 0, 0);
-            today.setHours(0, 0, 0, 0);
-
-            return (
-                dueDate < today &&
-                task.status !== "DONE"
-            );
-        });
+        const overdueTasks = tasks.filter(isTaskOverdue);
 
         return {
             // counts

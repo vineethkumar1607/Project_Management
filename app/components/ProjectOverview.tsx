@@ -6,6 +6,8 @@ import EmptyState from "~/components/Common/EmptyState";
 import PrimaryButton from "~/components/Common/PrimaryButton";
 import { FolderOpen, Plus } from "lucide-react";
 import { useProjectsData } from "~/hooks/useProjectsData";
+import { useCurrentWorkspace } from "~/hooks/useCurrentWorkspace";
+import { workspaceRoutes } from "~/lib/routesHelper";
 
 /* =======================
    Types
@@ -53,6 +55,7 @@ const ProjectOverview: FC = () => {
   const [, setIsDialogOpen] = useState(false);
 
   const { projects, loading, error } = useProjectsData();
+  const { currentWorkspaceId } = useCurrentWorkspace();
 
   const isInitialLoading = loading && projects.length === 0;
 
@@ -85,7 +88,7 @@ const ProjectOverview: FC = () => {
                 </span>
               )}
 
-              <Link to="/projects" className="text-sm text-muted-foreground">
+              <Link to={currentWorkspaceId ? workspaceRoutes.projects(currentWorkspaceId) : "/"} className="text-sm text-muted-foreground">
                 View all
               </Link>
             </div>
@@ -95,7 +98,7 @@ const ProjectOverview: FC = () => {
           <div className="max-h-125 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-400 p-4">
             {projects.length === 0 ? (
               isBackgroundLoading ? (
-                // 🔥 KEY FIX → show skeleton instead of blank UI
+                // KEY FIX → show skeleton instead of blank UI
                 <ProjectOverviewSkeleton />
               ) : (
                 <EmptyState
@@ -119,7 +122,7 @@ const ProjectOverview: FC = () => {
                 {projects.map((project: Project) => (
                   <li key={project.id}>
                     <Link
-                      to={`/projects/${project.id}`}
+                      to={currentWorkspaceId ? workspaceRoutes.projectDetails(currentWorkspaceId, project.id) : "/"}
                       className="block p-4 sm:p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors"
                     >
                       {/* Title + Status */}

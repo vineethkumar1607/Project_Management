@@ -1,10 +1,5 @@
 import React from "react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "~/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, } from "~/components/ui/dialog";
 
 import type { Task } from "~/types/workspace";
 
@@ -20,11 +15,7 @@ interface Props {
  * Displays all tasks scheduled for a selected calendar date.
  * Accessible, responsive and production-ready modal UI.
  */
-const TaskModal: React.FC<Props> = ({
-    selectedDate,
-    tasks,
-    onClose,
-}) => {
+const TaskPreviewModal: React.FC<Props> = ({ selectedDate, tasks, onClose, }) => {
     if (!selectedDate) return null;
 
     /**
@@ -61,10 +52,7 @@ const TaskModal: React.FC<Props> = ({
     };
 
     return (
-        <Dialog
-            open={!!selectedDate}
-            onOpenChange={onClose}
-        >
+        <Dialog open={!!selectedDate} onOpenChange={onClose}>
             <DialogContent className="max-w-2xl w-full max-h-[85vh] overflow-y-auto bg-background">
                 {/* ================= HEADER ================= */}
                 <DialogHeader>
@@ -75,29 +63,18 @@ const TaskModal: React.FC<Props> = ({
 
                 {/* ================= EMPTY STATE ================= */}
                 {tasks.length === 0 ? (
-                    <section
-                        aria-label="No tasks available"
-                        className="py-12 text-center"
-                    >
+                    <section aria-label="No tasks available" className="py-12 text-center">
                         <p className="text-sm text-muted-foreground">
                             No tasks scheduled for this date.
                         </p>
                     </section>
                 ) : (
                     /* ================= TASK LIST ================= */
-                    <section
-                        aria-label="Scheduled tasks"
-                        className="space-y-4 mt-4"
-                    >
+                    <section aria-label="Scheduled tasks" className="space-y-4 mt-4">
                         {tasks.map((task) => (
-                            <article
-                                key={task.id}
-                                className={`
-                  rounded-xl border-l-4 bg-card
-                  p-4 shadow-sm border
-                  ${getPriorityBorder(task.priority)}
-                `}
-                            >
+                            <article key={task.id}
+                                className={`rounded-xl border-l-4 bg-cardp-4 shadow-sm border
+                  ${getPriorityBorder(task.priority)} `}>
                                 {/* Top Section */}
                                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                                     {/* Left */}
@@ -112,16 +89,7 @@ const TaskModal: React.FC<Props> = ({
                                     </div>
 
                                     {/* Right Badge */}
-                                    <span
-                                        className="
-                      self-start rounded-full
-                      bg-yellow-100 px-3 py-1
-                      text-xs font-medium
-                      text-yellow-700
-                      dark:bg-yellow-500/10
-                      dark:text-yellow-300
-                    "
-                                    >
+                                    <span className=" self-start rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300">
                                         {task.type}
                                     </span>
                                 </div>
@@ -143,4 +111,4 @@ const TaskModal: React.FC<Props> = ({
     );
 };
 
-export default React.memo(TaskModal);
+export default React.memo(TaskPreviewModal);

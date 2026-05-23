@@ -1,4 +1,4 @@
-import type { Project } from "~/components/ProjectCard";
+import type { Project } from "~/types/workspace";
 
 interface ProjectFilters {
   searchTerm: string;

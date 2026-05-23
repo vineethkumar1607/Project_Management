@@ -1,19 +1,19 @@
 import React from "react";
 import { CheckCircle, Clock, AlertTriangle, Users, BarChart2 } from "lucide-react";
 
-import MetricCard from "../components/MetricCard";
-import StatusBarChart from "../components/StatusBarChart";
-import TypePieChart from "../components/TypePieChart";
-import PriorityBreakdown from "../components/PriorityBreakdown";
+import MetricCard from "~/components/common/MetricCard";
+import StatusBarChart from "~/features/analytics/StatusBarChart";
+import TypePieChart from "~/features/analytics/TypePieChart";
+import PriorityBreakdown from "~/features/analytics/PriorityBreakdown";
 
-import { useProjectContext } from "~/hooks/useProjectContext";
-import { useAnalytics } from "~/hooks/useCurrentProjectAnalytics";
+import { useProjectContext } from "~/features/projects/hooks/useProjectContext";
+import { useAnalytics } from "~/features/projects/hooks/useCurrentProjectAnalytics";
 import { useNavigate, useParams } from "react-router";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
-import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
-import ErrorState from "~/components/Common/ErrorState";
-import EmptyState from "~/components/Common/EmptyState";
-import PrimaryButton from "~/components/Common/PrimaryButton";
+import StatsGridSkeleton from "~/components/skeletons/StatsGridSkeleton";
+import ErrorState from "~/components/common/ErrorState";
+import EmptyState from "~/components/common/EmptyState";
+import PrimaryButton from "~/components/common/PrimaryButton";
 import { workspaceRoutes } from "~/lib/routesHelper";
 
 

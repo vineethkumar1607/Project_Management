@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { hydrateTheme, type Theme } from "../store/themeSlice";
+import { hydrateTheme, type Theme } from "../store/slices/themeSlice";
 
 /*
   This component is responsible for:

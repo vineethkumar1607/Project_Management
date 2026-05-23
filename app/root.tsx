@@ -1,10 +1,10 @@
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, } from "react-router";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
-import Navbar from "./components/layout/Navbar";
-import Sidebar from "./components/layout/Sidebar";
-import { Provider, useSelector, } from "react-redux";
-import { store, type RootState } from "./store/store";
+import Navbar from "./layouts/Navbar";
+import Sidebar from "./layouts/Sidebar";
+import { Provider } from "react-redux";
+import { store } from "./store/store";
 import AuthProvider from "./providers/AuthProvider";
 
 import "./app.css";
@@ -13,12 +13,10 @@ import { Navigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import ClerkThemeSync from "./components/ClerkThemeSync";
 import ThemeInitializer from "./components/ThemeInitializer";
-import { fetchWorkspaces } from "./store/workspaceThunk";
-import { useClerk, } from "@clerk/clerk-react";
-import { setCurrentWorkspace } from "./store/workspaceSlice";
+import { fetchWorkspaces } from "./store/thunks/workspaceThunk";
 import { Toaster } from "react-hot-toast";
 import AppWrapper from "./providers/AppWrapper";
-import { useProjectsFetcher } from "./hooks/useProjectsFetcher";
+import { useProjectsFetcher } from "./features/projects/hooks/useProjectsFetcher";
 
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -135,6 +133,11 @@ export default function App() {
 
   const { user, isLoaded } = useUser();
   const dispatch = useAppDispatch();
+  const workspaceLoading = useAppSelector((state) => state.workspace.loading);
+  const workspaceError = useAppSelector((state) => state.workspace.error);
+  const hasLoadedWorkspaces = useAppSelector(
+    (state) => state.workspace.workspaces.length > 0
+  );
   useProjectsFetcher();
 
 
@@ -149,24 +152,11 @@ export default function App() {
 
   useEffect(() => {
     if (!isLoaded || !user) return;
+    if (workspaceLoading || hasLoadedWorkspaces || workspaceError) return;
 
     dispatch(fetchWorkspaces());
     console.count("FETCH WORKSPACES");
-  }, [isLoaded, user?.id]);
-
-
-  const {  currentWorkspaceId } = useSelector(
-    (state: RootState) => state.workspace
-  );
-
-  useEffect(() => {
-    if (!isLoaded || !user) return;
-
-    const orgId = user.organizationMemberships?.[0]?.organization?.id;
-
-    if (!orgId) return;
-
-  }, [isLoaded, user, currentWorkspaceId]);
+  }, [dispatch, hasLoadedWorkspaces, isLoaded, user, user?.id, workspaceError, workspaceLoading]);
   /* --------------------------------------------------
       Main App Layout (Dashboard Pages)
   --------------------------------------------------- */

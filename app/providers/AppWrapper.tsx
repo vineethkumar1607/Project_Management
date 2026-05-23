@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
-import LayoutSkeleton from "../components/layout/LayoutSkeleton";
+import LayoutSkeleton from "~/components/skeletons/LayoutSkeleton";
 
 export default function AppWrapper({
   children,

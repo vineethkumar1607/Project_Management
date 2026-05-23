@@ -9,8 +9,8 @@ import { useParams } from "react-router";
 import { AlertCircle } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 
-import TaskDiscussionPanel from "~/components/task-details/TaskDiscussionPanel";
-import TaskInfoPanel from "~/components/task-details/TaskInfoPanel";
+import TaskDiscussionPanel from "~/features/tasks/TaskDiscussionPanel";
+import TaskInfoPanel from "~/features/tasks/TaskInfoPanel";
 
 import {
   useAddCommentMutation,

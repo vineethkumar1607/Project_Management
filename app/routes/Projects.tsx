@@ -1,23 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 
-import ProjectCard from "~/components/ProjectCard";
+import ProjectCard from "~/features/projects/ProjectCard";
 import type { Project } from "~/types/workspace";
 import { filterProjects } from "~/lib/filterProjects";
-import CreateProjectDialogBox from "~/components/CreateProjectDialogBox";
-import PrimaryButton from "~/components/Common/PrimaryButton";
+import CreateProjectDialogBox from "~/features/projects/CreateProjectDialogBox";
+import PrimaryButton from "~/components/common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
-import FiltersBar from "~/components/Common/FiltersBar";
-import { useProjectsFetcher } from "~/hooks/useProjectsFetcher";
-import { useProjectsData } from "~/hooks/useProjectsData";
+import FiltersBar from "~/components/common/FiltersBar";
+import { useProjectsFetcher } from "~/features/projects/hooks/useProjectsFetcher";
+import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
 import { FolderOpen, CheckCircle, Clock, ClipboardList } from "lucide-react";
-import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";
-import MetricCard from "~/components/MetricCard";
-import ErrorState from "~/components/Common/ErrorState";
-import EmptyState from "~/components/Common/EmptyState";
-import StatsGridSkeleton from "~/components/Skeletons/StatsGridSkeleton";
-import { TextSkeleton } from "~/components/Skeletons/TextSkeleton";
-import ProjectCardSkeleton from "~/components/Skeletons/ProjectCardSkeleton";
+import { useProjectAnalytics } from "~/features/projects/hooks/useProjectAnalytics";
+import MetricCard from "~/components/common/MetricCard";
+import ErrorState from "~/components/common/ErrorState";
+import EmptyState from "~/components/common/EmptyState";
+import StatsGridSkeleton from "~/components/skeletons/StatsGridSkeleton";
+import { TextSkeleton } from "~/components/skeletons/TextSkeleton";
+import ProjectCardSkeleton from "~/components/skeletons/ProjectCardSkeleton";
 
 // The Projects component is responsible for displaying a list of projects within the current workspace. It utilizes the useProjectsFetcher hook to ensure that project data is fetched and up-to-date. The component also manages UI state for filtering projects by search term, status, and priority. It displays loading and error states appropriately, and renders a grid of ProjectCard components for the filtered projects. Additionally, it includes a header with a button to create new projects, and a section for displaying project analytics metrics.
 const Projects = () => {

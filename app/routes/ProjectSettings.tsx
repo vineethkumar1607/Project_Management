@@ -1,13 +1,13 @@
 // ProjectSettings.tsx
 
-import EmptyState from "~/components/Common/EmptyState";
-import ErrorState from "~/components/Common/ErrorState";
-import ProjectDetailsForm from "~/components/ProjectDetailsForm";
-import ProjectMembers from "~/components/ProjectMembers";
-import LayoutSkeleton from "~/components/Skeletons/LayoutSkeleton";
-import { TextSkeleton } from "~/components/Skeletons/TextSkeleton";
-import { useCurrentProject } from "~/hooks/useCurrentProject";
-import { useWorkspaceMembers } from "~/hooks/useWorkspaceMembers";
+import EmptyState from "~/components/common/EmptyState";
+import ErrorState from "~/components/common/ErrorState";
+import ProjectDetailsForm from "~/features/projects/ProjectDetailsForm";
+import ProjectMembers from "~/features/projects/ProjectMembers";
+import LayoutSkeleton from "~/components/skeletons/LayoutSkeleton";
+import { TextSkeleton } from "~/components/skeletons/TextSkeleton";
+import { useCurrentProject } from "~/features/projects/hooks/useCurrentProject";
+import { useWorkspaceMembers } from "~/features/workspace/hooks/useWorkspaceMembers";
 
 const ProjectSettings = () => {
   const { project, loading: isLoading, error, } = useCurrentProject();

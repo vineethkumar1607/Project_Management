@@ -9,8 +9,8 @@ import { useParams } from "react-router";
 import { AlertCircle } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 
-import TaskDiscussionPanel from "~/components/task-details/TaskDiscussionPanel";
-import TaskInfoPanel from "~/components/task-details/TaskInfoPanel";
+import TaskDiscussionPanel from "~/features/tasks/TaskDiscussionPanel";
+import TaskInfoPanel from "~/features/tasks/TaskInfoPanel";
 
 import {
   useAddCommentMutation,
@@ -19,6 +19,7 @@ import {
 } from "~/store/api/tasksApi";
 
 import type { TaskComment } from "~/types/workspace";
+import toast from "react-hot-toast";
 
 export default function TaskDetails() {
   const { taskId } = useParams();
@@ -77,7 +78,7 @@ export default function TaskDetails() {
         },
       }).unwrap();
     } catch (error) {
-      console.error(error);
+      toast.error("Failed to add comment");
       setNewComment(message);
     }
   };

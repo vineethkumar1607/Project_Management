@@ -2,16 +2,16 @@ import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import { useState, useMemo } from "react"
-import { useCalendarEvents } from "../hooks/useCalendarEvents"
-import TaskModal from "../components/TaskPreviewModel"
+import { useCalendarEvents } from "~/features/tasks/hooks/useCalendarEvents"
+import TaskModal from "~/features/tasks/TaskPreviewModal"
 import { useParams } from "react-router";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
-import ErrorState from "~/components/Common/ErrorState"
-import CalendarSkeleton from "~/components/Skeletons/CalendarSkeleton"
-import EmptyState from "~/components/Common/EmptyState";
+import ErrorState from "~/components/common/ErrorState"
+import CalendarSkeleton from "~/components/skeletons/CalendarSkeleton"
+import EmptyState from "~/components/common/EmptyState";
 import type { CalendarTask } from "~/types/workspace";
 import { isTaskOverdue } from "~/lib/taskUtils";
-import TaskListCard from "~/components/Common/TaskListCard";
+import TaskListCard from "~/components/common/TaskListCard";
 import { AlertTriangle, Clock } from "lucide-react";
 
 

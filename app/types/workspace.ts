@@ -1,6 +1,7 @@
 // ================== CORE DOMAIN ==================
 
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 export type Role = "ADMIN" | "MEMBER";
 
@@ -170,6 +171,15 @@ export type ConfirmDialogProps = {
   cancelText?: string;
   onConfirm: () => Promise<void> | void;
   loading?: boolean;
+
+  children?: React.ReactNode;
+  confirmDisabled?: boolean;  
+};
+
+export type DangerZoneSectionProps = {
+    title: string;
+    description: string;
+    children: ReactNode;
 };
 
 export type FilterOption = {
@@ -202,7 +212,6 @@ export type AsyncStatus = "idle" | "loading" | "succeeded" | "failed";
 export interface AsyncState<T> {
   data: T;
   status: AsyncStatus;
-  lastFetched?: number;
   error?: string | null;
 }
 

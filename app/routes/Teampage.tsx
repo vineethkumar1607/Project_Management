@@ -1,23 +1,23 @@
 import { useState, useMemo, useEffect, } from "react";
 import { Users, UserPlus } from "lucide-react";
 
-import TeamTable from "~/components/TeamTable";
-import InviteMemberDialog from "../components/InviteMemberDialog";
+import TeamTable from "~/features/workspace/TeamTable";
+import InviteMemberDialog, { type ClerkOrganizationRole } from "~/features/workspace/InviteMemberDialog";
 import { Button } from "~/components/ui/button";
 import { useOrganization } from "@clerk/clerk-react";
 import type { Role } from "~/types/workspace";
-import PrimaryButton from "~/components/Common/PrimaryButton";
+import PrimaryButton from "~/components/common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
-import FiltersBar from "~/components/Common/FiltersBar";
+import FiltersBar from "~/components/common/FiltersBar";
 import { motion } from "framer-motion";
-import { useWorkspaceMembers } from "~/hooks/useWorkspaceMembers";
-import EmptyState from "~/components/Common/EmptyState";
-import MetricCard from "~/components/MetricCard";
+import { useWorkspaceMembers } from "~/features/workspace/hooks/useWorkspaceMembers";
+import EmptyState from "~/components/common/EmptyState";
+import MetricCard from "~/components/common/MetricCard";
 import toast from "react-hot-toast";
-import TableSkeleton from "~/components/Skeletons/TableSkeleton";
-import ErrorState from "~/components/Common/ErrorState";
-import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
-import { TextSkeleton } from "~/components/Skeletons/TextSkeleton";
+import TableSkeleton from "~/components/skeletons/TableSkeleton";
+import ErrorState from "~/components/common/ErrorState";
+import StatsGridSkeleton from "~/components/skeletons/StatsGridSkeleton";
+import { TextSkeleton } from "~/components/skeletons/TextSkeleton";
 
 // This component represents the team management page, allowing users to view and manage workspace members. It includes features such as searching, filtering by role, and inviting new members. The component utilizes the `useWorkspaceMembers` hook to fetch and manage the members data, ensuring that the UI is responsive to loading states and errors while providing a seamless user experience for team management tasks.
 export default function TeamPage() {
@@ -114,7 +114,7 @@ export default function TeamPage() {
   ], [roleSummary]);
 
   // Handle inviting a new member to the workspace. This function interacts with the organization object from Clerk to send an invitation email to the specified address with the selected role. It also provides user feedback through toast notifications for loading, success, and error states, ensuring that users are informed about the status of their invitation actions.
-  const handleInvite = async ({ email, role, }: { email: string; role: Role; }) => {
+  const handleInvite = async ({ email, role, }: { email: string; role: ClerkOrganizationRole; }) => {
     try {
       if (!organization) {
         toast.error("Organization not found");

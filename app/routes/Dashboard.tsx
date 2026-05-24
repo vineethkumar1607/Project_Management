@@ -1,27 +1,26 @@
 import { Suspense, lazy, memo, useState, } from "react";
-import { CheckCircle, Clock, FolderOpen, ListTodo, PauseCircle, Plus, } from "lucide-react";
-import ProjectOverviewSkeleton from "~/components/ui/ProjectOverviewSkeleton";
-import StatsGridSkeleton from "~/components/ui/StatsGridSkeleton";
-import RecentActivitySkeleton from "~/components/ui/RecentActivitySkeleton";
-import TaskSummarySkeleton from "~/components/ui/TaskSummarySkeleton";
+import { CheckCircle,  FolderOpen, ListTodo, PauseCircle, Plus, } from "lucide-react";
+import ProjectOverviewSkeleton from "~/components/skeletons/ProjectOverviewSkeleton";
+import StatsGridSkeleton from "~/components/skeletons/StatsGridSkeleton";
+import RecentActivitySkeleton from "~/components/skeletons/RecentActivitySkeleton";
+import TaskSummarySkeleton from "~/components/skeletons/TaskSummarySkeleton";
 import { useUser } from "@clerk/clerk-react";
-import PrimaryButton from "~/components/Common/PrimaryButton";
-import { useProjectAnalytics } from "~/hooks/useProjectAnalytics";
-import MetricCard from "~/components/MetricCard";
-import { useTaskAnalytics } from "~/hooks/useTaskAnalytics";
-import CreateProjectDialog from "../components/CreateProjectDialogBox";
-import { useProjectsFetcher } from "~/hooks/useProjectsFetcher";
-import { useProjectsData } from "~/hooks/useProjectsData";
+import PrimaryButton from "~/components/common/PrimaryButton";
+import { useProjectAnalytics } from "~/features/projects/hooks/useProjectAnalytics";
+import MetricCard from "~/components/common/MetricCard";
+import { useTaskAnalytics } from "~/features/tasks/hooks/useTaskAnalytics";
+import CreateProjectDialog from "~/features/projects/CreateProjectDialogBox";
+import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
 
 // Lazy components
-const ProjectOverview = lazy(() => import("../components/ProjectOverview"));
-const RecentActivity = lazy(() => import("../components/RecentActivity"));
-const TasksSummary = lazy(() => import("../components/dashboard/TasksSummary"));
+const ProjectOverview = lazy(() => import("~/features/dashboard/ProjectOverview"));
+const RecentActivity = lazy(() => import("~/features/dashboard/RecentActivity"));
+const TasksSummary = lazy(() => import("~/features/dashboard/TasksSummary"));
 
 const Dashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user} = useUser();
-  useProjectsFetcher();
+
 
   const { projects, loading, } = useProjectsData();
 

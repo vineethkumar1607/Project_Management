@@ -9,7 +9,7 @@ export default [
   },
   {
     path: "/workspace/:workspaceId",
-    file: "routes/WorkspaceLayout.tsx",
+    file: "layouts/WorkspaceLayout.tsx",
 
     children: [
       {
@@ -24,7 +24,7 @@ export default [
 
       {
         path: "projects/:projectId",
-        file: "routes/ProjectLayout.tsx",
+        file: "layouts/ProjectLayout.tsx",
 
         children: [
           {

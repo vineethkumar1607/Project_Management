@@ -1,5 +1,5 @@
 import type { Task } from "~/types/workspace";
-import { baseApi } from "./baseApi";
+import { baseApi } from "~/store/api/baseApi";
 import type { TaskDetails, } from "~/types/workspace";
 
 type TaskComment = {

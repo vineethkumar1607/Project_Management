@@ -4,10 +4,10 @@ import { flexRender, getCoreRowModel, getSortedRowModel, useReactTable, createCo
 
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, } from "~/components/ui/table";
 import { useMemo } from "react";
-import TaskFilterBar from "~/components/TaskFilterBar";
-import { filterTasks } from "~/lib/filtertasks";
-import StatusSelect from "~/components/StatusSelect";
-import { useTaskFilters } from "~/hooks/useTaskFilters";
+import TaskFilterBar from "~/features/tasks/TaskFilterBar";
+import { filterTasks } from "~/features/tasks/filterTasks";
+import StatusSelect from "~/features/tasks/StatusSelect";
+import { useTaskFilters } from "~/features/tasks/hooks/useTaskFilters";
 import { useParams } from "react-router";
 
 import type { Task } from "~/types/workspace";
@@ -16,13 +16,13 @@ import { useNavigate } from "react-router";
 
 import { useUser } from "@clerk/clerk-react";
 import { Button } from "~/components/ui/button";
-import ConfirmDialog from "~/components/Common/ConfirmDailog";
+import ConfirmDialog from "~/components/common/ConfirmDialog";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
-import { useDeleteTasksHandler } from "~/hooks/useDeleteTasksHandler";
-import { useTaskSelection } from "~/hooks/useTaskSelection";
+import { useDeleteTasksHandler } from "~/features/tasks/hooks/useDeleteTasksHandler";
+import { useTaskSelection } from "~/features/tasks/hooks/useTaskSelection";
 import type { SortingState } from "@tanstack/react-table";
-import TableSkeleton from "~/components/Skeletons/TableSkeleton";
-import ErrorState from "~/components/Common/ErrorState";
+import TableSkeleton from "~/components/skeletons/TableSkeleton";
+import ErrorState from "~/components/common/ErrorState";
 
 const formatIndianDate = (dateString?: string) => {
   if (!dateString) return "-";

@@ -1,4 +1,4 @@
-import SearchField from "~/components/Common/SearchField";
+import SearchField from "~/components/common/SearchField";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, } from "~/components/ui/select";
 
 type FilterOption<T extends string = string> = {

@@ -1,18 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit"
-import workspaceReducer from "./workspaceSlice"
-import projectReducer from "./projetSlice";
-import themeReducer from "./themeSlice"
-import { baseApi } from "./api/baseApi";
+import { baseApi } from "~/store/api/baseApi";
+import { rootReducer } from "~/store/rootReducer";
 
 export const store = configureStore({
-  reducer: {
-    theme: themeReducer,
-    workspace: workspaceReducer,
-    project: projectReducer,
-    [baseApi.reducerPath]: baseApi.reducer,
-  },
- 
-
+  reducer: rootReducer,
 
   //RTK Query uses middleware for caching, invalidation, polling, and other features.
   middleware: (getDefaultMiddleware) =>

@@ -15,7 +15,6 @@ export const useProjectsData = () => {
             : null
             
    );
-   console.count("useProjectsData called")
 
    return {
       projects: projectData?.data ?? EMPTY_PROJECTS,

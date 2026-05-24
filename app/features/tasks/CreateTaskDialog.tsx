@@ -48,10 +48,6 @@ const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
         const toastId = toast.loading("Creating task...");
 
         try {
-            console.log("CREATE TASK PAYLOAD:", {
-                projectId,
-                ...data,
-            });
             // 
             await createTask({
                 projectId,
@@ -63,8 +59,6 @@ const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
             reset();
             setIsDialogOpen(false);
         } catch (err: any) {
-            console.error("CREATE TASK ERROR:", err);
-
             const message =
                 err?.data?.message ||   // backend message
                 err?.data?.error ||

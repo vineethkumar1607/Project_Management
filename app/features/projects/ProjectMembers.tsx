@@ -127,9 +127,6 @@ const handleAddMember = async () => {
         }
       };
 
-      console.log("workspaceMembers:", workspaceMembers);
-      console.log("projectMembers:", project?.members);
-
       return (
         <section className="space-y-6">
 

@@ -4,7 +4,7 @@ import EmptyState from "~/components/common/EmptyState";
 import ErrorState from "~/components/common/ErrorState";
 import ProjectDetailsForm from "~/features/projects/ProjectDetailsForm";
 import ProjectMembers from "~/features/projects/ProjectMembers";
-import LayoutSkeleton from "~/components/skeletons/LayoutSkeleton";
+import DeleteProjectSection from "~/features/projects/DeleteProjectSection";
 import { TextSkeleton } from "~/components/skeletons/TextSkeleton";
 import { useCurrentProject } from "~/features/projects/hooks/useCurrentProject";
 import { useWorkspaceMembers } from "~/features/workspace/hooks/useWorkspaceMembers";
@@ -103,6 +103,7 @@ const ProjectSettings = () => {
         </div>
 
       </div>
+      <DeleteProjectSection project={project} />
     </section>
   )
 }

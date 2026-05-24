@@ -8,7 +8,6 @@ import CreateProjectDialogBox from "~/features/projects/CreateProjectDialogBox";
 import PrimaryButton from "~/components/common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
 import FiltersBar from "~/components/common/FiltersBar";
-import { useProjectsFetcher } from "~/features/projects/hooks/useProjectsFetcher";
 import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
 import { FolderOpen, CheckCircle, Clock, ClipboardList } from "lucide-react";
 import { useProjectAnalytics } from "~/features/projects/hooks/useProjectAnalytics";
@@ -18,10 +17,11 @@ import EmptyState from "~/components/common/EmptyState";
 import StatsGridSkeleton from "~/components/skeletons/StatsGridSkeleton";
 import { TextSkeleton } from "~/components/skeletons/TextSkeleton";
 import ProjectCardSkeleton from "~/components/skeletons/ProjectCardSkeleton";
+import { fetchProjects } from "~/store/thunks/projectThunk";
+import { useAppDispatch, useAppSelector } from "~/store/hooks";
 
-// The Projects component is responsible for displaying a list of projects within the current workspace. It utilizes the useProjectsFetcher hook to ensure that project data is fetched and up-to-date. The component also manages UI state for filtering projects by search term, status, and priority. It displays loading and error states appropriately, and renders a grid of ProjectCard components for the filtered projects. Additionally, it includes a header with a button to create new projects, and a section for displaying project analytics metrics.
+// Projects page component that displays a list of projects with filtering options, metrics, and the ability to create new projects. It uses the useProjectsData hook to fetch project data and analytics, and manages local state for search and filter criteria. The component also handles loading and error states, providing skeletons and error messages as needed.
 const Projects = () => {
-  useProjectsFetcher();
   const { projects, loading, error } = useProjectsData();
 
   const analytics = useProjectAnalytics(projects);
@@ -35,6 +35,14 @@ const Projects = () => {
 
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 500);
+
+
+  const dispatch = useAppDispatch();
+
+  const workspaceId = useAppSelector(
+    (state) => state.workspace.currentWorkspaceId
+  );
+
 
   useEffect(() => {
     setSearchTerm(debouncedQuery);
@@ -92,7 +100,11 @@ const Projects = () => {
       <ErrorState
         title="Failed to load projects"
         description="Unable to fetch projects right now."
-        onRetry={() => window.location.reload()}
+        onRetry={() => {
+          if (workspaceId) {
+            dispatch(fetchProjects(workspaceId));
+          }
+        }}
       />
     );
   }

@@ -119,7 +119,6 @@ const workspaceSlice = createSlice({
 
             // API success
             .addCase(fetchWorkspaces.fulfilled, (state, action) => {
-                console.log("REDUX UPDATED:", action.payload);
                 state.loading = false;
                 const workspaces = action.payload || [];
 

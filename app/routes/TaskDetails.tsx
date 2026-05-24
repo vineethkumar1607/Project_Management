@@ -19,6 +19,7 @@ import {
 } from "~/store/api/tasksApi";
 
 import type { TaskComment } from "~/types/workspace";
+import toast from "react-hot-toast";
 
 export default function TaskDetails() {
   const { taskId } = useParams();
@@ -77,7 +78,7 @@ export default function TaskDetails() {
         },
       }).unwrap();
     } catch (error) {
-      console.error(error);
+      toast.error("Failed to add comment");
       setNewComment(message);
     }
   };

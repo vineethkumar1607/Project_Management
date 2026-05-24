@@ -3,43 +3,24 @@ import { useAppDispatch, useAppSelector } from "~/store/hooks";
 import { fetchProjects } from "~/store/thunks/projectThunk";
 
 
-// Custom hook to fetch projects for the current workspace. It checks if the projects data is stale or if it has not been fetched yet, and dispatches the fetch action accordingly. This hook abstracts away the logic for managing project data fetching, allowing components to simply call it to ensure they have the latest projects data without worrying about the underlying implementation details.
+// Custom hook to fetch projects for a given workspace. It takes an optional workspaceId parameter, retrieves the current project data from the Redux store, and dispatches the fetchProjects action if the data is not already being fetched or has not been fetched yet. This hook ensures that project data is loaded and available in the store for components that need it.
 
-const STALE_TIME = 5 * 60 * 1000; // 5 minutes  
-export const useProjectsFetcher = () => {
+export const useProjectsFetcher = (workspaceId?: string) => {
     const dispatch = useAppDispatch();
 
-    const workspaceId = useAppSelector(
-        state => state.workspace.currentWorkspaceId
-    );
 
     const projectData = useAppSelector(
-        state =>
-            workspaceId
-                ? state.project.projectsByWorkspace[workspaceId]
-                : null
-    );
+        state => workspaceId ? state.project.projectsByWorkspace[workspaceId] : null);
 
     useEffect(() => {
         if (!workspaceId) return;
 
-        const isStale =
-            projectData?.lastFetched &&
-            Date.now() - projectData.lastFetched > STALE_TIME;
 
-        const shouldFetch =
-            !projectData ||
-            projectData.status === "idle" ||
-            isStale;
+        const shouldFetch = !projectData || projectData.status === "idle"
 
         if (shouldFetch) {
             dispatch(fetchProjects(workspaceId));
         }
-        console.count("useProjectsFetcher called");
-    }, [
-        workspaceId,
-        projectData?.lastFetched,
-        projectData?.status,
-        dispatch,
-    ]);
+
+    }, [workspaceId, projectData?.status, dispatch,]);
 };

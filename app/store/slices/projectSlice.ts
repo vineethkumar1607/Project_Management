@@ -1,9 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchProjects, createProject, updateProject, addProjectMember, removeProjectMember, fetchProjectMembers } from "../thunks/projectThunk";
+import { fetchProjects, createProject, updateProject, addProjectMember, removeProjectMember, fetchProjectMembers, deleteProject } from "../thunks/projectThunk";
 import type { ProjectState } from "~/types/workspace";
 
-
-// This slice manages the state related to projects, including the list of projects for each workspace and the members of each project. It handles actions for fetching projects, creating/updating projects, and adding/removing project members, with support for optimistic updates and error handling.
 
 // Initial state for the project slice, with empty data and null error.
 const initialState: ProjectState = {
@@ -30,7 +28,7 @@ const projectSlice = createSlice({
                     data: existing?.data || [],
                     status: "loading",
                     error: null,
-                    lastFetched: existing?.lastFetched,
+
                 };
             })
 
@@ -41,7 +39,7 @@ const projectSlice = createSlice({
                     data: action.payload,
                     status: "succeeded",
                     error: null,
-                    lastFetched: Date.now(),
+
                 };
             })
 
@@ -53,9 +51,8 @@ const projectSlice = createSlice({
                     data: existing?.data || [],
                     status: "failed",
                     error:
-                        action.error.message ||
-                        "Failed to fetch projects",
-                    lastFetched: existing?.lastFetched,
+                        action.error.message || "Failed to fetch projects",
+
                 };
             })
 
@@ -81,6 +78,19 @@ const projectSlice = createSlice({
                         workspace.data[index] = updated;
                     }
                 });
+            })
+
+            .addCase(deleteProject.fulfilled, (state, action) => {
+                const { workspaceId, projectId } = action.payload;
+
+                const workspace =
+                    state.projectsByWorkspace[workspaceId];
+
+                if (!workspace) return;
+
+                workspace.data = workspace.data.filter(
+                    project => project.id !== projectId
+                );
             })
 
             .addCase(addProjectMember.pending, (state, action) => {

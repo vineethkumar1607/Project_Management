@@ -1,12 +1,5 @@
 import { type FC } from "react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-} from "~/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import type { ConfirmDialogProps } from "~/types/workspace";
 
@@ -22,8 +15,11 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({
     cancelText = "Cancel",
     onConfirm,
     loading = false,
+    children,
+    confirmDisabled = false,
 }) => {
     const handleConfirm = async () => {
+
         try {
             await onConfirm();
             onOpenChange(false); // close ONLY on success
@@ -43,7 +39,7 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({
                         {description}
                     </DialogDescription>
                 </DialogHeader>
-
+                {children}
                 <DialogFooter>
                     <Button
                         variant="outline"
@@ -56,7 +52,7 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({
                     <Button
                         variant="destructive"
                         onClick={handleConfirm}
-                        disabled={loading}
+                        disabled={loading || confirmDisabled}
                         autoFocus
                     >
                         {loading ? "Processing..." : confirmText}

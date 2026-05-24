@@ -10,7 +10,6 @@ import { useProjectAnalytics } from "~/features/projects/hooks/useProjectAnalyti
 import MetricCard from "~/components/common/MetricCard";
 import { useTaskAnalytics } from "~/features/tasks/hooks/useTaskAnalytics";
 import CreateProjectDialog from "~/features/projects/CreateProjectDialogBox";
-import { useProjectsFetcher } from "~/features/projects/hooks/useProjectsFetcher";
 import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
 
 // Lazy components
@@ -21,7 +20,7 @@ const TasksSummary = lazy(() => import("~/features/dashboard/TasksSummary"));
 const Dashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user} = useUser();
-  useProjectsFetcher();
+
 
   const { projects, loading, } = useProjectsData();
 

@@ -16,7 +16,7 @@ import ThemeInitializer from "./components/ThemeInitializer";
 import { fetchWorkspaces } from "./store/thunks/workspaceThunk";
 import { Toaster } from "react-hot-toast";
 import AppWrapper from "./providers/AppWrapper";
-import { useProjectsFetcher } from "./features/projects/hooks/useProjectsFetcher";
+
 
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -138,7 +138,6 @@ export default function App() {
   const hasLoadedWorkspaces = useAppSelector(
     (state) => state.workspace.workspaces.length > 0
   );
-  useProjectsFetcher();
 
 
   useEffect(() => {
@@ -155,7 +154,7 @@ export default function App() {
     if (workspaceLoading || hasLoadedWorkspaces || workspaceError) return;
 
     dispatch(fetchWorkspaces());
-    console.count("FETCH WORKSPACES");
+   
   }, [dispatch, hasLoadedWorkspaces, isLoaded, user, user?.id, workspaceError, workspaceLoading]);
   /* --------------------------------------------------
       Main App Layout (Dashboard Pages)

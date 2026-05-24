@@ -104,7 +104,7 @@ const ProjectDetailsForm = ({ project }: { project: Project }) => {
                 progress,
             };
 
-            
+
             await dispatch(
                 updateProject({
                     projectId: project.id,
@@ -112,9 +112,10 @@ const ProjectDetailsForm = ({ project }: { project: Project }) => {
                 })
             ).unwrap();
             toast.success("Project updated successfully");
-        } catch (error) {
-            console.error("Update failed:", error)
-            toast.error("Failed to update project");
+        } catch (error: any) {
+            toast.error(
+                error || "Failed to update project"
+            );
         }
     }
 

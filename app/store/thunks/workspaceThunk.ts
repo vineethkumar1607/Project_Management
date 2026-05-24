@@ -17,12 +17,9 @@ export const fetchWorkspaces = createAsyncThunk<
         try {
             const data = await workspaceApi.getAll();
 
-            console.log("FETCHED WORKSPACES:", data);
-
             return data;
         } catch (error: any) {
-            console.log("FETCH ERROR:", error);
-            return thunkAPI.rejectWithValue(error.message);
+            return thunkAPI.rejectWithValue(error.response?.data?.message ||"Something went wrong");
         }
     },
     {
@@ -40,7 +37,7 @@ export const fetchWorkspaceMembers = createAsyncThunk(
             const data = await workspaceApi.getMembers(workspaceId);
             return data;
         } catch (error: any) {
-            return thunkAPI.rejectWithValue(error.message);
+            return thunkAPI.rejectWithValue(error.response?.data?.message ||"Something went wrong");
         }
     }
 );

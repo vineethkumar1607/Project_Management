@@ -1,5 +1,6 @@
 import { Outlet, useParams } from "react-router";
 import { useEffect } from "react";
+import { useProjectsFetcher } from "~/features/projects/hooks/useProjectsFetcher";
 
 import { useAppDispatch, useAppSelector } from "~/store/hooks";
 import { setCurrentWorkspace } from "~/store/slices/workspaceSlice";
@@ -16,6 +17,10 @@ const WorkspaceLayout = () => {
 
     dispatch(setCurrentWorkspace(workspaceId));
   }, [currentWorkspaceId, dispatch, workspaceId]);
+
+  const isWorkspaceReady = workspaceId === currentWorkspaceId;
+
+  useProjectsFetcher(isWorkspaceReady ? workspaceId : undefined);
 
   return <Outlet />;
 };

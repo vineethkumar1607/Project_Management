@@ -5,10 +5,13 @@ import { Pencil } from "lucide-react";
 import toast from "react-hot-toast";
 
 import PrimaryButton from "~/components/common/PrimaryButton";
-
+import { useDebounce } from "~/hooks/useDebounce";
 import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
 import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
 import { useWorkspaceMembers } from "~/features/workspace/hooks/useWorkspaceMembers";
+import DangerZoneSection from "~/components/common/DangerZoneSection";
+import ConfirmDialog from "~/components/common/ConfirmDialog";
+import { useWorkspacePermissions } from "~/hooks/useWorkspacePermissions";
 
 export default function WorkspaceOverviewCard() {
   const { currentWorkspace } = useCurrentWorkspace();
@@ -19,39 +22,35 @@ export default function WorkspaceOverviewCard() {
 
   const { organization } = useOrganization();
 
+  const { canEditWorkspace, canDeleteWorkspace, } = useWorkspacePermissions();
+
   const [isEditing, setIsEditing] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const [workspaceName, setWorkspaceName] = useState(
-    currentWorkspace?.name || ""
-  );
+  const [workspaceName, setWorkspaceName] = useState(currentWorkspace?.name || "");
+
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+
   useEffect(() => {
     setWorkspaceName(
-      organization?.name ||
-      currentWorkspace?.name ||
-      ""
+      organization?.name || currentWorkspace?.name || ""
     );
-  }, [
-    organization?.name,
-    currentWorkspace?.name,
-  ]);
+  }, [organization?.name, currentWorkspace?.name,]);
 
-  const memberCount = useMemo(
-    () => members.length,
-    [members]
-  );
+  const memberCount = useMemo(() => members.length, [members]);
 
-  const projectCount = useMemo(
-    () => projects.length,
-    [projects]
-  );
+  const projectCount = useMemo(() => projects.length, [projects]);
 
   const hasChanges = workspaceName.trim() !== (organization?.name || currentWorkspace?.name || "").trim();
 
-  if (!currentWorkspace) {
-    return null;
-  }
+  const debouncedDeleteConfirmation = useDebounce(deleteConfirmation, 300);
+
+  const isDeleteConfirmed = debouncedDeleteConfirmation.trim() === currentWorkspace?.name?.trim();
+
+  if (!currentWorkspace) { return null }
 
   const handleSaveWorkspace = async () => {
     if (!organization) {
@@ -95,13 +94,48 @@ export default function WorkspaceOverviewCard() {
     }
   };
 
+  const handleDeleteWorkspace = async () => {
+    try {
+      setIsDeleting(true);
+
+      // delete logic
+
+      toast.success("Workspace deleted");
+    } catch (error) {
+      toast.error("Failed to delete workspace");
+      throw error;
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleCancelEdit = () => {
-    setWorkspaceName(currentWorkspace.name);
+    setWorkspaceName(
+      organization?.name ||
+      currentWorkspace.name
+    );
 
     setIsEditing(false);
   };
 
-  console.log(organization?.name);
+  const handleToggleEdit = () => {
+    if (isEditing) {
+      handleCancelEdit();
+      return;
+    }
+
+    setIsEditing(true);
+  };
+
+
+
+  const handleDeleteDialogChange = (open) => {
+    setShowDeleteDialog(open);
+
+    if (!open) {
+      setDeleteConfirmation("");
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -118,18 +152,18 @@ export default function WorkspaceOverviewCard() {
               configuration settings.
             </p>
           </div>
+          {canEditWorkspace && (
+            <button
 
-          <button
-            type="button"
-            onClick={() =>
-              setIsEditing((prev) => !prev)
-            }
-            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted"
-          >
-            <Pencil size={14} />
+              type="button"
+              onClick={handleToggleEdit}
+              className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted"
+            >
+              <Pencil size={14} />
 
-            {isEditing ? "Cancel" : "Edit"}
-          </button>
+              {isEditing ? "Cancel" : "Edit"}
+            </button>
+          )}
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -156,6 +190,17 @@ export default function WorkspaceOverviewCard() {
                 {organization?.name || currentWorkspace.name}
               </p>
             )}
+          </div>
+
+          {/* Workspace Slug */}
+          <div className="rounded-lg border p-4">
+            <p className="text-sm text-muted-foreground">
+              Workspace Slug
+            </p>
+
+            <p className="mt-1 font-medium">
+              {organization?.slug || "No slug"}
+            </p>
           </div>
 
           {/* Members */}
@@ -207,28 +252,88 @@ export default function WorkspaceOverviewCard() {
       </section>
 
       {/* Delete Workspace */}
-      <section className="rounded-xl border border-red-200 bg-red-50/50 p-6">
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-red-600">
-            Delete Workspace
-          </h2>
 
-          <p className="text-sm text-muted-foreground">
-            Permanently delete this workspace and
-            all associated projects, tasks, and
-            members. This action cannot be undone.
-          </p>
-        </div>
-
-        <div className="mt-6">
+      {canDeleteWorkspace && (
+        <DangerZoneSection
+          title="Delete Workspace"
+          description="Permanently delete this workspace and all associated projects, tasks, and members. This action cannot be undone."
+        >
           <button
             type="button"
+            onClick={() => setShowDeleteDialog(true)}
             className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
             Delete Workspace
           </button>
+        </DangerZoneSection>
+      )}
+
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete Workspace"
+        description="This action permanently deletes the workspace and all associated data."
+        confirmText="Delete Workspace"
+        loading={isDeleting}
+        onConfirm={handleDeleteWorkspace}
+        confirmDisabled={!isDeleteConfirmed}
+      >
+        <div className="space-y-4">
+          {/* Warning Box */}
+          <div
+            className="
+        rounded-lg border border-red-200
+        bg-red-50 p-4
+        dark:border-red-900/50
+        dark:bg-red-950/20
+      "
+          >
+            <p className="text-sm text-red-700 dark:text-red-300">
+              This action cannot be undone.
+              All projects, tasks, members,
+              and workspace data will be permanently removed.
+            </p>
+          </div>
+
+          {/* Confirmation Text */}
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Please type{" "}
+              <span className="font-semibold text-foreground">
+                {currentWorkspace.name}
+              </span>{" "}
+              to confirm.
+            </p>
+
+            <div className="space-y-1">
+              <input
+                type="text"
+                value={deleteConfirmation}
+                onChange={(e) =>
+                  setDeleteConfirmation(e.target.value)
+                }
+                placeholder="Enter workspace name"
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-red-500"
+              />
+
+              {/* Stable Validation Area */}
+              <div className="min-h-5">
+                {deleteConfirmation ? (
+                  isDeleteConfirmed ? (
+                    <p className="text-xs text-green-600">
+                      Workspace name matched.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-red-500">
+                      Workspace name does not match.
+                    </p>
+                  )
+                ) : null}
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+      </ConfirmDialog>
     </div>
   );
 }

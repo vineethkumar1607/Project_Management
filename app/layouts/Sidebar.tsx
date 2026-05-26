@@ -6,6 +6,7 @@ import { FolderOpen, LayoutDashboard, Settings, Users, X } from "lucide-react"
 import { WorkspaceDropdown } from "~/features/workspace/WorkspaceDropdown";
 import { useCurrentUserProjects } from "~/features/projects/hooks/useCurrentUserProjects";
 import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
+import { workspaceRoutes } from "~/lib/routesHelper"
 
 interface SidebarProps {
   isSidebarOpen: boolean
@@ -24,24 +25,23 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
   const menuItems = [
     {
       name: "Dashboard",
-      href: currentWorkspaceId
-        ? `/workspace/${currentWorkspaceId}`
-        : "/",
+      href: currentWorkspaceId ? workspaceRoutes.dashboard(currentWorkspaceId) : "/",
       icon: LayoutDashboard,
     },
     {
       name: "Projects",
-      href: currentWorkspaceId
-        ? `/workspace/${currentWorkspaceId}/projects`
-        : "/projects",
+      href: currentWorkspaceId ? workspaceRoutes.projects(currentWorkspaceId) : "/projects",
       icon: FolderOpen,
     },
     {
       name: "Team",
-      href: currentWorkspaceId
-        ? `/workspace/${currentWorkspaceId}/team`
-        : "/team",
+      href: currentWorkspaceId ? workspaceRoutes.team(currentWorkspaceId) : "/team",
       icon: Users,
+    },
+    {
+      name: "Settings",
+      href: currentWorkspaceId ? workspaceRoutes.settings(currentWorkspaceId) : "/",
+      icon: Settings,
     },
   ];
 
@@ -117,18 +117,6 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
                 </NavLink>
               </li>
             ))}
-
-            {/* A simple button for settings at the end of the main list */}
-            <li>
-              <button
-                type="button"
-                aria-label="Open settings"
-                className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sm text-muted-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <Settings size={18} aria-hidden="true" />
-                <span>Settings</span>
-              </button>
-            </li>
           </ul>
 
           <hr aria-hidden="true" className="my-3" />

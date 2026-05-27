@@ -17,13 +17,39 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
     async (config) => {
         console.count("AXIOS GET TOKEN");
-        const token = await getToken(); // from Clerk
 
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        try {
+            /**
+             * Prevent infinite hanging
+             */
+            const token = await Promise.race([
+                getToken(),
+                new Promise<null>((resolve) =>
+                    setTimeout(() => resolve(null), 5000)
+                ),
+            ]);
+
+            console.log("TOKEN RESULT:", token);
+
+            if (token) {
+                config.headers.Authorization =
+                    `Bearer ${token}`;
+            } else {
+                console.warn(
+                    "No auth token available"
+                );
+            }
+
+            return config;
+
+        } catch (error) {
+            console.error(
+                "TOKEN FETCH ERROR:",
+                error
+            );
+
+            return config;
         }
-
-        return config;
     },
     (error) => Promise.reject(error)
 );

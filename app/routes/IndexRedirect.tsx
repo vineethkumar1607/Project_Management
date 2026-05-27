@@ -1,21 +1,21 @@
 import { Navigate } from "react-router";
-import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
+
+import { useAppSelector } from "~/store/hooks";
 
 const IndexRedirect = () => {
-  const { currentWorkspaceId, loading, error } = useCurrentWorkspace();
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 text-center">
-        <div>
-          <h1 className="text-lg font-semibold">Unable to load workspace</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{error}</p>
-        </div>
-      </div>
-    );
-  }
+  const workspaces = useAppSelector(
+    (state) => state.workspace.workspaces
+  );
 
-  if (loading || !currentWorkspaceId) {
+  const loading = useAppSelector(
+    (state) => state.workspace.loading
+  );
+
+  /**
+   * Wait until workspaces load
+   */
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         Loading workspace...
@@ -23,9 +23,23 @@ const IndexRedirect = () => {
     );
   }
 
+  /**
+   * No workspace available
+   */
+  if (workspaces.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        No workspace found
+      </div>
+    );
+  }
+
+  /**
+   * Redirect to first workspace
+   */
   return (
     <Navigate
-      to={`/workspace/${currentWorkspaceId}`}
+      to={`/workspace/${workspaces[0].id}`}
       replace
     />
   );

@@ -4,6 +4,10 @@ import type { Workspace } from "~/types/workspace";
 export const workspaceApi = {
     getAll: async (): Promise<Workspace[]> => {
         const res = await apiClient.get("/api/workspace")
+        console.log(
+            "RAW WORKSPACE RESPONSE:",
+            res.data
+        );
         return res.data.data;
     },
 

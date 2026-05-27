@@ -5,8 +5,9 @@ import MyTasksSidebar from "./MyTasksSidebar"
 import { FolderOpen, LayoutDashboard, Settings, Users, X } from "lucide-react"
 import { WorkspaceDropdown } from "~/features/workspace/WorkspaceDropdown";
 import { useCurrentUserProjects } from "~/features/projects/hooks/useCurrentUserProjects";
-import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
+
 import { workspaceRoutes } from "~/lib/routesHelper"
+import { useActiveWorkspace } from "~/features/workspace/hooks/useActiveWorkspace"
 
 interface SidebarProps {
   isSidebarOpen: boolean
@@ -20,7 +21,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
   const sidebarRef = useRef<HTMLElement>(null);
 
   const { projects, loading, } = useCurrentUserProjects();
-  const { currentWorkspaceId } = useCurrentWorkspace();
+  const { currentWorkspaceId } = useActiveWorkspace();
 
   const menuItems = [
     {

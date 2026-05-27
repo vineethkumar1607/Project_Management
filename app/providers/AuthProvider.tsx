@@ -10,6 +10,10 @@ export default function AuthProvider({
     const { getToken } = useAuth();
 
     useEffect(() => {
+
+        console.log(
+            "SETTING GET TOKEN FUNCTION"
+        );
         setGetToken(getToken);
     }, [getToken]);
 

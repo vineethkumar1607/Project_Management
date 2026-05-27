@@ -3,6 +3,7 @@ import { memo, useMemo } from "react";
 import type { Project } from "~/types/workspace";
 import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
 import { workspaceRoutes } from "~/lib/routesHelper";
+import { useActiveWorkspace } from "../workspace/hooks/useActiveWorkspace";
 
 type ProjectStatus =
   | "PLANNING"
@@ -33,7 +34,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
     return Math.min(Math.max(project.progress ?? 0, 0), 100);
   }, [project.progress]);
 
-  const { currentWorkspaceId } = useCurrentWorkspace();
+  const { currentWorkspaceId } = useActiveWorkspace();
 
   const projectPath = currentWorkspaceId ? workspaceRoutes.projectDetails(currentWorkspaceId, project.id) : "/";
 

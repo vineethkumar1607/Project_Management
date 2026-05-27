@@ -6,8 +6,8 @@ import EmptyState from "~/components/common/EmptyState";
 import PrimaryButton from "~/components/common/PrimaryButton";
 import { FolderOpen, Plus } from "lucide-react";
 import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
-import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
 import { workspaceRoutes } from "~/lib/routesHelper";
+import { useActiveWorkspace } from "../workspace/hooks/useActiveWorkspace";
 
 /* =======================
    Types
@@ -55,7 +55,7 @@ const ProjectOverview: FC = () => {
   const [, setIsDialogOpen] = useState(false);
 
   const { projects, loading, error } = useProjectsData();
-  const { currentWorkspaceId } = useCurrentWorkspace();
+  const { currentWorkspaceId } = useActiveWorkspace();
 
   const isInitialLoading = loading && projects.length === 0;
 

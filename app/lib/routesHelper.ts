@@ -1,16 +1,16 @@
 export const workspaceRoutes = {
-  dashboard: (workspaceId: string) =>
-    `/workspace/${workspaceId}`,
 
-  projects: (workspaceId: string) =>
-    `/workspace/${workspaceId}/projects`,
+  dashboard: (workspaceId: string) => `/workspace/${workspaceId}`,
 
-  projectDetails: (
-    workspaceId: string,
-    projectId: string
-  ) =>
-    `/workspace/${workspaceId}/projects/${projectId}`,
+  projects: (workspaceId: string) => `/workspace/${workspaceId}/projects`,
 
-  team: (workspaceId: string) =>
-    `/workspace/${workspaceId}/team`,
+  projectDetails: (workspaceId: string, projectId: string) => `/workspace/${workspaceId}/projects/${projectId}`,
+
+  team: (workspaceId: string) => `/workspace/${workspaceId}/team`,
+
+  settings: (workspaceId: string) => `/workspace/${workspaceId}/settings`,
+  
+  settingsWorkspace: (workspaceId: string) => `/workspace/${workspaceId}/settings/workspace`,
+
+  settingsBilling: (workspaceId: string) => `/workspace/${workspaceId}/settings/billing`,
 };

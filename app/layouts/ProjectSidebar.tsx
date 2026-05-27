@@ -1,18 +1,10 @@
 import { NavLink, useLocation } from "react-router";
-
-
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "~/components/ui/collapsible";
-import {
-    PROJECT_NAVIGATION_ITEMS,
-} from "~/lib/projectNavigation";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger, } from "~/components/ui/collapsible";
+import { PROJECT_NAVIGATION_ITEMS, } from "~/lib/projectNavigation";
 import { ChevronRight, ArrowRight, } from "lucide-react";
 import { TextSkeleton } from "~/components/skeletons/TextSkeleton";
-import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
 import { workspaceRoutes } from "~/lib/routesHelper";
+import { useActiveWorkspace } from "~/features/workspace/hooks/useActiveWorkspace";
 
 /**
  * Minimal project shape required for sidebar rendering.
@@ -41,7 +33,7 @@ interface ProjectSidebarProps {
 
 const ProjectSidebar = ({ projects, loading, }: ProjectSidebarProps) => {
     const location = useLocation();
-    const { currentWorkspaceId } = useCurrentWorkspace();
+    const { currentWorkspaceId } = useActiveWorkspace();
 
     if (loading) {
         return (

@@ -16,7 +16,7 @@ import ThemeInitializer from "./components/ThemeInitializer";
 import { fetchWorkspaces } from "./store/thunks/workspaceThunk";
 import { Toaster } from "react-hot-toast";
 import AppWrapper from "./providers/AppWrapper";
-
+import { isAuthInitialized } from "./api/authToken";
 
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -122,6 +122,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 // This is the root component for all routes. It handles global layout (Navbar + Sidebar) and route protection based on authentication status. 
 export default function App() {
+
+  console.log("APP COMPONENT RENDERED");
+
+  const fullState = useAppSelector(
+    state => state
+  );
+
+  console.log(
+    "FULL REDUX STATE:",
+    fullState
+  );
+
+
+  console.log(
+    "WORKSPACE SLICE:",
+    fullState.workspace
+  );
+
   const theme = useAppSelector((state) => state.theme.theme);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   // Current route path (/login, /dashboard, etc.)
@@ -135,9 +153,7 @@ export default function App() {
   const dispatch = useAppDispatch();
   const workspaceLoading = useAppSelector((state) => state.workspace.loading);
   const workspaceError = useAppSelector((state) => state.workspace.error);
-  const hasLoadedWorkspaces = useAppSelector(
-    (state) => state.workspace.workspaces.length > 0
-  );
+
 
 
   useEffect(() => {
@@ -149,13 +165,37 @@ export default function App() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+
   useEffect(() => {
-    if (!isLoaded || !user) return;
-    if (workspaceLoading || hasLoadedWorkspaces || workspaceError) return;
+    console.log("ROOT EFFECT RUNNING");
+
+    console.log("isLoaded:", isLoaded);
+
+    console.log("user:", user);
+
+    console.log(
+      "auth initialized:",
+      isAuthInitialized()
+    );
+
+    if (!isLoaded) return;
+
+    if (!isAuthInitialized()) {
+      console.log(
+        "Auth not initialized yet"
+      );
+
+      return;
+    }
+
+    console.log(
+      "DISPATCHING FETCH WORKSPACES"
+    );
 
     dispatch(fetchWorkspaces());
-   
-  }, [dispatch, hasLoadedWorkspaces, isLoaded, user, user?.id, workspaceError, workspaceLoading]);
+
+  }, [dispatch, isLoaded, user]);
+
   /* --------------------------------------------------
       Main App Layout (Dashboard Pages)
   --------------------------------------------------- */

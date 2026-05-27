@@ -7,26 +7,37 @@ import type { RootState } from "~/store/store";
  Workspace type (reusing same interface or exporting it from slice)
  */
 
+
 export const fetchWorkspaces = createAsyncThunk<
     Workspace[],
     void,
     { rejectValue: string; state: RootState }
 >(
     "workspace/fetchWorkspaces",
+
     async (_, thunkAPI) => {
         try {
-            const data = await workspaceApi.getAll();
+            const data =
+                await workspaceApi.getAll();
+            console.log(
+                "FETCHED WORKSPACES:",
+                data
+            );
 
             return data;
+
         } catch (error: any) {
-            return thunkAPI.rejectWithValue(error.response?.data?.message ||"Something went wrong");
+
+            console.error(
+                "FETCH WORKSPACES ERROR:",
+                error
+            );
+
+            return thunkAPI.rejectWithValue(
+                error.response?.data?.message ||
+                "Something went wrong"
+            );
         }
-    },
-    {
-        condition: (_, { getState }) => {
-            const { workspace } = getState();
-            return !workspace.loading;
-        },
     }
 );
 
@@ -37,7 +48,7 @@ export const fetchWorkspaceMembers = createAsyncThunk(
             const data = await workspaceApi.getMembers(workspaceId);
             return data;
         } catch (error: any) {
-            return thunkAPI.rejectWithValue(error.response?.data?.message ||"Something went wrong");
+            return thunkAPI.rejectWithValue(error.response?.data?.message || "Something went wrong");
         }
     }
 );

@@ -1,7 +1,8 @@
-    
+
 import { useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "~/store/hooks";
 import { fetchWorkspaceMembers } from "~/store/thunks/workspaceThunk";
+import { useActiveWorkspace } from "~/features/workspace/hooks/useActiveWorkspace";
 
 const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 // Custom hook to manage workspace members data, including fetching, loading states, and error handling. It ensures that the members list is always up-to-date by refetching when necessary.
@@ -10,10 +11,9 @@ const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
 export const useWorkspaceMembers = () => {
     const dispatch = useAppDispatch();
-    // Get the current workspace ID from the Redux store. This ID is essential for fetching the corresponding members of the workspace.
-    const workspaceId = useAppSelector(
-        (state) => state.workspace.currentWorkspaceId
-    );
+
+    const { currentWorkspaceId: workspaceId } = useActiveWorkspace();
+
     // Get workspace members data from the store based on the current workspace ID. If no workspace ID is available, it returns null.
     const workspaceData = useAppSelector((state) =>
         workspaceId

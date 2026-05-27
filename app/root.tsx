@@ -135,9 +135,7 @@ export default function App() {
   const dispatch = useAppDispatch();
   const workspaceLoading = useAppSelector((state) => state.workspace.loading);
   const workspaceError = useAppSelector((state) => state.workspace.error);
-  const hasLoadedWorkspaces = useAppSelector(
-    (state) => state.workspace.workspaces.length > 0
-  );
+
 
 
   useEffect(() => {
@@ -151,11 +149,10 @@ export default function App() {
 
   useEffect(() => {
     if (!isLoaded || !user) return;
-    if (workspaceLoading || hasLoadedWorkspaces || workspaceError) return;
 
     dispatch(fetchWorkspaces());
-   
-  }, [dispatch, hasLoadedWorkspaces, isLoaded, user, user?.id, workspaceError, workspaceLoading]);
+
+  }, [dispatch, isLoaded, user?.id]);
   /* --------------------------------------------------
       Main App Layout (Dashboard Pages)
   --------------------------------------------------- */

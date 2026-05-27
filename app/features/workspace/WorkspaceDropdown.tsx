@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { Check, ChevronDown, Plus } from "lucide-react";
 import { useNavigate } from "react-router";
-import { useClerk } from "@clerk/clerk-react";
+import { useClerk, useOrganization } from "@clerk/clerk-react";
 
 import {
   DropdownMenu,
@@ -17,12 +17,14 @@ import {
 import { Button } from "~/components/ui/button";
 import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
 import { setCurrentWorkspace } from "~/store/slices/workspaceSlice";
-import { useDispatch } from "react-redux";
+import { fetchWorkspaces } from "~/store/thunks/workspaceThunk";
+import { useAppDispatch } from "~/store/hooks";
 
 export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
+  const { organization } = useOrganization();
   // Clerk organization management
   const {
     openCreateOrganization,
@@ -36,6 +38,9 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
     currentWorkspace,
   } = useCurrentWorkspace();
 
+  const wait = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
   // Switch active workspace
   const handleWorkspaceSelect = async (
     workspaceId: string
@@ -48,7 +53,72 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
 
     navigate(`/workspace/${workspaceId}`);
   };
-  
+
+
+  const handleCreateWorkspace = async () => {
+    /**
+     * Open Clerk organization modal
+     */
+    await openCreateOrganization({
+      afterCreateOrganizationUrl: "/",
+    });
+
+    /**
+     * Wait for Clerk webhook -> Inngest -> DB sync
+     */
+    let attempts = 0;
+
+    while (attempts < 10) {
+      try {
+        /**
+         * Refetch latest workspaces
+         */
+        const workspaces = await dispatch(
+          fetchWorkspaces()
+        ).unwrap();
+
+        /**
+         * Current active Clerk org
+         */
+        const activeOrgId = organization?.id;
+
+        /**
+         * Check if DB sync completed
+         */
+        const createdWorkspace =
+          workspaces.find(
+            (workspace) =>
+              workspace.id === activeOrgId
+          );
+
+        /**
+         * Workspace exists in DB
+         */
+        if (createdWorkspace) {
+          dispatch(
+            setCurrentWorkspace(
+              createdWorkspace.id
+            )
+          );
+
+          navigate(
+            `/workspace/${createdWorkspace.id}`
+          );
+
+          return;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      attempts++;
+      /**
+       * Wait before retry
+       */
+      await wait(1000);
+    }
+  };
+
   return (
     <div className="px-3 py-3 border-b">
       <DropdownMenu>
@@ -131,9 +201,7 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
 
           <DropdownMenuItem
             className="text-blue-600"
-            onClick={() =>
-              openCreateOrganization()
-            }
+            onClick={handleCreateWorkspace}
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Workspace

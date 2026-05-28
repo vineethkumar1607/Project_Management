@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction, } from "@reduxjs/toolkit";
 import { fetchWorkspaceMembers, fetchWorkspaces } from "../thunks/workspaceThunk";
 import type { Workspace } from "~/types/workspace";
 
@@ -16,7 +16,7 @@ interface WorkspaceState {
             lastFetched?: number;
         };
     };
-    currentWorkspaceId: string | null;
+
     loading: boolean;
     error: string | null;
 }
@@ -35,7 +35,7 @@ interface WorkspaceState {
 const initialState: WorkspaceState = {
     workspaces: [],
     membersByWorkspace: {},
-    currentWorkspaceId: null,
+
     loading: false,
     error: null,
 };
@@ -52,62 +52,32 @@ const workspaceSlice = createSlice({
      * Used for direct UI-driven updates
      */
     reducers: {
-        /**
-          Set active workspace
-         We persist it so user doesn't lose selection after refresh
-         */
-        setCurrentWorkspace(state, action: PayloadAction<string>) {
-            if (typeof window !== "undefined") {
-                localStorage.setItem("currentWorkspaceId", action.payload);
-            }
-            state.currentWorkspaceId = action.payload;
-        },
 
-        /**
-         * Replace entire workspace list
-         * Typically used after API fetch
-         */
+        // Replace entire workspace list (e.g. after fetching from API)
         setWorkspaces(state, action: PayloadAction<Workspace[]>) {
             state.workspaces = action.payload;
         },
-
-        /**
-         * Add new workspace
-         * Automatically selects it
-         */
+        /// Add a new workspace to the list
         addWorkspace(state, action: PayloadAction<Workspace>) {
             state.workspaces.push(action.payload);
-            state.currentWorkspaceId = action.payload.id;
         },
 
-        /**
-         * Update workspace
-         */
+        // Update an existing workspace by matching ID
         updateWorkspace(state, action: PayloadAction<Workspace>) {
             state.workspaces = state.workspaces.map((w) =>
                 w.id === action.payload.id ? action.payload : w
             );
         },
 
-        /**
-         * Delete workspace
-         * Also clears selection if deleted workspace was active
-         */
+        // Remove a workspace by ID
         deleteWorkspace(state, action: PayloadAction<string>) {
             state.workspaces = state.workspaces.filter(
                 (w) => w.id !== action.payload
             );
-
-            if (state.currentWorkspaceId === action.payload) {
-                state.currentWorkspaceId = null;
-            }
         }
     },
 
-    /**
-     * Async reducers 
-     * Handles loading, success, error states
-     */
+    // Handle async thunks for fetching workspaces and members
     extraReducers: (builder) => {
         builder
 
@@ -121,29 +91,7 @@ const workspaceSlice = createSlice({
             .addCase(fetchWorkspaces.fulfilled, (state, action) => {
                 state.loading = false;
                 const workspaces = action.payload || [];
-
                 state.workspaces = workspaces;
-
-                if (workspaces.length > 0) {
-                    const savedId =
-                        typeof window !== "undefined"
-                            ? localStorage.getItem("currentWorkspaceId")
-                            : null;
-
-                    if (savedId) {
-                        const exists = action.payload.find((w) => w.id === savedId);
-
-                        if (exists) {
-                            state.currentWorkspaceId = savedId;
-                        } else {
-                            state.currentWorkspaceId = action.payload[0].id;
-                        }
-                    } else {
-                        state.currentWorkspaceId = action.payload[0].id;
-                    }
-                } else {
-                    state.currentWorkspaceId = null;
-                }
             })
 
             // API failed
@@ -187,18 +135,8 @@ const workspaceSlice = createSlice({
 
 });
 
-/**
- * Export actions
- */
-export const {
-    setCurrentWorkspace,
-    setWorkspaces,
-    addWorkspace,
-    updateWorkspace,
-    deleteWorkspace,
-} = workspaceSlice.actions;
+// Export actions for use in components
+export const { setWorkspaces, addWorkspace, updateWorkspace, deleteWorkspace, } = workspaceSlice.actions;
 
-/**
- * Export reducer
- */
+
 export default workspaceSlice.reducer;

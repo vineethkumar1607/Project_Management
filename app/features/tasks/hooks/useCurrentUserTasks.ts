@@ -12,7 +12,17 @@ export const useCurrentUserTasks = () => {
 
     const tasks = useMemo(() => {
         const allTasks = projects.flatMap(
-            (project) => project.tasks ?? []
+            (project) =>
+                (project.tasks ?? []).map((task) => ({
+                    ...task,
+
+                    project: {
+                        id: project.id,
+                        name: project.name,
+                        workspaceId: project.workspaceId,
+                        team_lead: project.team_lead,
+                    },
+                }))
         );
 
         return allTasks.filter(

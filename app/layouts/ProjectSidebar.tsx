@@ -6,34 +6,41 @@ import { TextSkeleton } from "~/components/skeletons/TextSkeleton";
 import { workspaceRoutes } from "~/lib/routesHelper";
 import { useActiveWorkspace } from "~/features/workspace/hooks/useActiveWorkspace";
 
-/**
- * Minimal project shape required for sidebar rendering.
- * Keep this small — sidebar does not need full project object.
- */
+
 interface Project {
     id: string;
     name: string;
 }
 
-/**
- * ProjectSidebar receives projects as props.
- * This keeps the component reusable and decoupled from Redux.
- */
+
 interface ProjectSidebarProps {
     projects: Project[];
     loading?: boolean;
 }
 
-/**
-    * Returns sub-navigation items for a given project.
-    * Uses dynamic routing structure:
-    * /projects/:projectId/:tab
-    */
-
 
 const ProjectSidebar = ({ projects, loading, }: ProjectSidebarProps) => {
     const location = useLocation();
     const { currentWorkspaceId } = useActiveWorkspace();
+
+    const getProjectSubRoute = (route: string, workspaceId: string, projectId: string) => {
+        switch (route) {
+            case ".":
+                return workspaceRoutes.projectTasks(workspaceId, projectId);
+
+            case "analytics":
+                return workspaceRoutes.projectAnalytics(workspaceId, projectId);
+
+            case "calendar":
+                return workspaceRoutes.projectCalendar(workspaceId, projectId);
+
+            case "settings":
+                return workspaceRoutes.projectSettings(workspaceId, projectId);
+
+            default:
+                return workspaceRoutes.projectTasks(workspaceId, projectId);
+        }
+    };
 
     if (loading) {
         return (
@@ -96,8 +103,8 @@ const ProjectSidebar = ({ projects, loading, }: ProjectSidebarProps) => {
                      * Auto-expands the project if current route
                      * belongs to this project's nested pages.
                      */
-                    const isProjectActive = location.pathname.startsWith(`/workspace/${currentWorkspaceId}/projects/${project.id}`)
-
+                    const isProjectActive =
+                        location.pathname.startsWith(workspaceRoutes.projectDetails(currentWorkspaceId!, project.id));
                     return (
                         <Collapsible key={project.id} defaultOpen={isProjectActive} className="group">
 
@@ -128,11 +135,9 @@ const ProjectSidebar = ({ projects, loading, }: ProjectSidebarProps) => {
                                 {PROJECT_NAVIGATION_ITEMS.map((subItem) => (
                                     <NavLink
                                         key={subItem.value}
-                                        to={
-                                            subItem.route === "."
-                                                ? workspaceRoutes.projectDetails(currentWorkspaceId!, project.id)
-                                                : `${workspaceRoutes.projectDetails(currentWorkspaceId!, project.id)}/${subItem.route}`
-                                        }
+                                        to={getProjectSubRoute(
+                                            subItem.route, currentWorkspaceId!, project.id
+                                        )}
                                         end={subItem.value === "tasks"}
                                         /**
                                          * NavLink provides automatic active state detection.

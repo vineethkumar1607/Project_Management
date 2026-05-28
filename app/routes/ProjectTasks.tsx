@@ -23,6 +23,7 @@ import { useTaskSelection } from "~/features/tasks/hooks/useTaskSelection";
 import type { SortingState } from "@tanstack/react-table";
 import TableSkeleton from "~/components/skeletons/TableSkeleton";
 import ErrorState from "~/components/common/ErrorState";
+import { workspaceRoutes } from "~/lib/routesHelper";
 
 const formatIndianDate = (dateString?: string) => {
   if (!dateString) return "-";
@@ -48,7 +49,7 @@ const ProjectTasks = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const { filters } = useTaskFilters();
-  const { projectId } = useParams();
+  const { workspaceId, projectId } = useParams();
 
   const { data: tasks = [], isLoading, error } = useGetTasksQuery(projectId!);
 
@@ -57,13 +58,7 @@ const ProjectTasks = () => {
     [tasks, filters]
   );
 
-  const {
-    selectedTaskIds,
-    handleCheckboxClick,
-    toggleSelectAll,
-    isAllSelected,
-    clearSelection,
-  } = useTaskSelection(filteredTasks);
+  const { selectedTaskIds, handleCheckboxClick, toggleSelectAll, isAllSelected, clearSelection, } = useTaskSelection(filteredTasks);
 
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -73,11 +68,7 @@ const ProjectTasks = () => {
 
   const assignees = useMemo<string[]>(() => {
     return Array.from(
-      new Set(
-        tasks
-          .map((t: Task) => t.assignee?.name)
-          .filter((name): name is string => Boolean(name))
-      )
+      new Set(tasks.map((t: Task) => t.assignee?.name).filter((name): name is string => Boolean(name)))
     );
   }, [tasks]);
 
@@ -284,7 +275,7 @@ const ProjectTasks = () => {
                         // Prevent navigation when clicking checkbox
                         if ((e.target as HTMLElement).closest("input")) return;
 
-                        navigate(`/tasks/${row.original.id}`);
+                        navigate(workspaceRoutes.taskDetails(workspaceId!, projectId!, row.original.id))
                       }}
                     >
                       {row.getVisibleCells().map((cell) => (

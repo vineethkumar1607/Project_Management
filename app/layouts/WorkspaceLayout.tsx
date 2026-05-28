@@ -1,17 +1,27 @@
-
 import { Navigate, Outlet } from "react-router";
+
 import { useProjectsFetcher } from "~/features/projects/hooks/useProjectsFetcher";
+
 import { useWorkspaceSync } from "~/features/workspace/hooks/useWorkspaceSync";
+
 import WorkspaceLoader from "~/components/skeletons/WorkspaceLoader";
+
 import { useAppSelector } from "~/store/hooks";
 
+import { workspaceRoutes } from "~/lib/routesHelper";
 
 const WorkspaceLayout = () => {
-  const { isReady, workspaceId, workspaceExists, workspaceLoading, hasWorkspaceAccess, } = useWorkspaceSync();
+  const {
+    isReady,
+    workspaceId,
+    workspaceExists,
+    workspaceLoading,
+    hasWorkspaceAccess,
+  } = useWorkspaceSync();
+
   const workspaces = useAppSelector(
     (state) => state.workspace.workspaces
   );
-
 
   useProjectsFetcher(
     isReady ? workspaceId : undefined
@@ -22,8 +32,7 @@ const WorkspaceLayout = () => {
   }
 
   if (!workspaceExists) {
-    const fallbackWorkspace =
-      workspaces[0];
+    const fallbackWorkspace = workspaces[0];
 
     if (!fallbackWorkspace) {
       return (
@@ -32,26 +41,24 @@ const WorkspaceLayout = () => {
         </div>
       );
     }
-    if (!hasWorkspaceAccess) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          Access denied
-        </div>
-      );
-    }
 
     return (
       <Navigate
-        to={`/workspace/${fallbackWorkspace.id}`}
+        to={workspaceRoutes.dashboard(
+          fallbackWorkspace.id
+        )}
         replace
       />
     );
   }
 
-
-
-
-
+  if (!hasWorkspaceAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Access denied
+      </div>
+    );
+  }
 
   return <Outlet />;
 };

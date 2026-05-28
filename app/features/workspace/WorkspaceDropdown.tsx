@@ -9,6 +9,7 @@ import { Button } from "~/components/ui/button";
 import { fetchWorkspaces } from "~/store/thunks/workspaceThunk";
 import { useAppDispatch } from "~/store/hooks";
 import { useActiveWorkspace } from "./hooks/useActiveWorkspace";
+import { workspaceRoutes } from "~/lib/routesHelper";
 
 export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
   const [isSwitching, setIsSwitching] = useState(false);
@@ -37,7 +38,7 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
 
       await setActive({ organization: workspaceId, });
 
-      navigate(`/workspace/${workspaceId}`);
+      navigate(workspaceRoutes.dashboard(workspaceId));
 
     } catch (error) {
 
@@ -80,7 +81,7 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
         );
         // If workspace is found, navigate to it
         if (createdWorkspace) {
-          navigate(`/workspace/${createdWorkspace.id}`);
+          navigate(workspaceRoutes.dashboard(createdWorkspace.id));
 
           return;
         }

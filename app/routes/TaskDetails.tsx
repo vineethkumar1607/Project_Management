@@ -7,14 +7,12 @@ import TaskInfoPanel from "~/features/tasks/TaskInfoPanel";
 import { useAddCommentMutation, useGetTaskByIdQuery, useGetTaskCommentsQuery, } from "~/store/api/tasksApi";
 import type { TaskComment } from "~/types/workspace";
 import toast from "react-hot-toast";
-import { useActiveWorkspace } from "~/features/workspace/hooks/useActiveWorkspace";
 
 export default function TaskDetails() {
-  const { taskId } = useParams();
+  const { taskId, projectId } = useParams();
   const safeTaskId = taskId ?? "";
   const { user } = useUser();
 
-  const { currentWorkspaceId } = useActiveWorkspace();
   const listRef = useRef<HTMLUListElement>(null);
 
   const [cursor, setCursor] = useState<string | undefined>();
@@ -36,15 +34,13 @@ export default function TaskDetails() {
 
   const comments: TaskComment[] = data?.items ?? [];
 
-  const hasWorkspaceAccess = useMemo(() => {
-    if (!task || !currentWorkspaceId) {
-      return false;
+  const hasProjectAccess = useMemo(() => {
+    if (!task || !projectId) {
+      return null;
     }
 
-   return (
-   task.project.workspaceId === currentWorkspaceId
-);
-  }, [task, currentWorkspaceId]);
+    return task.project.id === projectId;
+  }, [task, projectId]);
 
   useEffect(() => {
     if (listRef.current) {
@@ -167,7 +163,7 @@ export default function TaskDetails() {
     );
   }
 
-  if (!hasWorkspaceAccess) {
+  if (hasProjectAccess === false) {
     return (
       <section className="flex items-center justify-center h-[60vh]">
         <div className="text-center max-w-sm">

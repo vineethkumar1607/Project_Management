@@ -1,4 +1,4 @@
-import { Outlet, useNavigate, useLocation, useParams } from "react-router";
+import { Outlet, useNavigate, useLocation, useParams, Navigate } from "react-router";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
 import { Suspense, useMemo, useState } from "react";
@@ -56,12 +56,18 @@ const ProjectLayout = () => {
     return <TasksSkeleton />;
   };
 
-  const projectExists = useMemo(() => {
-    return projects.some(
-      (project) =>
-        project.id === projectId
-    );
-  }, [projects, projectId]);
+  // 
+const projectExists = useMemo(() => {
+  if (!workspaceId || !projectId) {
+    return false;
+  }
+
+  return projects.some(
+    (project) =>
+      project.id === projectId &&
+      project.workspaceId === workspaceId
+  );
+}, [projects, workspaceId, projectId]);
 
 
   const metrics = [
@@ -106,15 +112,16 @@ const ProjectLayout = () => {
 
   const currentTab: TabValue = PROJECT_NAVIGATION_ITEMS.find(tab => tab.value === lastSegment)?.value || "tasks";
 
-  if (!isProjectLoading && !projectExists) {
-    return (
-      <div className="p-6 text-red-500">
-        Project not found
-      </div>
-    );
-  }
+ if (!isProjectLoading && !projectExists) {
+  return (
+    <Navigate
+      to={workspaceRoutes.projects(workspaceId!)}
+      replace
+    />
+  );
+}
 
-  
+
   if (error) {
     return (
       <div className="p-6 text-red-500">

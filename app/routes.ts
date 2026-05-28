@@ -77,7 +77,7 @@ export default [
     ],
   },
   {
-    path: "/tasks/:taskId",
+    path: "/workspace/:workspaceId/projects/:projectId/tasks/:taskId",
     file: "routes/TaskDetails.tsx",
   },
   {

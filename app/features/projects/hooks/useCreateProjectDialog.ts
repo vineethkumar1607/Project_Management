@@ -5,8 +5,8 @@ import { useAppDispatch } from "~/store/hooks";
 import { createProject } from "~/store/thunks/projectThunk";
 
 import { useWorkspaceMembers } from "~/features/workspace/hooks/useWorkspaceMembers";
-import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
 import type { Project } from "~/types/workspace";
+import { useActiveWorkspace } from "~/features/workspace/hooks/useActiveWorkspace";
 
 type FormData = {
     name: string;
@@ -27,8 +27,7 @@ export const useCreateProjectDialog = ({
     onSuccess }: Props) => {
     const dispatch = useAppDispatch();
 
-    const { currentWorkspaceId: workspaceId } =
-        useCurrentWorkspace();
+    const { currentWorkspaceId: workspaceId } =useActiveWorkspace();
     const { members: membersList, } = useWorkspaceMembers();
 
     const {

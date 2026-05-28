@@ -5,12 +5,15 @@ import { useWorkspaceSync } from "~/features/workspace/hooks/useWorkspaceSync";
 import WorkspaceLoader from "~/components/skeletons/WorkspaceLoader";
 
 const WorkspaceLayout = () => {
-  const { isReady, workspaceId, workspaceExists, } = useWorkspaceSync();
+  const { isReady, workspaceId, workspaceExists, workspaceLoading, } = useWorkspaceSync();
 
   useProjectsFetcher(
     isReady ? workspaceId : undefined
   );
 
+  if (workspaceLoading || !isReady) {
+    return <WorkspaceLoader />;
+  }
 
   if (!workspaceExists) {
     return (
@@ -20,9 +23,6 @@ const WorkspaceLayout = () => {
     );
   }
 
-  if (!isReady) {
-    return <WorkspaceLoader />;
-  }
 
   return <Outlet />;
 };

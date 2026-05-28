@@ -9,13 +9,14 @@ import { Input } from "~/components/ui/input";
 
 import type { Project } from "~/types/workspace";
 
-import { useAppDispatch, useAppSelector } from "~/store/hooks";
+import { useAppDispatch, } from "~/store/hooks";
 import { deleteProject } from "~/store/thunks/projectThunk";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 
 import { workspaceRoutes } from "~/lib/routesHelper";
 import { useProjectPermissions } from "~/hooks/useProjectPermissions";
+import { useActiveWorkspace } from "~/features/workspace/hooks/useActiveWorkspace";
 
 
 type DeleteProjectSectionProps = {
@@ -30,9 +31,7 @@ const DeleteProjectSection = ({ project, }: DeleteProjectSectionProps) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    const workspaceId = useAppSelector(
-        state => state.workspace.currentWorkspaceId
-    );
+    const { currentWorkspaceId: workspaceId } = useActiveWorkspace();
 
     const { canDeleteProject } =
         useProjectPermissions(project);

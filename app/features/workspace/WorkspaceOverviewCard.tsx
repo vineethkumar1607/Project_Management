@@ -7,14 +7,14 @@ import toast from "react-hot-toast";
 import PrimaryButton from "~/components/common/PrimaryButton";
 import { useDebounce } from "~/hooks/useDebounce";
 import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
-import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
 import { useWorkspaceMembers } from "~/features/workspace/hooks/useWorkspaceMembers";
 import DangerZoneSection from "~/components/common/DangerZoneSection";
 import ConfirmDialog from "~/components/common/ConfirmDialog";
 import { useWorkspacePermissions } from "~/hooks/useWorkspacePermissions";
+import { useActiveWorkspace } from "./hooks/useActiveWorkspace";
 
 export default function WorkspaceOverviewCard() {
-  const { currentWorkspace } = useCurrentWorkspace();
+  const { currentWorkspace } = useActiveWorkspace();
 
   const { members } = useWorkspaceMembers();
 

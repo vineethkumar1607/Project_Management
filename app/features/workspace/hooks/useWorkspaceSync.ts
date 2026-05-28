@@ -12,7 +12,7 @@ type UseWorkspaceSyncReturn = {
     workspaceId?: string;
 
     workspaceExists: boolean;
-
+    workspaceLoading: boolean;
     organization: ReturnType<
         typeof useOrganization
     >["organization"];
@@ -34,12 +34,28 @@ export const useWorkspaceSync = (): UseWorkspaceSyncReturn => {
     );
 
 
+    const workspaceLoading = useAppSelector(
+        (state) => state.workspace.loading
+    );
+
+
+
+
+
     const workspaceExists = useMemo(() => {
-        return workspaces.some(
-            (workspace) =>
-                workspace.id === workspaceId
-        );
-    }, [workspaces, workspaceId]);
+        /**
+         * While loading,
+         * do not fail validation 
+         */
+        if (workspaceLoading) {
+            return true;
+        }
+
+        return workspaces.some((workspace) =>
+            workspace.id === workspaceId);
+    }, [workspaceLoading, workspaces, workspaceId,]);
+
+
 
 
     // Sync workspace when workspaceId changes or when organization changes 
@@ -76,7 +92,7 @@ export const useWorkspaceSync = (): UseWorkspaceSyncReturn => {
         };
 
         syncWorkspace();
-    }, [workspaceId, organization?.id, setActive,]);
+    }, [workspaceId, organization?.id, setActive, workspaceExists,]);
 
     const isReady = useMemo(() => {
         return (organization?.id === workspaceId && !isSyncing);
@@ -87,7 +103,8 @@ export const useWorkspaceSync = (): UseWorkspaceSyncReturn => {
         isSyncing,
         workspaceId,
         organization,
-        workspaceExists
+        workspaceExists,
+        workspaceLoading,
     };
 };
 

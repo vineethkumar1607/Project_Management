@@ -1,30 +1,20 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
+import { useEffect, useMemo, useRef, useState, } from "react";
 import { useParams } from "react-router";
 import { AlertCircle } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
-
 import TaskDiscussionPanel from "~/features/tasks/TaskDiscussionPanel";
 import TaskInfoPanel from "~/features/tasks/TaskInfoPanel";
-
-import {
-  useAddCommentMutation,
-  useGetTaskByIdQuery,
-  useGetTaskCommentsQuery,
-} from "~/store/api/tasksApi";
-
+import { useAddCommentMutation, useGetTaskByIdQuery, useGetTaskCommentsQuery, } from "~/store/api/tasksApi";
 import type { TaskComment } from "~/types/workspace";
 import toast from "react-hot-toast";
+import { useActiveWorkspace } from "~/features/workspace/hooks/useActiveWorkspace";
 
 export default function TaskDetails() {
   const { taskId } = useParams();
   const safeTaskId = taskId ?? "";
   const { user } = useUser();
+
+  const { currentWorkspaceId } = useActiveWorkspace();
   const listRef = useRef<HTMLUListElement>(null);
 
   const [cursor, setCursor] = useState<string | undefined>();
@@ -34,14 +24,10 @@ export default function TaskDetails() {
     setCursor(undefined);
   }, [taskId]);
 
-  const {
-    data: task,
-    isLoading: isTaskLoading,
-    isError: isTaskError,
-    refetch: refetchTask,
-  } = useGetTaskByIdQuery(safeTaskId, {
-    skip: !taskId,
-  });
+  const { data: task, isLoading: isTaskLoading, isError: isTaskError, refetch: refetchTask, } =
+    useGetTaskByIdQuery(safeTaskId, {
+      skip: !taskId,
+    });
 
   const { data, isFetching } = useGetTaskCommentsQuery(
     { taskId: safeTaskId, cursor },
@@ -49,6 +35,16 @@ export default function TaskDetails() {
   );
 
   const comments: TaskComment[] = data?.items ?? [];
+
+  const hasWorkspaceAccess = useMemo(() => {
+    if (!task || !currentWorkspaceId) {
+      return false;
+    }
+
+   return (
+   task.project.workspaceId === currentWorkspaceId
+);
+  }, [task, currentWorkspaceId]);
 
   useEffect(() => {
     if (listRef.current) {
@@ -166,6 +162,24 @@ export default function TaskDetails() {
           >
             Retry
           </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (!hasWorkspaceAccess) {
+    return (
+      <section className="flex items-center justify-center h-[60vh]">
+        <div className="text-center max-w-sm">
+          <AlertCircle className="mx-auto size-10 text-red-500 mb-3" />
+
+          <h1 className="text-xl font-semibold">
+            Access denied
+          </h1>
+
+          <p className="text-sm text-muted-foreground mt-2">
+            You do not have access to this task.
+          </p>
         </div>
       </section>
     );

@@ -1,11 +1,9 @@
-"use client";
-
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Check, ChevronDown, Plus } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useClerk } from "@clerk/clerk-react";
 
-import { DropdownMenu, DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator,} from "~/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, } from "~/components/ui/dropdown-menu";
 
 import { Button } from "~/components/ui/button";
 import { fetchWorkspaces } from "~/store/thunks/workspaceThunk";
@@ -13,6 +11,8 @@ import { useAppDispatch } from "~/store/hooks";
 import { useActiveWorkspace } from "./hooks/useActiveWorkspace";
 
 export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
+  const [isSwitching, setIsSwitching] = useState(false);
+
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
@@ -25,20 +25,28 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
   // Current workspace state
   const { workspaces, currentWorkspaceId, currentWorkspace, } = useActiveWorkspace();
 
-  const wait = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   // Switch active workspace
-  const handleWorkspaceSelect = async (
-    workspaceId: string
-  ) => {
-    await setActive({
-      organization: workspaceId,
-    });
+  const handleWorkspaceSelect = async (workspaceId: string) => {
+    // Prevent multiple rapid clicks
+    if (isSwitching) { return; }
 
-  
+    try {
+      setIsSwitching(true);
 
-    navigate(`/workspace/${workspaceId}`);
+      await setActive({ organization: workspaceId, });
+
+      navigate(`/workspace/${workspaceId}`);
+
+    } catch (error) {
+
+      console.error("Failed to switch workspace:", error);
+
+    } finally {
+
+      setIsSwitching(false);
+    }
   };
 
 
@@ -46,29 +54,15 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
     /**
      * Open Clerk organization modal
      */
-    await openCreateOrganization({
-      afterCreateOrganizationUrl: "/",
-    });
+    await openCreateOrganization({ afterCreateOrganizationUrl: "/", });
 
-    /**
-     * Wait for:
-     * Clerk org sync
-     * +
-     * backend DB sync
-     */
+    // After creation, we need to find the newly created workspace and navigate to it
     let attempts = 0;
 
     while (attempts < 10) {
       try {
-        /**
-         * Current active Clerk org
-         */
-        const activeOrgId =
-          clerk.organization?.id;
-
-        /**
-         * Clerk org not ready yet
-         */
+        const activeOrgId = clerk.organization?.id;
+        // If no active org yet, wait and retry (Clerk sync delay)
         if (!activeOrgId) {
           attempts++;
 
@@ -76,31 +70,17 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
 
           continue;
         }
+        // Fetch latest workspaces from backend to find the newly created one
+        const workspaces = await dispatch(
+          fetchWorkspaces()).unwrap();
 
-        /**
-         * Refetch latest workspaces
-         */
-        const workspaces =
-          await dispatch(
-            fetchWorkspaces()
-          ).unwrap();
-
-        /**
-         * Check if backend sync completed
-         */
-        const createdWorkspace =
-          workspaces.find(
-            (workspace) =>
-              workspace.id === activeOrgId
-          );
-
-        /**
-         * Workspace exists in backend
-         */
+        // Find the newly created workspace by matching Clerk org ID with workspace ID
+        const createdWorkspace = workspaces.find(
+          (workspace) => workspace.id === activeOrgId
+        );
+        // If workspace is found, navigate to it
         if (createdWorkspace) {
-          navigate(
-            `/workspace/${createdWorkspace.id}`
-          );
+          navigate(`/workspace/${createdWorkspace.id}`);
 
           return;
         }
@@ -109,17 +89,14 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
       }
 
       attempts++;
-
-      /**
-       * Retry delay
-       */
+      // Wait before next attempt
       await wait(1000);
     }
   };
 
   return (
     <div className="px-3 py-3 border-b">
-      <DropdownMenu>
+      <DropdownMenu >
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
@@ -137,8 +114,7 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
 
               <div className="text-left min-w-0">
                 <p className="text-sm font-semibold truncate">
-                  {currentWorkspace?.name ??
-                    "Select Workspace"}
+                  {isSwitching ? "Switching..." : currentWorkspace?.name ?? "Select Workspace"}
                 </p>
 
                 <p className="text-xs text-muted-foreground">
@@ -167,6 +143,7 @@ export const WorkspaceDropdown = memo(function WorkspaceDropdown() {
 
             return (
               <DropdownMenuItem
+                disabled={isSwitching}
                 key={workspace.id}
                 onClick={() =>
                   handleWorkspaceSelect(

@@ -86,6 +86,7 @@ export type Task = {
     id?: string;
     name?: string;
     team_lead?: string;
+    workspaceId: string;
   };
 };
 
@@ -107,6 +108,7 @@ export type TaskDetails = {
     name: string;
     status: string;
     priority: string;
+    workspaceId: string;
   };
 };
 

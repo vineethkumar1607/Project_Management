@@ -16,26 +16,16 @@ export const useWorkspaceMembers = () => {
 
     // Get workspace members data from the store based on the current workspace ID. If no workspace ID is available, it returns null.
     const workspaceData = useAppSelector((state) =>
-        workspaceId
-            ? state.workspace.membersByWorkspace[workspaceId]
-            : null
+        workspaceId ? state.workspace.membersByWorkspace[workspaceId] : null
     );
     // Memoize the members list to avoid unnecessary re-renders. It will only recompute when workspaceData changes.
-    const members = useMemo(
-        () => workspaceData?.data ?? [],
-        [workspaceData]
-    );
+    const members = useMemo(() => workspaceData?.data ?? [], [workspaceData]);
 
     const status = workspaceData?.status;
 
-    const isInitialLoading =
-        !workspaceData ||
-        status === "idle" ||
-        status === "loading";
+    const isInitialLoading = !workspaceData || status === "idle" || status === "loading";
 
-    const isBackgroundLoading =
-        !!workspaceData?.lastFetched &&
-        status === "loading";
+    const isBackgroundLoading = !!workspaceData?.lastFetched && status === "loading";
 
     const error = status === "failed";
 
@@ -44,24 +34,15 @@ export const useWorkspaceMembers = () => {
         if (!workspaceId) return;
 
         const isStale =
-            workspaceData?.lastFetched &&
-            Date.now() - workspaceData.lastFetched > STALE_TIME;
+            workspaceData?.lastFetched && Date.now() - workspaceData.lastFetched > STALE_TIME;
 
-        const shouldFetch =
-            !workspaceData ||
-            status === "failed" ||
-            isStale;
+        const shouldFetch = !workspaceData || status === "failed" || isStale;
 
         if (shouldFetch) {
             dispatch(fetchWorkspaceMembers(workspaceId));
         }
 
-    }, [
-        workspaceId,
-        workspaceData?.lastFetched,
-        status,
-        dispatch,
-    ]);
+    }, [workspaceId, workspaceData?.lastFetched, status, dispatch,]);
 
     return {
         members,

@@ -68,8 +68,6 @@ const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
         }
     };
 
-    console.log("Members List:", membersList);
-
     return (
         <Dialog open onOpenChange={setIsDialogOpen}>
             <DialogContent className="sm:max-w-xl">

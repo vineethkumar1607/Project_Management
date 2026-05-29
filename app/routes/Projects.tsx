@@ -18,7 +18,8 @@ import StatsGridSkeleton from "~/components/skeletons/StatsGridSkeleton";
 import { TextSkeleton } from "~/components/skeletons/TextSkeleton";
 import ProjectCardSkeleton from "~/components/skeletons/ProjectCardSkeleton";
 import { fetchProjects } from "~/store/thunks/projectThunk";
-import { useAppDispatch, useAppSelector } from "~/store/hooks";
+import { useAppDispatch } from "~/store/hooks";
+import { useParams } from "react-router";
 
 // Projects page component that displays a list of projects with filtering options, metrics, and the ability to create new projects. It uses the useProjectsData hook to fetch project data and analytics, and manages local state for search and filter criteria. The component also handles loading and error states, providing skeletons and error messages as needed.
 const Projects = () => {
@@ -39,9 +40,7 @@ const Projects = () => {
 
   const dispatch = useAppDispatch();
 
-  const workspaceId = useAppSelector(
-    (state) => state.workspace.currentWorkspaceId
-  );
+ const { workspaceId } = useParams();
 
 
   useEffect(() => {

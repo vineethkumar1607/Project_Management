@@ -5,6 +5,7 @@ import { Button } from "~/components/ui/button"
 import { ScrollArea } from "~/components/ui/scroll-area"
 import { Badge } from "~/components/ui/badge";
 import { useCurrentUserTasks } from "~/features/tasks/hooks/useCurrentUserTasks"
+import { workspaceRoutes } from "~/lib/routesHelper"
 
 
 
@@ -75,7 +76,7 @@ export default function MyTasksSidebar() {
             {currentUserTasks.map((task) => (
               <li key={task.id}>
                 <NavLink
-                  to={`/tasks/${task.id}`}
+                  to={workspaceRoutes.taskDetails(task.project!.workspaceId, task.projectId, task.id)}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all
               focus:outline-none focus:ring-2 focus:ring-blue-500

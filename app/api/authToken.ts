@@ -11,10 +11,6 @@ export const setGetToken = (
 
 export const getToken = async () => {
   if (!getTokenFn) {
-    console.warn(
-      "Token function not initialized"
-    );
-
     return null;
   }
 

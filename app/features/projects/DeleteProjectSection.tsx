@@ -9,9 +9,9 @@ import { Input } from "~/components/ui/input";
 
 import type { Project } from "~/types/workspace";
 
-import { useAppDispatch, useAppSelector } from "~/store/hooks";
+import { useAppDispatch, } from "~/store/hooks";
 import { deleteProject } from "~/store/thunks/projectThunk";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import toast from "react-hot-toast";
 
 import { workspaceRoutes } from "~/lib/routesHelper";
@@ -30,12 +30,9 @@ const DeleteProjectSection = ({ project, }: DeleteProjectSectionProps) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    const workspaceId = useAppSelector(
-        state => state.workspace.currentWorkspaceId
-    );
+const { workspaceId } = useParams();
 
-    const { canDeleteProject } =
-        useProjectPermissions(project);
+    const { canDeleteProject } =useProjectPermissions(project);
 
     if (!canDeleteProject) return null;
 

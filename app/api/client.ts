@@ -16,8 +16,6 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
     async (config) => {
-        console.count("AXIOS GET TOKEN");
-
         try {
             /**
              * Prevent infinite hanging
@@ -29,15 +27,9 @@ apiClient.interceptors.request.use(
                 ),
             ]);
 
-            console.log("TOKEN RESULT:", token);
-
             if (token) {
                 config.headers.Authorization =
                     `Bearer ${token}`;
-            } else {
-                console.warn(
-                    "No auth token available"
-                );
             }
 
             return config;

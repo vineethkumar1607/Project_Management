@@ -11,17 +11,28 @@ export interface Workspace {
   slug: string;
   image_url?: string;
   owner: {
+    id: string;
     email: string;
+    name?: string;
+    imageUrl?: string;
   };
-  projects: Project[];
+
+
+  projects?: Project[];
 }
+
+
+export type ProjectStatus = | "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
+
+export type ProjectPriority = | "LOW" | "MEDIUM" | "HIGH";
+
 
 export interface Project {
   id: string;
   name: string;
   description?: string | null;
-  status: "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
-  priority: "LOW" | "MEDIUM" | "HIGH";
+  status: ProjectStatus;
+  priority: ProjectPriority;
   progress?: number;
   start_date?: string;
   end_date?: string;
@@ -58,9 +69,9 @@ export type TaskType = "TASK" | "BUG" | "FEATURE" | "IMPROVEMENT" | "OTHER";
 export type Task = {
   id: string;
   title: string;
-  status: "TODO" | "IN_PROGRESS" | "DONE";
-  type: "BUG" | "FEATURE" | "IMPROVEMENT";
-  priority: "LOW" | "MEDIUM" | "HIGH";
+  status: TaskStatus;
+  type: TaskType;
+  priority: TaskPriority;
   due_date?: string;
   assignee: {
     id: string;
@@ -75,6 +86,7 @@ export type Task = {
     id?: string;
     name?: string;
     team_lead?: string;
+    workspaceId: string;
   };
 };
 
@@ -96,30 +108,31 @@ export type TaskDetails = {
     name: string;
     status: string;
     priority: string;
+    workspaceId: string;
   };
 };
 
 export interface TaskItem {
-    id: string;
-    title: string;
-    type?: string;
-    priority?: string;
-    date?: string;
+  id: string;
+  title: string;
+  type?: string;
+  priority?: string;
+  date?: string;
 }
 
 export interface TaskListCardProps {
-    title: string;
-    count?: number;
-    tasks: TaskItem[];
+  title: string;
+  count?: number;
+  tasks: TaskItem[];
 
-    icon?: LucideIcon;
+  icon?: LucideIcon;
 
-    emptyMessage: string;
+  emptyMessage: string;
 
-    variant?: "default" | "overdue";
+  variant?: "default" | "overdue";
 
-    showDate?: boolean;
-    showMeta?: boolean;
+  showDate?: boolean;
+  showMeta?: boolean;
 }
 
 export type TaskComment = {
@@ -173,13 +186,13 @@ export type ConfirmDialogProps = {
   loading?: boolean;
 
   children?: React.ReactNode;
-  confirmDisabled?: boolean;  
+  confirmDisabled?: boolean;
 };
 
 export type DangerZoneSectionProps = {
-    title: string;
-    description: string;
-    children: ReactNode;
+  title: string;
+  description: string;
+  children: ReactNode;
 };
 
 export type FilterOption = {

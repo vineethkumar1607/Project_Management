@@ -1,7 +1,6 @@
 import { Link } from "react-router";
 import { memo, useMemo } from "react";
 import type { Project } from "~/types/workspace";
-import { useCurrentWorkspace } from "~/features/workspace/hooks/useCurrentWorkspace";
 import { workspaceRoutes } from "~/lib/routesHelper";
 import { useActiveWorkspace } from "../workspace/hooks/useActiveWorkspace";
 

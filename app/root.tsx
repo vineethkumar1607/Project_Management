@@ -17,6 +17,7 @@ import { fetchWorkspaces } from "./store/thunks/workspaceThunk";
 import { Toaster } from "react-hot-toast";
 import AppWrapper from "./providers/AppWrapper";
 import { isAuthInitialized } from "./api/authToken";
+import WorkspaceUrlSync from "./features/workspace/WorkspaceUrlSync";
 
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -123,27 +124,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 // This is the root component for all routes. It handles global layout (Navbar + Sidebar) and route protection based on authentication status. 
 export default function App() {
 
-  console.log("APP COMPONENT RENDERED");
-
-  const fullState = useAppSelector(
-    state => state
-  );
-
-  console.log(
-    "FULL REDUX STATE:",
-    fullState
-  );
-
-
-  console.log(
-    "WORKSPACE SLICE:",
-    fullState.workspace
-  );
-
   const theme = useAppSelector((state) => state.theme.theme);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   // Current route path (/login, /dashboard, etc.)
   const location = useLocation();
+
+  useEffect(() => {
+  console.log("ROUTE CHANGED:", location.pathname);
+}, [location.pathname]);
 
   /* Routes where Navbar + Sidebar should NOT appear */
   const hideLayoutRoutes = ["/login", "/404"];
@@ -167,30 +155,11 @@ export default function App() {
 
 
   useEffect(() => {
-    console.log("ROOT EFFECT RUNNING");
-
-    console.log("isLoaded:", isLoaded);
-
-    console.log("user:", user);
-
-    console.log(
-      "auth initialized:",
-      isAuthInitialized()
-    );
-
     if (!isLoaded) return;
 
     if (!isAuthInitialized()) {
-      console.log(
-        "Auth not initialized yet"
-      );
-
       return;
     }
-
-    console.log(
-      "DISPATCHING FETCH WORKSPACES"
-    );
 
     dispatch(fetchWorkspaces());
 
@@ -216,6 +185,7 @@ export default function App() {
       </SignedOut>
 
       <SignedIn>
+        <WorkspaceUrlSync />
         {shouldHideLayout ? (
           <AppWrapper>
             <Outlet />

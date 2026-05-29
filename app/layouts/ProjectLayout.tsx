@@ -1,7 +1,7 @@
-import { Outlet, useNavigate, useLocation, useParams } from "react-router";
+import { Outlet, useNavigate, useLocation, useParams, Navigate } from "react-router";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useGetTasksQuery } from "~/store/api/tasksApi";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import PrimaryButton from "~/components/common/PrimaryButton";
 import CreateTaskDialog from "~/features/tasks/CreateTaskDialog";
 
@@ -15,20 +15,15 @@ import MetricCard from "~/components/common/MetricCard";
 import { useTaskAnalytics } from "~/features/tasks/hooks/useTaskAnalytics";
 import { PROJECT_NAVIGATION_ITEMS, } from "~/lib/projectNavigation";
 import StatsGridSkeleton from "~/components/skeletons/StatsGridSkeleton";
-import {
-  ListTodo,
-  CheckCircle2,
-  Clock3,
-  AlertTriangle,
-} from "lucide-react";
+import { ListTodo, CheckCircle2, Clock3, AlertTriangle, } from "lucide-react";
 import { workspaceRoutes } from "~/lib/routesHelper";
+import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
 
 
 const loadedTabs = new Set<string>();
 
 const prefetchTab = (value: TabValue, loader: () => Promise<any>) => {
   if (loadedTabs.has(value)) return;
-
   loadedTabs.add(value);
   loader();
 };
@@ -44,6 +39,7 @@ const ProjectLayout = () => {
 
   // Fetch project details using custom hook
   const { project, loading: isProjectLoading, error, } = useCurrentProject();
+  const { projects } = useProjectsData();
 
   const { data: tasks = [], isLoading, isError } = useGetTasksQuery(projectId!, {
     skip: !projectId,  //  prevents invalid API call
@@ -52,15 +48,26 @@ const ProjectLayout = () => {
 
   const safeTasks = isError ? [] : tasks;
 
-  const analytics = useTaskAnalytics({
-    tasks: safeTasks,
-  });
+  const analytics = useTaskAnalytics({ tasks: safeTasks, });
 
   const getSkeleton = () => {
     if (location.pathname.includes("analytics")) return <AnalyticsSkeleton />;
     if (location.pathname.includes("calendar")) return <CalendarSkeleton />;
     return <TasksSkeleton />;
   };
+
+  // 
+  const projectExists = useMemo(() => {
+    if (!workspaceId || !projectId) {
+      return false;
+    }
+
+    return projects.some(
+      (project) =>
+        project.id === projectId &&
+        project.workspaceId === workspaceId
+    );
+  }, [projects, workspaceId, projectId]);
 
 
   const metrics = [
@@ -69,37 +76,30 @@ const ProjectLayout = () => {
       value: analytics.totalTasks,
       icon: ListTodo,
       description: "all project tasks",
-
       iconBgColor: "bg-blue-500/10",
       iconColor: "text-blue-500",
     },
-
     {
       title: "Completed",
       value: analytics.completedTasksCount,
       icon: CheckCircle2,
       description: "finished successfully",
-
       iconBgColor: "bg-emerald-500/10",
       iconColor: "text-emerald-500",
     },
-
     {
       title: "In Progress",
       value: analytics.inProgressTasksCount,
       icon: Clock3,
       description: "currently active",
-
       iconBgColor: "bg-violet-500/10",
       iconColor: "text-violet-500",
     },
-
     {
       title: "Overdue",
       value: analytics.overdueTasksCount,
       icon: AlertTriangle,
       description: "require attention",
-
       iconBgColor: "bg-amber-500/10",
       iconColor: "text-amber-500",
     },
@@ -110,9 +110,23 @@ const ProjectLayout = () => {
   const pathSegments = location.pathname.split("/");
   const lastSegment = pathSegments[pathSegments.length - 1];
 
-  const currentTab: TabValue =
-    PROJECT_NAVIGATION_ITEMS.find(tab => tab.value === lastSegment)?.value ||
-    "tasks";
+  const currentTab: TabValue = PROJECT_NAVIGATION_ITEMS.find(tab => tab.value === lastSegment)?.value || "tasks";
+
+
+  //  temporary change for debugging 
+  if (
+    !isProjectLoading &&
+    projects.length > 0 &&
+    !projectExists
+  ) {
+    return (
+      <Navigate
+        to={workspaceRoutes.projects(workspaceId!)}
+        replace
+      />
+    );
+  }
+
 
   if (error) {
     return (

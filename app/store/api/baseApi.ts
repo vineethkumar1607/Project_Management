@@ -13,7 +13,6 @@ export const baseApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: `${API_BASE_URL}/api`,
         prepareHeaders: async (headers) => {
-            console.count("RTK GET TOKEN");
             const token = await getToken();
 
             if (token) {

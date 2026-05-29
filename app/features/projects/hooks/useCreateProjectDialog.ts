@@ -1,9 +1,7 @@
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-
 import { useAppDispatch } from "~/store/hooks";
 import { createProject } from "~/store/thunks/projectThunk";
-
 import { useWorkspaceMembers } from "~/features/workspace/hooks/useWorkspaceMembers";
 import type { Project } from "~/types/workspace";
 import { useActiveWorkspace } from "~/features/workspace/hooks/useActiveWorkspace";
@@ -27,17 +25,10 @@ export const useCreateProjectDialog = ({
     onSuccess }: Props) => {
     const dispatch = useAppDispatch();
 
-    const { currentWorkspaceId: workspaceId } =useActiveWorkspace();
+    const { currentWorkspaceId: workspaceId } = useActiveWorkspace();
     const { members: membersList, } = useWorkspaceMembers();
 
-    const {
-        register,
-        handleSubmit,
-        control,
-        setValue,
-        watch,
-        formState: { errors, isSubmitting },
-    } = useForm<FormData>({
+    const { register, handleSubmit, control, setValue, watch, formState: { errors, isSubmitting }, } = useForm<FormData>({
         defaultValues: {
             name: "",
             description: "",
@@ -53,9 +44,7 @@ export const useCreateProjectDialog = ({
     const members = watch("members") || [];
 
     const handleMemberToggle = (email: string) => {
-        const updated = members.includes(email)
-            ? members.filter((m) => m !== email)
-            : [...members, email];
+        const updated = members.includes(email) ? members.filter((m) => m !== email) : [...members, email];
 
         setValue("members", updated);
     };
@@ -63,9 +52,7 @@ export const useCreateProjectDialog = ({
     const onSubmit = async (data: FormData) => {
         if (!workspaceId) return;
 
-        const toastId = toast.loading(
-            "Creating project..."
-        );
+        const toastId = toast.loading("Creating project...");
 
         const transformedPayload = {
             workspaceId,
@@ -84,24 +71,14 @@ export const useCreateProjectDialog = ({
 
         try {
             await dispatch(
-                createProject({
-                    workspaceId,
-                    payload: transformedPayload,
-                })
+                createProject({ workspaceId, payload: transformedPayload, })
             ).unwrap();
 
-            toast.success("Project created", {
-                id: toastId,
-            });
+            toast.success("Project created", { id: toastId, });
 
             onSuccess();
         } catch (err: any) {
-            toast.error(
-                err || "Failed to create project",
-                {
-                    id: toastId,
-                }
-            );
+            toast.error(err || "Failed to create project", { id: toastId, });
         }
     };
 

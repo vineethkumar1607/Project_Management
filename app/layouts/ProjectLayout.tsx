@@ -57,17 +57,17 @@ const ProjectLayout = () => {
   };
 
   // 
-const projectExists = useMemo(() => {
-  if (!workspaceId || !projectId) {
-    return false;
-  }
+  const projectExists = useMemo(() => {
+    if (!workspaceId || !projectId) {
+      return false;
+    }
 
-  return projects.some(
-    (project) =>
-      project.id === projectId &&
-      project.workspaceId === workspaceId
-  );
-}, [projects, workspaceId, projectId]);
+    return projects.some(
+      (project) =>
+        project.id === projectId &&
+        project.workspaceId === workspaceId
+    );
+  }, [projects, workspaceId, projectId]);
 
 
   const metrics = [
@@ -112,14 +112,20 @@ const projectExists = useMemo(() => {
 
   const currentTab: TabValue = PROJECT_NAVIGATION_ITEMS.find(tab => tab.value === lastSegment)?.value || "tasks";
 
- if (!isProjectLoading && !projectExists) {
-  return (
-    <Navigate
-      to={workspaceRoutes.projects(workspaceId!)}
-      replace
-    />
-  );
-}
+
+  //  temporary change for debugging 
+  if (
+    !isProjectLoading &&
+    projects.length > 0 &&
+    !projectExists
+  ) {
+    return (
+      <Navigate
+        to={workspaceRoutes.projects(workspaceId!)}
+        replace
+      />
+    );
+  }
 
 
   if (error) {

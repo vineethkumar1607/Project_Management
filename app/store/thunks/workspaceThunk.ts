@@ -19,10 +19,6 @@ export const fetchWorkspaces = createAsyncThunk<
         try {
             const data =
                 await workspaceApi.getAll();
-            console.log(
-                "FETCHED WORKSPACES:",
-                data
-            );
 
             return data;
 

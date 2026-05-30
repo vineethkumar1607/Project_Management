@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
-import { useClerk, useOrganization, } from "@clerk/clerk-react";
+import {  useOrganization, } from "@clerk/clerk-react";
 import { useAppSelector } from "~/store/hooks";
-import { workspaceRoutes } from "~/lib/routesHelper";
+
 
 
 type UseWorkspaceSyncReturn = {
@@ -24,7 +24,6 @@ type UseWorkspaceSyncReturn = {
 export const useWorkspaceSync = (): UseWorkspaceSyncReturn => {
     const { workspaceId } = useParams();
     const { organization } = useOrganization();
-    const { setActive } = useClerk();
     const [isSyncing, setIsSyncing] = useState(false);
     const [hasRecoveryFailed, setHasRecoveryFailed] = useState(false);
 
@@ -36,7 +35,6 @@ export const useWorkspaceSync = (): UseWorkspaceSyncReturn => {
         (state) => state.workspace.loading
     );
 
-    const navigate = useNavigate();
 
     const workspaceExists = useMemo(() => {
         // If we're still loading workspaces, we can't be sure if the workspace exists or not, so we return true to avoid false negatives

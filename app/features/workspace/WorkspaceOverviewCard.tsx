@@ -1,141 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
-
-import { useOrganization } from "@clerk/clerk-react";
 import { Pencil } from "lucide-react";
-import toast from "react-hot-toast";
-
 import PrimaryButton from "~/components/common/PrimaryButton";
-import { useDebounce } from "~/hooks/useDebounce";
-import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
-import { useWorkspaceMembers } from "~/features/workspace/hooks/useWorkspaceMembers";
 import DangerZoneSection from "~/components/common/DangerZoneSection";
 import ConfirmDialog from "~/components/common/ConfirmDialog";
-import { useWorkspacePermissions } from "~/hooks/useWorkspacePermissions";
-import { useActiveWorkspace } from "./hooks/useActiveWorkspace";
+import { useWorkspaceOverview } from "./hooks/useWorkspaceOverview";
+
 
 export default function WorkspaceOverviewCard() {
-  const { currentWorkspace } = useActiveWorkspace();
 
-  const { members } = useWorkspaceMembers();
+  const workspaceOverview = useWorkspaceOverview();
 
-  const { projects } = useProjectsData();
+  const { workspace, permissions, edit, deleteDialog, } = workspaceOverview;
 
-  const { organization } = useOrganization();
+  const { currentWorkspace, organization, workspaceName, memberCount, projectCount, } = workspace;
 
-  const { canEditWorkspace, canDeleteWorkspace, } = useWorkspacePermissions();
+  const { canEditWorkspace, canDeleteWorkspace, } = permissions;
 
-  const [isEditing, setIsEditing] = useState(false);
+  const { isEditing, isSaving, hasChanges, setWorkspaceName, handleSaveWorkspace, handleCancelEdit, handleToggleEdit, } = edit;
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { isDeleting, showDeleteDialog, deleteConfirmation, isDeleteConfirmed, setDeleteConfirmation, handleDeleteWorkspace, handleDeleteDialogChange, setShowDeleteDialog, } = deleteDialog;
 
-  const [workspaceName, setWorkspaceName] = useState(currentWorkspace?.name || "");
+  if (!currentWorkspace) return null;
 
-  const [deleteConfirmation, setDeleteConfirmation] = useState("");
-
-  useEffect(() => {
-    setWorkspaceName(
-      organization?.name || currentWorkspace?.name || ""
-    );
-  }, [organization?.name, currentWorkspace?.name,]);
-
-  const memberCount = useMemo(() => members.length, [members]);
-
-  const projectCount = useMemo(() => projects.length, [projects]);
-
-  const hasChanges = workspaceName.trim() !== (organization?.name || currentWorkspace?.name || "").trim();
-
-  const debouncedDeleteConfirmation = useDebounce(deleteConfirmation, 300);
-
-  const isDeleteConfirmed = debouncedDeleteConfirmation.trim() === currentWorkspace?.name?.trim();
-
-  if (!currentWorkspace) { return null }
-
-  const handleSaveWorkspace = async () => {
-    if (!organization) {
-      toast.error("Organization not found");
-
-      return;
-    }
-
-    const trimmedName = workspaceName.trim();
-
-    if (!trimmedName) {
-      toast.error("Workspace name is required");
-
-      return;
-    }
-
-    if (!hasChanges) {
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-
-      await organization.update({
-        name: trimmedName,
-      });
-
-      toast.success(
-        "Workspace updated successfully"
-      );
-
-      setIsEditing(false);
-    } catch (error) {
-      console.error(error);
-
-      toast.error(
-        "Failed to update workspace"
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDeleteWorkspace = async () => {
-    try {
-      setIsDeleting(true);
-
-      // delete logic
-
-      toast.success("Workspace deleted");
-    } catch (error) {
-      toast.error("Failed to delete workspace");
-      throw error;
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setWorkspaceName(
-      organization?.name ||
-      currentWorkspace.name
-    );
-
-    setIsEditing(false);
-  };
-
-  const handleToggleEdit = () => {
-    if (isEditing) {
-      handleCancelEdit();
-      return;
-    }
-
-    setIsEditing(true);
-  };
-
-
-
-  const handleDeleteDialogChange = (open) => {
-    setShowDeleteDialog(open);
-
-    if (!open) {
-      setDeleteConfirmation("");
-    }
-  };
 
   return (
     <div className="space-y-8">
@@ -280,18 +165,9 @@ export default function WorkspaceOverviewCard() {
       >
         <div className="space-y-4">
           {/* Warning Box */}
-          <div
-            className="
-        rounded-lg border border-red-200
-        bg-red-50 p-4
-        dark:border-red-900/50
-        dark:bg-red-950/20
-      "
-          >
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/20" >
             <p className="text-sm text-red-700 dark:text-red-300">
-              This action cannot be undone.
-              All projects, tasks, members,
-              and workspace data will be permanently removed.
+              This action cannot be undone.All projects, tasks, members,and workspace data will be permanently removed.
             </p>
           </div>
 
@@ -306,12 +182,9 @@ export default function WorkspaceOverviewCard() {
             </p>
 
             <div className="space-y-1">
-              <input
-                type="text"
-                value={deleteConfirmation}
-                onChange={(e) =>
-                  setDeleteConfirmation(e.target.value)
-                }
+              <input type="text" value={deleteConfirmation} onChange={(e) =>
+                setDeleteConfirmation(e.target.value)
+              }
                 placeholder="Enter workspace name"
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-red-500"
               />

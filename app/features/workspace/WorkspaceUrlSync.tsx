@@ -13,27 +13,20 @@ export default function WorkspaceUrlSync() {
     useEffect(() => {
         if (!organization?.id) return;
 
-        const expectedPath =
-            workspaceRoutes.dashboard(
-                organization.id
-            );
+        const expectedPath = workspaceRoutes.dashboard(organization.id);
 
-        if (
-            location.pathname.startsWith(
-                expectedPath
-            )
-        ) {
-            return;
-        }
+        if (location.pathname.startsWith(expectedPath)) return;
 
-        navigate(expectedPath, {
-            replace: true,
-        });
-    }, [
-        organization?.id,
-        location.pathname,
-        navigate,
-    ]);
+        console.log("WORKSPACE URL SYNC",
+            {
+                orgId: organization?.id,
+                path: location.pathname,
+            }
+        );
+
+        navigate(expectedPath, { replace: true, });
+
+    }, [organization?.id, location.pathname, navigate,]);
 
     return null;
 }

@@ -1,4 +1,4 @@
-// ================== CORE DOMAIN ==================
+// common types related to workspaces, projects, tasks, and billing
 
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -60,7 +60,7 @@ export interface WorkspaceMember {
 }
 
 
-// ================== TASK ==================
+// task types 
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
@@ -147,7 +147,7 @@ export type TaskComment = {
 };
 
 
-// ================== API PAYLOADS ==================
+// API payload types
 
 export type CreateProjectPayload = {
   name: string;
@@ -173,7 +173,7 @@ export type TaskFormData = {
 
 
 
-// ================== UI TYPES ==================
+// ui types
 
 export type ConfirmDialogProps = {
   open: boolean;
@@ -218,7 +218,7 @@ export interface FiltersBarProps {
 
 
 
-// ================== ASYNC STATE ==================
+// asnchronous state types
 
 export type AsyncStatus = "idle" | "loading" | "succeeded" | "failed";
 
@@ -230,7 +230,7 @@ export interface AsyncState<T> {
 
 
 
-// ================== REDUX STATE ==================
+//  redux state types
 
 export type ProjectsByWorkspace = {
   [workspaceId: string]: AsyncState<Project[]>;
@@ -245,7 +245,7 @@ export interface ProjectState {
   projectMembersByProject: ProjectMembersByProject;
 }
 
-// ================== ANALYTICS TYPES==================
+// other types
 
 
 export type ChartData = {
@@ -265,3 +265,18 @@ export type CalendarTask = {
   date: string;
   priority: "low" | "medium" | "high";
 };
+
+// billing types
+export type Plan =
+    | "FREE"
+    | "PRO"
+    | "ENTERPRISE";
+
+export type BillingCycle =
+    | "MONTHLY"
+    | "QUARTERLY"
+    | "YEARLY";
+
+export type FeatureValue =
+    | boolean
+    | string;

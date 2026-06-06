@@ -60,6 +60,7 @@ export default function WorkspaceOverviewCard() {
 
             {isEditing ? (
               <input
+                autoFocus type="text"
                 value={workspaceName}
                 onChange={(e) =>
                   setWorkspaceName(
@@ -182,7 +183,7 @@ export default function WorkspaceOverviewCard() {
             </p>
 
             <div className="space-y-1">
-              <input type="text" value={deleteConfirmation} onChange={(e) =>
+              <input autoFocus type="text" value={deleteConfirmation} onChange={(e) =>
                 setDeleteConfirmation(e.target.value)
               }
                 placeholder="Enter workspace name"

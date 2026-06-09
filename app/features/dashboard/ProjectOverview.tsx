@@ -8,6 +8,7 @@ import { FolderOpen, Plus } from "lucide-react";
 import { useProjectsData } from "~/features/projects/hooks/useProjectsData";
 import { workspaceRoutes } from "~/lib/routesHelper";
 import { useActiveWorkspace } from "../workspace/hooks/useActiveWorkspace";
+import CreateProjectDialogBox from "../projects/CreateProjectDialogBox";
 
 /* =======================
    Types
@@ -52,7 +53,7 @@ const priorityColors: Record<ProjectPriority, string> = {
 const ProjectOverview: FC = () => {
 
 
-  const [, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { projects, loading, error } = useProjectsData();
   const { currentWorkspaceId } = useActiveWorkspace();
@@ -172,6 +173,11 @@ const ProjectOverview: FC = () => {
             )}
           </div>
         </>
+      )}
+      {isDialogOpen && (
+        <CreateProjectDialogBox
+          setIsDialogOpen={setIsDialogOpen}
+        />
       )}
     </section>
   );

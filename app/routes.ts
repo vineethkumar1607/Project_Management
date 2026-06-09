@@ -55,14 +55,9 @@ export default [
       },
       {
         path: "settings",
-        file: "features/settings/Settings.tsx",
+        file: "routes/Settings.tsx",
 
         children: [
-          {
-            index: true,
-            file: "routes/SettingsIndexRedirect.tsx",
-          },
-
           {
             path: "workspace",
             file: "features/workspace/WorkspaceOverviewCard.tsx",

@@ -1,5 +1,5 @@
 import { CreditCard, Settings } from "lucide-react";
-import { NavLink, Navigate, Outlet, useParams } from "react-router";
+import { NavLink, Navigate, Outlet, useLocation, useParams, } from "react-router";
 
 import { workspaceRoutes } from "~/lib/routesHelper";
 
@@ -21,9 +21,24 @@ const tabs = [
 
 export default function SettingsPage() {
     const { workspaceId } = useParams();
+    const location = useLocation();
 
     if (!workspaceId) {
         return <Navigate to="/" replace />;
+    }
+
+    if (
+        location.pathname ===
+        `/workspace/${workspaceId}/settings`
+    ) {
+        return (
+            <Navigate
+                to={workspaceRoutes.settingsWorkspace(
+                    workspaceId
+                )}
+                replace
+            />
+        );
     }
 
     return (

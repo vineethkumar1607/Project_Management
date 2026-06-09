@@ -98,8 +98,7 @@ const ProjectSettings = () => {
             </p>
           </div>
 
-          <ProjectMembers project={project} workspaceMembers={workspaceMembers}
-          />
+          <ProjectMembers project={project} workspaceMembers={workspaceMembers}/>
         </div>
 
       </div>

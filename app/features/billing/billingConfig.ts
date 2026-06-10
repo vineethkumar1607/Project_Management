@@ -1,4 +1,5 @@
 import type { BillingCycle, Plan, FeatureValue, } from "~/types/workspace";
+import type { BillingInvoice } from "./BillingHistory";
 
 type PricingPlan = {
     id: Plan;
@@ -89,5 +90,92 @@ export const FEATURE_SECTIONS: FeatureSection[] = [
                 values: { FREE: false, PRO: false, ENTERPRISE: true, },
             },
         ],
+    },
+];
+
+type BillingColumnKey =
+    | "date"
+    | "description"
+    | "amount"
+    | "status"
+    | "invoice"
+    | "download";
+
+type BillingTableColumn = {
+    key: BillingColumnKey;
+    label: string;
+    className?: string;
+};
+
+export const BILLING_TABLE_COLUMNS: BillingTableColumn[] = [
+    {
+        key: "date",
+        label: "Date",
+        className: "pl-10 ",
+    },
+    {
+        key: "description",
+        label: "Description",
+        className: "w-auto",
+    },
+    {
+        key: "amount",
+        label: "Amount",
+        className: "",
+    },
+    {
+        key: "status",
+        label: "Status",
+        className: "",
+    },
+    {
+        key: "invoice",
+        label: "Invoice",
+        className: "",
+    },
+    {
+        key: "download",
+        label: "Download",
+        className: "pr-10 text-right ",
+    },
+] as const;
+
+
+
+export const invoices: BillingInvoice[] = [
+    {
+        id: "1",
+        invoiceNumber:
+            "INV-2026-001",
+        date: "09 Jun 2026",
+        description:
+            "Pro Plan - Monthly",
+        amount: 499,
+        currency: "INR",
+        status: "PAID",
+    },
+
+    {
+        id: "2",
+        invoiceNumber:
+            "INV-2026-002",
+        date: "09 May 2026",
+        description:
+            "Pro Plan - Monthly",
+        amount: 499,
+        currency: "INR",
+        status: "PAID",
+    },
+
+    {
+        id: "3",
+        invoiceNumber:
+            "INV-2026-003",
+        date: "09 Apr 2026",
+        description:
+            "Pro Plan - Monthly",
+        amount: 499,
+        currency: "INR",
+        status: "REFUNDED",
     },
 ];

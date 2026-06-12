@@ -9,7 +9,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useCreateTaskMutation } from "~/store/api/tasksApi";
 import { useParams } from "react-router";
 import toast from "react-hot-toast";
-import { useWorkspaceMembers } from "~/features/workspace/hooks/useWorkspaceMembers";
+import { useProjectMembers } from "~/features/projects/hooks/useProjectMembers";
 
 
 
@@ -32,7 +32,9 @@ const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
     const [createTask,] = useCreateTaskMutation();
 
     // Fetch members list for the workspace
-    const { members: membersList, isInitialLoading: membersLoading, } = useWorkspaceMembers();
+    const { members: membersList, isLoading: membersLoading, } = useProjectMembers(projectId);
+
+    console.log(membersList, "membersList in CreateTaskDialog");
     // Initialize form with react-hook-form
     const { register, handleSubmit, control, formState: { errors, isSubmitting }, reset,
     } = useForm<TaskFormData>({
@@ -192,9 +194,12 @@ const CreateTaskDialog: FC<Props> = ({ setIsDialogOpen }) => {
                                                 No members found
                                             </div>
                                         ) : (
-                                            membersList.map((m: WorkspaceMember) => (
-                                                <SelectItem key={m.id} value={m.id}>
-                                                    {m.name || m.email}
+                                            membersList.map((m) => (
+                                                <SelectItem
+                                                    key={m.user.id}
+                                                    value={m.user.id}
+                                                >
+                                                    {m.user.name || m.user.email}
                                                 </SelectItem>
                                             ))
                                         )}

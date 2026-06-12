@@ -119,6 +119,10 @@ const projectSlice = createSlice({
                         m.id === tempId ? newMember : m
                     );
                 }
+
+                const projectMembers = state.projectMembersByProject[projectId];
+
+                if (projectMembers) { projectMembers.data.push(newMember); }
             })
 
             .addCase(addProjectMember.rejected, (state, action) => {
@@ -165,6 +169,11 @@ const projectSlice = createSlice({
                     project.members = project.members.filter(
                         (m: any) => m.user?.id !== memberId
                     );
+                }
+                const projectMembers = state.projectMembersByProject[projectId];
+
+                if (projectMembers) {
+                    projectMembers.data = projectMembers.data.filter((m: any) => m.user.id !== memberId);
                 }
             })
 

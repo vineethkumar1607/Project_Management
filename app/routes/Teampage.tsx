@@ -139,40 +139,46 @@ export default function TeamPage() {
       setIsInviteOpen(false);
 
     } catch (err) {
-      console.error("Invite failed", err);
+
+      console.error(err);
+
+      toast.error(
+        JSON.stringify(err, null, 2)
+      );
+
     }
   };
   if (isInitialLoading) {
-  return (
-    <div className="space-y-8">
+    return (
+      <div className="space-y-8">
 
-      {/* Header Skeleton */}
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-2">
-          <TextSkeleton className="h-8 w-56" />
-          <TextSkeleton className="h-4 w-72" />
+        {/* Header Skeleton */}
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-2">
+            <TextSkeleton className="h-8 w-56" />
+            <TextSkeleton className="h-4 w-72" />
+          </div>
+
+          <TextSkeleton className="h-10 w-40 rounded-md" />
+        </header>
+
+        {/* Stats Skeleton */}
+        <StatsGridSkeleton />
+
+        {/* Filters Skeleton */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <TextSkeleton className="h-10 flex-1 rounded-md" />
+          <TextSkeleton className="h-10 w-[180px] rounded-md" />
         </div>
 
-        <TextSkeleton className="h-10 w-40 rounded-md" />
-      </header>
-
-      {/* Stats Skeleton */}
-      <StatsGridSkeleton />
-
-      {/* Filters Skeleton */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <TextSkeleton className="h-10 flex-1 rounded-md" />
-        <TextSkeleton className="h-10 w-[180px] rounded-md" />
+        {/* Table Skeleton */}
+        <TableSkeleton
+          rows={4}
+          columns={3}
+        />
       </div>
-
-      {/* Table Skeleton */}
-      <TableSkeleton
-        rows={4}
-        columns={3}
-      />
-    </div>
-  );
-}
+    );
+  }
 
   if (error) {
     return (
@@ -250,7 +256,7 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Table or Empty State */}
+      {/*  Empty State */}
       <section aria-label="Team members" className="min-h-[60vh]">
         {filteredMembers.length > 0 ? (
           <TeamTable members={filteredMembers} />

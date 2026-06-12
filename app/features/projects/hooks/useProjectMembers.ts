@@ -25,6 +25,14 @@ export const useProjectMembers = (projectId?: string) => {
         }
     }, [projectId, status, dispatch]);
 
+
+    console.log({
+    projectId,
+    status,
+    members,
+}, "useProjectMembers");
+
+
     return {
         members,
         isLoading: status === "loading",

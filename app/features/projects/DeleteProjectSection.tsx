@@ -30,15 +30,18 @@ const DeleteProjectSection = ({ project, }: DeleteProjectSectionProps) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-const { workspaceId } = useParams();
+    const { workspaceId } = useParams();
 
-    const { canDeleteProject } =useProjectPermissions(project);
-
-    if (!canDeleteProject) return null;
+    const { canDeleteProject } = useProjectPermissions(project);
 
     const isMatch = useMemo(() => {
         return confirmText.trim() === project.name;
     }, [confirmText, project.name]);
+
+    
+    if (!canDeleteProject) {
+        return null;
+    }
 
     const handleDelete = async () => {
         if (!workspaceId) return;

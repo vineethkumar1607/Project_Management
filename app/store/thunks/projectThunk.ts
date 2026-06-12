@@ -24,7 +24,7 @@ export const fetchProjects = createAsyncThunk<
 
       return data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.message ||"Something went wrong");
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Something went wrong");
     }
   },
 
@@ -59,7 +59,7 @@ export const createProject = createAsyncThunk(
       const data = await projectApi.create(workspaceId, payload);
       return data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.message ||"Something went wrong");
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Something went wrong");
     }
   }
 );
@@ -76,7 +76,7 @@ export const updateProject = createAsyncThunk(
       const data = await projectApi.update(projectId, payload);
       return data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.message ||"Something went wrong");
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Something went wrong");
     }
   }
 );
@@ -94,7 +94,7 @@ export const deleteProject = createAsyncThunk("project/deleteProject",
         projectId,
       };
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.message ||"Failed to delete project");
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Failed to delete project");
     }
   }
 );
@@ -115,7 +115,7 @@ export const addProjectMember = createAsyncThunk(
         tempId: tempMember.id,
       };
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.message ||"Something went wrong");
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Something went wrong");
     }
   }
 );
@@ -124,7 +124,7 @@ export const addProjectMember = createAsyncThunk(
 export const removeProjectMember = createAsyncThunk(
   "project/removeProjectMember",
   async (
-    { workspaceId, projectId, memberId,  }: { workspaceId: string; projectId: string; memberId: string; backupMember?: any; },
+    { workspaceId, projectId, memberId, }: { workspaceId: string; projectId: string; memberId: string; backupMember?: any; },
     thunkAPI
   ) => {
     try {
@@ -136,7 +136,7 @@ export const removeProjectMember = createAsyncThunk(
         memberId,
       };
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.message ||"Something went wrong");
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Something went wrong");
     }
   }
 );
@@ -147,11 +147,13 @@ export const fetchProjectMembers = createAsyncThunk(
   "project/fetchProjectMembers",
   async (projectId: string, { rejectWithValue }) => {
     try {
-      const data = await projectApi.getProjectMembers(projectId);
 
+      console.log("FETCHING PROJECT MEMBERS", projectId);
+      const data = await projectApi.getProjectMembers(projectId);
+      console.log("PROJECT MEMBERS API RESPONSE", data);
       return { projectId, data };
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message ||"Something went wrong");
+      return rejectWithValue(err.response?.data?.message || "Something went wrong");
     }
   }
 );
